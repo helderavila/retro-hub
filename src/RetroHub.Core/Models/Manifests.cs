@@ -97,6 +97,9 @@ public sealed class EmulatorManifest
     /// <summary>Controller mapping written to the emulator config file.</summary>
     public ControllerConfig? Controller { get; set; }
 
+    /// <summary>Settings the emulator needs to work well (e.g. a renderer that draws on this system), written on install and before games.</summary>
+    public List<ConfigDefaults> Defaults { get; set; } = [];
+
     /// <summary>Text for emulators without automatic mapping (e.g. how to set up the controller in them).</summary>
     public string? ControllerNote { get; set; }
 
@@ -195,6 +198,19 @@ public sealed class StateLocation
     public string Pattern { get; set; } = "";
     /// <summary>Regex with the slot number in group 1 (empty = slot 0).</summary>
     public string? Slot { get; set; }
+}
+
+/// <summary>Keys written into one emulator config file (same formats as <see cref="ControllerConfig"/>).</summary>
+public sealed class ConfigDefaults
+{
+    /// <summary>File relative to the emulator folder (e.g. "config/Mupen64Plus-Next/Mupen64Plus-Next.opt").</summary>
+    public string File { get; set; } = "";
+
+    /// <summary>"ini", "flat" (key = "value", RetroArch) or "qt".</summary>
+    public string Format { get; set; } = "ini";
+
+    /// <summary>Section → key → value. In the "flat" format, use section "".</summary>
+    public Dictionary<string, Dictionary<string, string>> Settings { get; set; } = [];
 }
 
 public sealed class ControllerConfig

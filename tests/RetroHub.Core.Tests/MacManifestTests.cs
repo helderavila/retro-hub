@@ -105,4 +105,37 @@ public class MacManifestTests
         Assert.Equal(Path.Combine(dir.Path, "home"), File.ReadAllText(Path.Combine(dir.Path, "home.txt")).Trim());
         Assert.True(Directory.Exists(Path.Combine(dir.Path, "home")));
     }
+
+    [Fact]
+    public void Retroarch_on_mac_uses_parallel_rdp_on_vulkan_for_n64()
+    {
+        var ra = Load().GetEmulator("retroarch")!;
+        var options = ra.Defaults.Single(d => d.File.EndsWith("Mupen64Plus-Next.opt"));
+        var overrideCfg = ra.Defaults.Single(d => d.File.EndsWith("Mupen64Plus-Next.cfg"));
+        Assert.Equal("parallel", options.Settings[""]["mupen64plus-rdp-plugin"]);
+        Assert.Equal("vulkan", overrideCfg.Settings[""]["video_driver"]);
+        Assert.Empty(ManifestTests.Load().GetEmulator("retroarch")!.Defaults); // Windows keeps GLideN64
+    }
+
+    [Fact]
+    public void Defaults_are_written_once_and_a_later_user_change_is_kept()
+    {
+        using var dir = new TempDir();
+        var db = new LibraryDatabase(Path.Combine(dir.Path, "lib.db"));
+        db.Initialize();
+        var ra = Load().GetEmulator("retroarch")!;
+        var installed = new InstalledEmulator { Id = "retroarch", Version = "1", InstallDir = dir.Path, InstalledAt = DateTimeOffset.UtcNow };
+        var opt = dir.File("config/Mupen64Plus-Next/Mupen64Plus-Next.opt", "mupen64plus-rdp-plugin = \"gliden64\"\nmupen64plus-43screensize = \"640x480\"\n");
+        var defaults = new Install.EmulatorDefaults(db);
+
+        Assert.True(defaults.EnsureApplied(ra, installed));
+        var text = File.ReadAllText(opt);
+        Assert.Contains("mupen64plus-rdp-plugin = \"parallel\"", text);
+        Assert.Contains("mupen64plus-43screensize = \"640x480\"", text); // other options untouched
+        Assert.Contains("video_driver = \"vulkan\"", File.ReadAllText(Path.Combine(dir.Path, "config/Mupen64Plus-Next/Mupen64Plus-Next.cfg")));
+
+        File.WriteAllText(opt, "mupen64plus-rdp-plugin = \"angrylion\"\n");
+        Assert.False(defaults.EnsureApplied(ra, installed));
+        Assert.Contains("angrylion", File.ReadAllText(opt));
+    }
 }

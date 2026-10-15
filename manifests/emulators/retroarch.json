@@ -105,6 +105,14 @@
       { "systems": ["dreamcast"],         "core": "flycast",          "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" },
       { "systems": ["arcade"],            "core": "fbneo",            "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" }
     ],
+    // N64: the default renderer (GLideN64, OpenGL) draws a black screen on macOS while the game runs.
+    // ParaLLEl-RDP on Vulkan (MoltenVK) works and is the most accurate; the override switches only this core to Vulkan.
+    "defaults": [
+      { "file": "config/Mupen64Plus-Next/Mupen64Plus-Next.opt", "format": "flat",
+        "settings": { "": { "mupen64plus-rdp-plugin": "parallel", "mupen64plus-rsp-plugin": "parallel" } } },
+      { "file": "config/Mupen64Plus-Next/Mupen64Plus-Next.cfg", "format": "flat",
+        "settings": { "": { "video_driver": "vulkan" } } }
+    ],
     // macOS has no XInput: the MFi driver (Game Controller framework) reads Xbox, PlayStation and MFi controllers.
     "controller": {
       "file": "config/retroarch.cfg",

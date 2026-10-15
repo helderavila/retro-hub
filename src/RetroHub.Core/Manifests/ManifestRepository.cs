@@ -187,6 +187,7 @@ public sealed class ManifestRepository
 
         if (m.BiosDir is not null) m.BiosDir = In(m.BiosDir);
         if (m.Controller is { } controller) controller.File = In(controller.File);
+        foreach (var defaults in m.Defaults) defaults.File = In(defaults.File);
         if (m.Achievements is { } achievements) achievements.File = In(achievements.File);
         if (m.Graphics is { } graphics)
         {

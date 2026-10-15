@@ -68,6 +68,8 @@ public sealed class EmulatorInstaller(
 
         progress.Report(new InstallUpdate(L.T("Configuring"), null, null));
         RunPostInstall(manifest, target, progress);
+        foreach (var file in manifest.Defaults)
+            progress.Report(InstallUpdate.Line($"  ~ {file.File}"));
         if (manifest.BiosDir is not null)
             Directory.CreateDirectory(Path.Combine(target, manifest.BiosDir));
 
@@ -92,6 +94,7 @@ public sealed class EmulatorInstaller(
             InstalledAt = DateTimeOffset.UtcNow,
         };
         db.SaveInstalledEmulator(record);
+        new EmulatorDefaults(db).EnsureApplied(manifest, record);
 
         progress.Report(new InstallUpdate(L.T("Done"), 1, L.F("✓ {0} {1} ready", manifest.Name, resolved.Version)));
         return record;

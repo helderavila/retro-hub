@@ -18,6 +18,8 @@ public sealed partial class GameLauncher(ManifestRepository manifests, LibraryDa
     /// <summary>Sessions shorter than this (crash on start, missing BIOS) do not count as play time.</summary>
     private static readonly TimeSpan MinimumSession = TimeSpan.FromSeconds(10);
 
+    private readonly Install.EmulatorDefaults _defaults = new(db);
+
     [GeneratedRegex(@"\{(\w+)\}")]
     private static partial Regex Placeholder();
 
@@ -103,7 +105,9 @@ public sealed partial class GameLauncher(ManifestRepository manifests, LibraryDa
 
         var plan = Plan(game, state);
 
-        // First time in this emulator: maps the controller (does not overwrite if the user remapped it later).
+        // First time in this emulator: its needed settings and the controller mapping (not redone if the user changes them later).
+        try { _defaults.EnsureApplied(plan.Emulator, plan.Installed); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException) { /* play anyway */ }
         try { controllers.EnsureConfigured(plan.Emulator, plan.Installed); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* play anyway */ }
 
