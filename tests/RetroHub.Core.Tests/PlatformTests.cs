@@ -77,8 +77,9 @@ public class PlatformTests
         var binary = dir.File("Foo.app/Contents/MacOS/foo-qt", [0]);
         var app = Path.Combine(dir.Path, "Foo.app");
 
-        Assert.Equal(binary, Platform.ResolveAppBundle(app));
-        Assert.Equal(binary, Platform.ResolveAppBundle(app + "/"));
+        // Compared as full paths: on Windows the bundle path mixes both separators.
+        Assert.Equal(Path.GetFullPath(binary), Path.GetFullPath(Platform.ResolveAppBundle(app)));
+        Assert.Equal(Path.GetFullPath(binary), Path.GetFullPath(Platform.ResolveAppBundle(app + "/")));
         Assert.Equal(binary, Platform.ResolveAppBundle(binary)); // not a bundle: unchanged
     }
 }

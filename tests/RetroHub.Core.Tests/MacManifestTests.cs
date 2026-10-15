@@ -44,15 +44,15 @@ public class MacManifestTests
     public void Data_dir_moves_config_saves_and_bios_under_the_redirected_home()
     {
         var duck = Load().GetEmulator("duckstation")!;
-        var root = Path.Combine("home", "Library", "Application Support", "DuckStation");
+        const string root = "home/Library/Application Support/DuckStation";
 
         Assert.Equal("{emuDir}/home", duck.Environment["HOME"]);
-        Assert.Equal(Path.Combine(root, "settings.ini"), duck.Controller!.File);
-        Assert.Equal(Path.Combine(root, "settings.ini"), duck.Graphics!.File);
-        Assert.Equal(Path.Combine(root, "settings.ini"), duck.Achievements!.File);
-        Assert.Equal(Path.Combine(root, "bios"), duck.BiosDir);
-        Assert.All(duck.Saves!.States, s => Assert.StartsWith(root, s.Dir));
-        Assert.All(duck.Saves.Backup, b => Assert.StartsWith(root, b));
+        Assert.Equal(root + "/settings.ini", Posix(duck.Controller!.File));
+        Assert.Equal(root + "/settings.ini", Posix(duck.Graphics!.File));
+        Assert.Equal(root + "/settings.ini", Posix(duck.Achievements!.File));
+        Assert.Equal(root + "/bios", Posix(duck.BiosDir!));
+        Assert.All(duck.Saves!.States, s => Assert.StartsWith(root, Posix(s.Dir)));
+        Assert.All(duck.Saves.Backup, b => Assert.StartsWith(root, Posix(b)));
     }
 
     [Fact]
@@ -164,8 +164,11 @@ public class MacManifestTests
     public void Mac_quiet_settings_land_in_the_mac_config_files()
     {
         var mac = Load();
-        Assert.Contains(mac.GetEmulator("retroarch")!.Defaults, d => d.File == "config/retroarch.cfg");
-        Assert.Contains(mac.GetEmulator("ppsspp")!.Defaults, d => d.File == Path.Combine("home/.config/ppsspp", "PSP/SYSTEM/ppsspp.ini"));
-        Assert.Contains(mac.GetEmulator("duckstation")!.Defaults, d => d.File == Path.Combine("home", "Library", "Application Support", "DuckStation", "settings.ini"));
+        Assert.Contains(mac.GetEmulator("retroarch")!.Defaults, d => Posix(d.File) == "config/retroarch.cfg");
+        Assert.Contains(mac.GetEmulator("ppsspp")!.Defaults, d => Posix(d.File) == "home/.config/ppsspp/PSP/SYSTEM/ppsspp.ini");
+        Assert.Contains(mac.GetEmulator("duckstation")!.Defaults, d => Posix(d.File) == "home/Library/Application Support/DuckStation/settings.ini");
     }
+
+    /// <summary>Mac paths compared with "/" also when the suite runs on Windows, where Path.Combine joins with "\".</summary>
+    private static string Posix(string path) => path.Replace('\\', '/');
 }
