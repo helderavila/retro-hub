@@ -1,0 +1,134 @@
+<UserControl x:Class="RetroHub.Mac.Views.StatsView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:RetroHub.Mac.Controls"
+             xmlns:vm="using:RetroHub.Mac.ViewModels"
+             xmlns:l="using:RetroHub.Mac.Helpers"
+             x:DataType="vm:StatsViewModel">
+
+    <UserControl.Resources>
+        <!-- Horizontal bar: one series, one neutral tone; the value written beside it (text token, not the bar color) -->
+        <DataTemplate x:Key="HBar" x:DataType="vm:StatBar">
+            <Grid Classes="hbar" Margin="0,0,0,10" Background="Transparent" ToolTip.Tip="{Binding Tooltip}" ColumnDefinitions="150,*,76">
+                <TextBlock Text="{Binding Label}" FontSize="{StaticResource Font.Size.Sm}" Foreground="{StaticResource Brush.Text.Secondary}"
+                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <!-- The bar takes "ratio" of the space; the rest stays empty -->
+                <ui:RatioBar Grid.Column="1" Height="10" VerticalAlignment="Center" CornerRadius="0,4,4,0"
+                             Ratio="{Binding Ratio}" />
+                <TextBlock Grid.Column="2" Text="{Binding ValueText}" Theme="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- Resting values here: values set inside a DataTemplate would beat the hover styles -->
+        <Style Selector="Grid.hbar ui|RatioBar">
+            <Setter Property="Fill" Value="{StaticResource Brush.Text.Secondary}" />
+        </Style>
+        <Style Selector="Grid.day Border.bar">
+            <Setter Property="Background" Value="{StaticResource Brush.Text.Secondary}" />
+        </Style>
+        <Style Selector="Grid.day TextBlock.value">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+        <Style Selector="Grid.hbar:pointerover ui|RatioBar">
+            <Setter Property="Fill" Value="{StaticResource Brush.Text.Primary}" />
+        </Style>
+        <Style Selector="Grid.day:pointerover Border.bar">
+            <Setter Property="Background" Value="{StaticResource Brush.Text.Primary}" />
+        </Style>
+        <Style Selector="Grid.day:pointerover TextBlock.value">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="{StaticResource Page.Padding}">
+            <TextBlock Text="{l:T Stats}" Theme="{StaticResource Text.Display}" />
+            <TextBlock Text="{l:T 'Based on how long each emulator stays open through Retro Hub (sessions under 10 s do not count).'}"
+                       Theme="{StaticResource Text.Secondary}" Margin="0,6,0,0" MaxWidth="620" HorizontalAlignment="Left" />
+
+            <!-- Empty -->
+            <ContentControl Theme="{StaticResource Surface}" Margin="0,32,0,0" IsVisible="{Binding !HasData}">
+                <StackPanel Margin="24,28" HorizontalAlignment="Center">
+                    <ui:Icon Data="{StaticResource Icon.Chart}" Width="24" Height="24" Foreground="{StaticResource Brush.Text.Tertiary}" />
+                    <TextBlock Text="{l:T 'No playtime yet'}" Theme="{StaticResource Text.Title}" Margin="0,14,0,0" HorizontalAlignment="Center" />
+                    <TextBlock Text="{l:T 'Play something through Retro Hub and come back here.'}" Theme="{StaticResource Text.Tertiary}" Margin="0,6,0,0" HorizontalAlignment="Center" />
+                </StackPanel>
+            </ContentControl>
+
+            <StackPanel IsVisible="{Binding HasData}">
+                <!-- Totals -->
+                <UniformGrid Columns="4" Margin="0,32,-16,0">
+                    <Border Theme="{StaticResource Tile}">
+                        <StackPanel>
+                            <TextBlock Text="{l:T 'TOTAL TIME'}" Theme="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{Binding TotalTime}" Theme="{StaticResource Tile.Value}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Theme="{StaticResource Tile}">
+                        <StackPanel>
+                            <TextBlock Text="{l:T 'LAST 7 DAYS'}" Theme="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{Binding WeekTime}" Theme="{StaticResource Tile.Value}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Theme="{StaticResource Tile}">
+                        <StackPanel>
+                            <TextBlock Text="{l:T 'GAMES PLAYED'}" Theme="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{Binding GamesPlayed}" Theme="{StaticResource Tile.Value}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Theme="{StaticResource Tile}">
+                        <StackPanel>
+                            <TextBlock Text="{l:T SESSIONS}" Theme="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{Binding Sessions}" Theme="{StaticResource Tile.Value}" />
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <!-- Last 14 days (columns) -->
+                <ContentControl Theme="{StaticResource Surface}" Margin="0,24,0,0">
+                    <StackPanel Margin="24,20,24,16">
+                        <TextBlock Text="{l:T 'Last 14 days'}" Theme="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" />
+                        <ItemsControl ItemsSource="{Binding LastDays}" Margin="0,18,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="1" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:StatBar">
+                                    <Grid Classes="day" Background="Transparent" ToolTip.Tip="{Binding Tooltip}" Margin="3,0" RowDefinitions="Auto,120,Auto">
+                                        <TextBlock Classes="value" Text="{Binding ValueText}" Theme="{StaticResource Text.Mono.Tertiary}"
+                                                   HorizontalAlignment="Center" Margin="0,0,0,6" />
+                                        <Border Grid.Row="1" Classes="bar" Height="{Binding ColumnHeight}" Width="18" VerticalAlignment="Bottom"
+                                                CornerRadius="4,4,0,0" />
+                                        <Border Grid.Row="1" Height="1" VerticalAlignment="Bottom" Background="{StaticResource Brush.Border}" Margin="-3,0" />
+                                        <TextBlock Grid.Row="2" Text="{Binding Label}" Theme="{StaticResource Text.Mono.Tertiary}"
+                                                   HorizontalAlignment="Center" Margin="0,8,0,0" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ContentControl>
+
+                <!-- Per system · most played -->
+                <Grid Margin="0,24,0,0" ColumnDefinitions="*,24,*">
+                    <ContentControl Theme="{StaticResource Surface}">
+                        <StackPanel Margin="24,20,24,12">
+                            <TextBlock Text="{l:T 'Time per system'}" Theme="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" Margin="0,0,0,16" />
+                            <ItemsControl ItemsSource="{Binding BySystem}" ItemTemplate="{StaticResource HBar}" />
+                        </StackPanel>
+                    </ContentControl>
+                    <ContentControl Grid.Column="2" Theme="{StaticResource Surface}">
+                        <StackPanel Margin="24,20,24,12">
+                            <TextBlock Text="{l:T 'Most played'}" Theme="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" Margin="0,0,0,16" />
+                            <ItemsControl ItemsSource="{Binding TopGames}" ItemTemplate="{StaticResource HBar}" />
+                        </StackPanel>
+                    </ContentControl>
+                </Grid>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

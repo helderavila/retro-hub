@@ -1,0 +1,59 @@
+<Window x:Class="RetroHub.Mac.Views.AddEmulatorDialog"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:RetroHub.Mac.Views"
+        xmlns:l="using:RetroHub.Mac.Helpers"
+        SystemDecorations="None" CanResize="False" Background="Transparent" TransparencyLevelHint="Transparent"
+        SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        FontFamily="{StaticResource Font.Sans}" Foreground="{StaticResource Brush.Text.Primary}">
+
+    <!-- Add an emulator that is already on the Mac: name, app, systems and arguments -->
+    <Border Width="600" Margin="24" Background="{StaticResource Brush.Surface}" CornerRadius="{StaticResource Radius.Lg}"
+            BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1" BoxShadow="0 8 40 0 #99000000">
+        <StackPanel Margin="24,22,24,20">
+            <TextBlock Text="{l:T 'Add emulator'}" Theme="{StaticResource Text.Title}" />
+            <TextBlock Theme="{StaticResource Text.Secondary}" Margin="0,8,0,0" TextWrapping="Wrap"
+                       Text="{l:T 'Point to the app of an emulator you already have. Retro Hub only launches games with it: nothing is downloaded, copied or changed in it.'}" />
+
+            <TextBlock Text="{l:T NAME}" Theme="{StaticResource Text.Overline}" Margin="0,20,0,6" />
+            <TextBox x:Name="NameBox" Theme="{StaticResource TextBox.Field}" />
+
+            <TextBlock Text="{l:T APP}" Theme="{StaticResource Text.Overline}" Margin="0,16,0,6" />
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Theme="{StaticResource Button.Secondary}" Content="{l:T 'Browse…'}" Margin="8,0,0,0" Click="Browse_Click" />
+                <TextBox x:Name="ExeBox" Theme="{StaticResource TextBox.Field}" />
+            </DockPanel>
+
+            <TextBlock Text="{l:T SYSTEMS}" Theme="{StaticResource Text.Overline}" Margin="0,16,0,8" />
+            <ItemsControl x:Name="SystemsList">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="views:SystemOption">
+                        <ToggleButton Theme="{StaticResource Chip.Toggle}" IsChecked="{Binding IsChecked}" Margin="0,0,6,6" ToolTip.Tip="{Binding Name}">
+                            <TextBlock Text="{Binding Label}" />
+                        </ToggleButton>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Text="{l:T ARGUMENTS}" Theme="{StaticResource Text.Overline}" Margin="0,12,0,6" />
+            <TextBox x:Name="ArgsBox" Theme="{StaticResource TextBox.Field}" FontFamily="{StaticResource Font.Mono}" Text="&quot;{rom}&quot;" />
+            <!-- Text set in code (it has literal braces) -->
+            <TextBlock x:Name="ArgsHint" Theme="{StaticResource Text.Mono.Tertiary}" Margin="0,6,0,0" TextWrapping="Wrap" />
+
+            <Border x:Name="ErrorBox" Margin="0,14,0,0" Background="{StaticResource Brush.Bg}" CornerRadius="{StaticResource Radius.Md}"
+                    BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="1" Padding="12,10" IsVisible="False">
+                <TextBlock x:Name="ErrorText" Foreground="{StaticResource Brush.Status.Error}" FontSize="{StaticResource Font.Size.Sm}" TextWrapping="Wrap" />
+            </Border>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
+                <Button Theme="{StaticResource Button.Secondary}" Content="{l:T Cancel}" IsCancel="True" Margin="0,0,8,0" Click="Cancel_Click" />
+                <Button Theme="{StaticResource Button.Primary}" Content="{l:T Add}" IsDefault="True" Click="Add_Click" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

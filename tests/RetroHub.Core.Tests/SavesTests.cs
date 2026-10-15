@@ -39,11 +39,11 @@ public class SavesTests
         var db = new LibraryDatabase(paths.Database);
         db.Initialize();
         var emuDir = Path.Combine(dir.Path, "emus");
-        var cmd = Path.Combine(Environment.SystemDirectory, "cmd.exe");
+        var cmd = TestPlatform.Shell;
         foreach (var id in new[] { "pcsx2", "retroarch" })
             db.SaveInstalledEmulator(new InstalledEmulator { Id = id, Version = "1", InstallDir = Path.Combine(emuDir, id), ExecutablePath = cmd, InstalledAt = DateTimeOffset.UtcNow });
-        dir.File("emus/retroarch/cores/snes9x_libretro.dll", [0]);
-        return new Env(ManifestRepository.Load(paths.Manifests), db, paths, emuDir);
+        dir.File("emus/retroarch/cores/" + Util.Platform.CoreFileName("snes9x"), [0]);
+        return new Env(ManifestRepository.LoadFor(null, paths.Manifests), db, paths, emuDir);
     }
 
     private static byte[] P2sWithScreenshot()
@@ -69,8 +69,8 @@ public class SavesTests
         dir.File("emus/retroarch/states/Chrono Trigger (USA).state2.png", [0]); // miniatura, não é save
 
         var service = new SaveStateService(env.Manifests, env.Db);
-        var ps2 = service.Find(new Game { SystemId = "ps2", Serial = "SLUS-20946", Path = @"C:\x\Black.iso" });
-        var snes = service.Find(new Game { SystemId = "snes", Path = @"C:\roms\Chrono Trigger (USA).sfc" });
+        var ps2 = service.Find(new Game { SystemId = "ps2", Serial = "SLUS-20946", Path = Path.Combine(dir.Path, "x", "Black.iso") });
+        var snes = service.Find(new Game { SystemId = "snes", Path = Path.Combine(dir.Path, "roms", "Chrono Trigger (USA).sfc") });
 
         Assert.Equal([3, 1], ps2.Select(s => s.Slot));
         Assert.NotNull(SaveStateService.Thumbnail(ps2[0]));
@@ -85,13 +85,14 @@ public class SavesTests
         var env = Create(dir);
         var state = dir.File("emus/retroarch/states/Chrono.state3", [0]);
         var launcher = new GameLauncher(env.Manifests, env.Db, new ControllerConfigurator(env.Db));
-        var game = new Game { SystemId = "snes", Path = @"C:\roms\Chrono.sfc" };
+        var rom = Path.Combine(dir.Path, "roms", "Chrono.sfc");
+        var game = new Game { SystemId = "snes", Path = rom };
 
         var normal = launcher.Plan(game);
         var resumed = launcher.Plan(game, new SaveState(state, "retroarch", "RetroArch", 3, DateTimeOffset.Now, 1, true));
 
-        Assert.Equal("-L snes9x \"C:\\roms\\Chrono.sfc\"", normal.Arguments);
-        Assert.Equal("-L snes9x \"C:\\roms\\Chrono.sfc\" --entryslot=3", resumed.Arguments);
+        Assert.Equal($"-L snes9x \"{rom}\"", normal.Arguments);
+        Assert.Equal($"-L snes9x \"{rom}\" --entryslot=3", resumed.Arguments);
     }
 
     [Fact]

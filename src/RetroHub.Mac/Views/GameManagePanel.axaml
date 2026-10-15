@@ -1,0 +1,77 @@
+<!-- A game's collections, emulator, file and verification — used on the game page. -->
+<UserControl x:Class="RetroHub.Mac.Views.GameManagePanel"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:RetroHub.Mac.ViewModels"
+             xmlns:l="using:RetroHub.Mac.Helpers"
+             x:DataType="vm:GameDetailsViewModel">
+    <StackPanel>
+        <!-- Collections -->
+        <TextBlock Text="{l:T 'COLLECTIONS'}" Theme="{StaticResource Text.Overline}" Margin="0,0,0,10" />
+        <ItemsControl ItemsSource="{Binding Collections}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:CollectionToggle">
+                    <ToggleButton Theme="{StaticResource Chip.Toggle}" IsChecked="{Binding IsMember}" Margin="0,0,6,6">
+                        <TextBlock Text="{Binding Name}" />
+                    </ToggleButton>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Theme="{StaticResource Button.Secondary.Small}" Content="{l:T 'Create'}"
+                    Command="{Binding CreateCollectionCommand}" Margin="8,0,0,0" />
+            <TextBox Theme="{StaticResource TextBox.Field}" Height="28" Text="{Binding NewCollectionName}">
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding CreateCollectionCommand}" />
+                </TextBox.KeyBindings>
+            </TextBox>
+        </DockPanel>
+        <TextBlock Text="{l:T 'new collection: type the name and press Enter'}" Theme="{StaticResource Text.Mono.Tertiary}" Margin="0,4,0,0" />
+
+        <!-- Emulator -->
+        <TextBlock Text="{l:T 'OPEN WITH'}" Theme="{StaticResource Text.Overline}" Margin="0,28,0,10" />
+        <ListBox Theme="{StaticResource Chips}" ItemsSource="{Binding EmulatorChoices}" SelectedItem="{Binding SelectedEmulator}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:EmulatorChoice">
+                    <TextBlock Text="{Binding Label}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- File -->
+        <TextBlock Text="{l:T 'FILE'}" Theme="{StaticResource Text.Overline}" Margin="0,22,0,8" />
+        <TextBlock Text="{Binding FilePath}" Theme="{StaticResource Text.Mono}" TextWrapping="Wrap" />
+        <TextBlock Margin="0,6,0,0" Theme="{StaticResource Text.Mono.Tertiary}">
+            <Run Text="{Binding SizeText}" /><Run Text="{Binding SerialText}" />
+        </TextBlock>
+        <TextBlock Text="{Binding OfficialNameText}" Margin="0,4,0,0" Theme="{StaticResource Text.Mono.Tertiary}"
+                   TextWrapping="Wrap" IsVisible="{Binding OfficialName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+        <!-- Verification -->
+        <Border Margin="0,16,0,0" Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}"
+                BorderThickness="1" CornerRadius="{StaticResource Radius.Md}" Padding="14,12">
+            <StackPanel>
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Theme="{StaticResource Button.Secondary.Small}" Command="{Binding VerifyCommand}">
+                        <Panel>
+                            <TextBlock Text="{l:T 'Verify file'}" IsVisible="{Binding !IsVerifying}" />
+                            <TextBlock Text="{l:T 'Cancel'}" IsVisible="{Binding IsVerifying}" />
+                        </Panel>
+                    </Button>
+                    <Ellipse DockPanel.Dock="Left" Theme="{StaticResource StatusDot}" Fill="{Binding VerifyKind, Converter={StaticResource StatusBrush}}" />
+                    <TextBlock Text="{Binding VerifyText}" Margin="10,0,12,0" VerticalAlignment="Center" TextWrapping="Wrap"
+                               FontSize="{StaticResource Font.Size.Sm}" Foreground="{StaticResource Brush.Text.Secondary}" />
+                </DockPanel>
+                <ProgressBar Margin="0,12,0,0" Minimum="0" Maximum="1" Value="{Binding VerifyProgress, Mode=OneWay}"
+                             IsVisible="{Binding IsVerifying}" />
+                <TextBlock Margin="0,8,0,0" Theme="{StaticResource Text.Tertiary}" TextWrapping="Wrap"
+                           Text="{l:T 'Compares the whole file with the official list (No-Intro/Redump). Large discs take a few minutes.'}" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,272 @@
+<UserControl x:Class="RetroHub.Mac.Views.EmulatorsView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:RetroHub.Mac.Controls"
+             xmlns:vm="using:RetroHub.Mac.ViewModels"
+             xmlns:l="using:RetroHub.Mac.Helpers"
+             x:DataType="vm:EmulatorsViewModel">
+
+    <!-- Columns shared by the header and the rows (WPF keeps them as GridLength resources):
+         check 36 · name 2.4* · systems 2* · version 1.3* · status 1.4* · actions 290 -->
+    <UserControl.Resources>
+        <!-- Chip text in the interface language; the selected item stays the manifest key -->
+        <DataTemplate x:Key="TranslatedItem" x:DataType="x:String">
+            <TextBlock Text="{Binding Converter={StaticResource Translate}}" />
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- Resting opacity here: a value set inside the DataTemplate would beat the hover style -->
+        <Style Selector="Panel.row Border.rowHover">
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.15" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Panel.row:pointerover Border.rowHover">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="{StaticResource Page.Padding}">
+
+            <!-- Header -->
+            <Grid RowDefinitions="Auto,Auto">
+                <StackPanel MaxWidth="560" HorizontalAlignment="Left" Margin="0,0,24,0">
+                    <TextBlock Text="{l:T Emulators}" Theme="{StaticResource Text.Display}" />
+                    <TextBlock Theme="{StaticResource Text.Secondary}" Margin="0,6,0,0"
+                               Text="{l:T 'Apps downloaded from official sources. The SHA-256 is verified before extracting whenever the source publishes one.'}" />
+                </StackPanel>
+                <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,24,0,0">
+                    <Button Theme="{StaticResource Button.Secondary}" Command="{Binding ApplyRecommendedGraphicsCommand}" Margin="0,0,8,8"
+                            ToolTip.Tip="{l:T 'Applies the quality level recommended for your Mac to every installed emulator'}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Icon Data="{StaticResource Icon.Tv}" Width="14" Height="14" Margin="0,0,8,0" />
+                            <TextBlock Text="{l:T 'Recommended graphics'}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Theme="{StaticResource Button.Secondary}" Command="{Binding CheckUpdatesCommand}" Margin="0,0,8,8"
+                            ToolTip.Tip="{l:T 'Checks for new versions of the installed emulators'}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Icon Data="{StaticResource Icon.Refresh}" Width="14" Height="14" Margin="0,0,8,0" />
+                            <TextBlock Text="{l:T Updates}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Theme="{StaticResource Button.Secondary}" Command="{Binding ConfigureControllerCommand}" Margin="0,0,8,8"
+                            ToolTip.Tip="{l:T 'Maps the controller to player 1 in every installed emulator'}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Icon Data="{StaticResource Icon.Gamepad}" Width="14" Height="14" Margin="0,0,8,0" />
+                            <TextBlock Text="{l:T 'Set up controller'}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Theme="{StaticResource Button.Secondary}" Command="{Binding CheckDependenciesCommand}" Margin="0,0,8,8"
+                            ToolTip.Tip="{l:T 'Checks Rosetta 2 (needed by PCSX2 on Apple Silicon)'}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Icon Data="{StaticResource Icon.Package}" Width="14" Height="14" Margin="0,0,8,0" />
+                            <TextBlock Text="{l:T Dependencies}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Theme="{StaticResource Button.Secondary}" Command="{Binding AddEmulatorCommand}" Margin="0,0,8,8"
+                            ToolTip.Tip="{l:T 'Use an emulator you already have on your Mac (point to its app)'}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Icon Data="{StaticResource Icon.Plus}" Width="14" Height="14" Margin="0,0,8,0" />
+                            <TextBlock Text="{l:T 'Add emulator'}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Theme="{StaticResource Button.Ghost}" Command="{Binding ImportManifestCommand}" Margin="0,0,8,8"
+                            ToolTip.Tip="{l:T 'Imports a .json manifest (same format as the ones bundled with Retro Hub: download, controller, graphics, saves)'}">
+                        <TextBlock Text="{l:T 'Import .json'}" />
+                    </Button>
+                    <Button Theme="{StaticResource Button.Primary}" Command="{Binding InstallSelectedCommand}" Margin="0,0,0,8"
+                            ToolTip.Tip="{l:T 'Installs the checked ones (or every missing one, if none is checked)'}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Icon Data="{StaticResource Icon.Download}" Width="14" Height="14" Margin="0,0,8,0" />
+                            <TextBlock Text="{l:T 'Install selected'}" />
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
+            </Grid>
+
+            <!-- Install panel -->
+            <ContentControl Theme="{StaticResource Surface}" Margin="{StaticResource Section.Gap}" IsVisible="{Binding ShowPanel}">
+                <StackPanel>
+                    <Grid Margin="20,16,12,14">
+                        <StackPanel>
+                            <TextBlock Text="{Binding PanelTitle}" FontWeight="{StaticResource Font.Weight.Medium}" />
+                            <TextBlock Text="{Binding Stage}" Theme="{StaticResource Text.Tertiary}" Margin="0,4,0,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Fraction, StringFormat={}{0:P0}}" Theme="{StaticResource Text.Mono}" Margin="0,0,12,0" />
+                            <Button Theme="{StaticResource Button.Ghost}" Content="{l:T Cancel}" Command="{Binding CancelCommand}"
+                                    IsVisible="{Binding IsInstalling}" />
+                            <Button Theme="{StaticResource Button.Icon}" Command="{Binding ClosePanelCommand}" ToolTip.Tip="{l:T Close}"
+                                    IsVisible="{Binding !IsInstalling}">
+                                <ui:Icon Data="{StaticResource Icon.X}" Width="12" Height="12" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                    <ProgressBar Minimum="0" Maximum="1" Value="{Binding Fraction, Mode=OneWay}" Margin="20,0" />
+                    <Border Margin="0,16,0,0" Background="{StaticResource Brush.Bg}" CornerRadius="0,0,11,11"
+                            BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="0,1,0,0">
+                        <TextBox x:Name="LogBox" Theme="{StaticResource TextBox.Log}" Text="{Binding Log, Mode=OneWay}" Height="200" />
+                    </Border>
+                </StackPanel>
+            </ContentControl>
+
+            <!-- Table -->
+            <ContentControl Theme="{StaticResource Surface}" Margin="{StaticResource Section.Gap}">
+                <StackPanel>
+                    <Grid Margin="{StaticResource Row.Padding}" Height="40" ColumnDefinitions="36,2.4*,2*,1.3*,1.4*,290">
+                        <TextBlock Grid.Column="1" Text="{l:T EMULATOR}" Theme="{StaticResource Text.Overline}" />
+                        <TextBlock Grid.Column="2" Text="{l:T SYSTEMS}" Theme="{StaticResource Text.Overline}" />
+                        <TextBlock Grid.Column="3" Text="{l:T VERSION}" Theme="{StaticResource Text.Overline}" />
+                        <TextBlock Grid.Column="4" Text="{l:T STATUS}" Theme="{StaticResource Text.Overline}" />
+                    </Grid>
+                    <Border Theme="{StaticResource Divider}" />
+
+                    <ItemsControl x:Name="Rows" ItemsSource="{Binding Items}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:EmulatorItemViewModel">
+                                <Panel Classes="row" Background="Transparent">
+                                    <Border Classes="rowHover" Background="{StaticResource Brush.Overlay.Hover}" />
+                                    <StackPanel>
+                                        <Grid Margin="{StaticResource Row.Padding}" MinHeight="68" ColumnDefinitions="36,2.4*,2*,1.3*,1.4*,290">
+
+                                            <CheckBox Grid.Column="0" IsChecked="{Binding Selected}" VerticalAlignment="Center" HorizontalAlignment="Left" />
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,14,16,14">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="{StaticResource Font.Weight.Medium}" />
+                                                    <Border Theme="{StaticResource Badge}" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                            IsVisible="{Binding IsCustom}"
+                                                            ToolTip.Tip="{l:T 'Added by you (kept outside the app folder, so Retro Hub updates do not delete it)'}">
+                                                        <TextBlock Text="{l:T yours}" Theme="{StaticResource Badge.Text}" />
+                                                    </Border>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Description}" Theme="{StaticResource Text.Tertiary}" Margin="0,3,0,0"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding SourceText}" Theme="{StaticResource Text.Mono.Tertiary}" Margin="0,3,0,0" />
+                                                <TextBlock Text="{Binding ControllerText}" Theme="{StaticResource Text.Mono.Tertiary}" Margin="0,2,0,0"
+                                                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ControllerText}" />
+                                            </StackPanel>
+
+                                            <ItemsControl Grid.Column="2" ItemsSource="{Binding Systems}" VerticalAlignment="Center" Margin="0,8,12,4">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="x:String">
+                                                        <Border Theme="{StaticResource Badge}" Margin="0,0,4,4">
+                                                            <TextBlock Text="{Binding}" Theme="{StaticResource Badge.Text}" />
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <TextBlock Grid.Column="3" Text="{Binding VersionText}" Theme="{StaticResource Text.Mono}"
+                                                       TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+
+                                            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Background="Transparent"
+                                                        ToolTip.Tip="{Binding StatusTooltip}">
+                                                <Ellipse Theme="{StaticResource StatusDot}" Fill="{Binding StatusKind, Converter={StaticResource StatusBrush}}" />
+                                                <TextBlock Text="{Binding StatusText}" Margin="8,0,0,0" FontSize="{StaticResource Font.Size.Sm}"
+                                                           Foreground="{StaticResource Brush.Text.Secondary}" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <ToggleButton Theme="{StaticResource Chip.Toggle}" Margin="0,6,6,0" IsChecked="{Binding ShowSettings}"
+                                                              ToolTip.Tip="{l:T 'Resolution and aspect ratio'}"
+                                                              IsVisible="{Binding HasGraphics}">
+                                                    <TextBlock Text="{l:T Graphics}" />
+                                                </ToggleButton>
+                                                <Button Theme="{StaticResource Button.Icon}" Margin="0,0,6,0" ToolTip.Tip="{l:T 'Open folder'}"
+                                                        Command="{Binding #Rows.((vm:EmulatorsViewModel)DataContext).OpenFolderCommand}" CommandParameter="{Binding}"
+                                                        IsVisible="{Binding IsInstalled}">
+                                                    <ui:Icon Data="{StaticResource Icon.Folder}" Width="14" Height="14" />
+                                                </Button>
+                                                <Button Theme="{StaticResource Button.Secondary.Small}" Content="{Binding ActionLabel}"
+                                                        Command="{Binding #Rows.((vm:EmulatorsViewModel)DataContext).InstallCommand}" CommandParameter="{Binding}" />
+                                                <Button Theme="{StaticResource Button.Icon}" Margin="4,0,0,0" ToolTip.Tip="{l:T 'Remove from the list (emulator added by you)'}"
+                                                        Command="{Binding #Rows.((vm:EmulatorsViewModel)DataContext).RemoveCustomCommand}" CommandParameter="{Binding}"
+                                                        IsVisible="{Binding IsCustom}">
+                                                    <ui:Icon Data="{StaticResource Icon.Trash}" Width="14" Height="14" />
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Graphics settings -->
+                                        <Border Margin="56,0,20,16" Padding="16,12" Background="{StaticResource Brush.Bg}" CornerRadius="{StaticResource Radius.Md}"
+                                                BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="1"
+                                                IsVisible="{Binding ShowSettings}">
+                                            <StackPanel>
+                                                <!-- Preset level -->
+                                                <DockPanel IsVisible="{Binding HasPresets}">
+                                                    <TextBlock Text="{l:T QUALITY}" Theme="{StaticResource Text.Overline}" Width="170" Margin="0,0,0,6" />
+                                                    <ListBox Theme="{StaticResource Chips}" ItemsSource="{Binding PresetChoices}" SelectedItem="{Binding SelectedPreset}"
+                                                             ItemTemplate="{StaticResource TranslatedItem}" />
+                                                </DockPanel>
+                                                <TextBlock Text="{Binding RecommendedText}" Theme="{StaticResource Text.Mono.Tertiary}" Margin="170,0,0,10"
+                                                           IsVisible="{Binding HasPresets}" />
+                                                <DockPanel IsVisible="{Binding HasResolution}">
+                                                    <TextBlock Text="{l:T 'INTERNAL RESOLUTION'}" Theme="{StaticResource Text.Overline}" Width="170" Margin="0,0,0,6" />
+                                                    <ListBox Theme="{StaticResource Chips}" ItemsSource="{Binding ResolutionChoices}" SelectedItem="{Binding SelectedResolution}"
+                                                             ItemTemplate="{StaticResource TranslatedItem}" />
+                                                </DockPanel>
+                                                <DockPanel IsVisible="{Binding HasAspect}" Margin="0,4,0,0">
+                                                    <TextBlock Text="{l:T 'ASPECT RATIO'}" Theme="{StaticResource Text.Overline}" Width="170" Margin="0,0,0,6" />
+                                                    <ListBox Theme="{StaticResource Chips}" ItemsSource="{Binding AspectChoices}" SelectedItem="{Binding SelectedAspect}"
+                                                             ItemTemplate="{StaticResource TranslatedItem}" />
+                                                </DockPanel>
+                                                <!-- On/off switches -->
+                                                <ItemsControl ItemsSource="{Binding Toggles}" Margin="0,8,0,0">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:GraphicsToggleItem">
+                                                            <StackPanel Margin="0,0,0,10">
+                                                                <CheckBox IsChecked="{Binding IsOn}" Content="{Binding Label}" />
+                                                                <TextBlock Text="{Binding Hint}" Theme="{StaticResource Text.Tertiary}" Margin="30,3,0,0" TextWrapping="Wrap" />
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <TextBlock Margin="0,2,0,0" Theme="{StaticResource Text.Tertiary}" TextWrapping="Wrap"
+                                                           Text="{l:T 'Applies to every game on this emulator from the next game on (close the emulator before changing). Higher resolution makes 3D games sharper; the level becomes custom if you change the resolution by hand.'}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                    <Border Theme="{StaticResource Divider}" VerticalAlignment="Bottom" />
+                                </Panel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ContentControl>
+
+            <!-- Achievements -->
+            <TextBlock Text="{l:T 'Achievements (RetroAchievements)'}" Theme="{StaticResource Text.Title}" Margin="0,48,0,0" />
+            <TextBlock Theme="{StaticResource Text.Secondary}" Margin="0,6,0,0" MaxWidth="640" HorizontalAlignment="Left"
+                       Text="{l:T 'Trophies for classic games. Create a free account at retroachievements.org and sign in with it here. RetroArch signs in automatically; in PCSX2 and DuckStation achievements are turned on and you sign in once inside them.'}" />
+            <ContentControl Theme="{StaticResource Surface}" Margin="0,20,0,0">
+                <StackPanel Margin="20,16">
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel Width="220" Margin="0,0,12,0">
+                            <TextBlock Text="{l:T USERNAME}" Theme="{StaticResource Text.Overline}" Margin="0,0,0,6" />
+                            <TextBox Theme="{StaticResource TextBox.Field}" Text="{Binding AchievementsUser}" />
+                        </StackPanel>
+                        <StackPanel Width="220" Margin="0,0,12,0">
+                            <TextBlock Text="{l:T PASSWORD}" Theme="{StaticResource Text.Overline}" Margin="0,0,0,6" />
+                            <TextBox x:Name="AchievementsPassword" Theme="{StaticResource TextBox.Password}" />
+                        </StackPanel>
+                        <Button Theme="{StaticResource Button.Primary}" VerticalAlignment="Bottom" Content="{l:T 'Enable achievements'}" Click="EnableAchievements_Click" />
+                    </StackPanel>
+                    <TextBlock Margin="0,12,0,0" Theme="{StaticResource Text.Tertiary}" TextWrapping="Wrap"
+                               Text="{l:T 'Retro Hub does not store your password: it only goes to the RetroArch config file (retroarch.cfg), which swaps it for a token on the first sign-in.'}" />
+                </StackPanel>
+            </ContentControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

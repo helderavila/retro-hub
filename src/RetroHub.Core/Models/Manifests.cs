@@ -82,6 +82,15 @@ public sealed class EmulatorManifest
     /// <summary>Folder (relative to the install) where the emulator looks for BIOS.</summary>
     public string? BiosDir { get; set; }
 
+    /// <summary>
+    /// Where the emulator keeps its config, saves and BIOS, relative to the install folder (e.g. a HOME redirected inside it).
+    /// When set, the controller, graphics and achievements files, save folders and biosDir are relative to it.
+    /// </summary>
+    public string? DataDir { get; set; }
+
+    /// <summary>Environment variables for the emulator process (e.g. "HOME": "{emuDir}/home"). Placeholder: {emuDir}.</summary>
+    public Dictionary<string, string> Environment { get; set; } = [];
+
     public List<LaunchProfile> Launch { get; set; } = [];
     public CoreSource? Cores { get; set; }
 
@@ -109,6 +118,10 @@ public sealed class EmulatorManifest
 
     [System.Text.Json.Serialization.JsonIgnore]
     public bool IsCustom => UserManifestPath is not null;
+
+    /// <summary>false when the manifest has no block for this platform (e.g. a Windows-only download on macOS).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool SupportedHere { get; set; } = true;
 }
 
 public sealed class GraphicsConfig
@@ -253,7 +266,7 @@ public sealed class LaunchProfile
 
 public sealed class CoreSource
 {
-    /// <summary>URL with {core}, e.g. .../latest/{core}_libretro.dll.zip</summary>
+    /// <summary>URL with {core} (and {arch} = arm64 | x86_64 on macOS), e.g. .../latest/{core}_libretro.dll.zip</summary>
     public string UrlTemplate { get; set; } = "";
     public string TargetDir { get; set; } = "cores";
 }

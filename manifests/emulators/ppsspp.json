@@ -39,5 +39,44 @@
         "on": { "Graphics": { "ReplaceTextures": "True" } },
         "off": { "Graphics": { "ReplaceTextures": "False" } } }
     ]
+  },
+  // ── macOS ── Universal app from the official site, signed and notarized. PPSSPP has no portable mode on macOS:
+  // it runs with HOME inside this folder, so the memory stick is home/.config/ppsspp (PSP/SYSTEM, PSP/SAVEDATA…).
+  "macos": {
+    "source": {
+      "type": "url",
+      "version": "1.20.4",
+      "url": "https://www.ppsspp.org/files/1_20_4/PPSSPP_macOS.dmg",
+      "sha256": null
+    },
+    "executable": "PPSSPPSDL.app/Contents/MacOS/PPSSPPSDL",
+    "postInstall": [
+      { "action": "createDir", "path": "home/.config/ppsspp/PSP/SYSTEM" }
+    ],
+    "environment": { "HOME": "{emuDir}/home" },
+    "dataDir": "home/.config/ppsspp",
+    "launch": [
+      { "systems": ["psp"], "args": "--fullscreen \"{rom}\"" }
+    ],
+    // Since 1.20, --state=FILE opens the game right at a save state.
+    "saves": {
+      "states": [ { "dir": "PSP/PPSSPP_STATE", "pattern": "{serialNoDash}_*.ppst", "slot": "_(\\d+)\\.ppst$" } ],
+      "loadStateArgs": "--fullscreen --state=\"{state}\" \"{rom}\"",
+      "backup": ["PSP/SAVEDATA", "PSP/PPSSPP_STATE"]
+    },
+    "graphics": {
+      "file": "PSP/SYSTEM/ppsspp.ini",
+      "presets": { "values": {
+        "Original": { "Graphics": { "InternalResolution": "1", "AnisotropyLevel": "0", "MultiSampleLevel": "0" } },
+        "Enhanced": { "Graphics": { "InternalResolution": "3", "AnisotropyLevel": "4", "MultiSampleLevel": "0" } },
+        "Maximum": { "Graphics": { "InternalResolution": "8", "AnisotropyLevel": "4", "MultiSampleLevel": "2" } } } },
+      "resolution": { "values": { "1x": { "Graphics": { "InternalResolution": "1" } }, "2x": { "Graphics": { "InternalResolution": "2" } }, "3x": { "Graphics": { "InternalResolution": "3" } }, "4x": { "Graphics": { "InternalResolution": "4" } }, "6x": { "Graphics": { "InternalResolution": "6" } }, "4K": { "Graphics": { "InternalResolution": "8" } } } },
+      "toggles": [
+        { "id": "hdtextures", "label": "HD textures",
+          "hint": "Put the pack in home/.config/ppsspp/PSP/TEXTURES/<game ID> (PPSSPP folder).",
+          "on": { "Graphics": { "ReplaceTextures": "True" } },
+          "off": { "Graphics": { "ReplaceTextures": "False" } } }
+      ]
+    }
   }
 }

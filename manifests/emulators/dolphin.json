@@ -79,5 +79,46 @@
         "on": { "Settings": { "HiresTextures": "True" } },
         "off": { "Settings": { "HiresTextures": "False" } } }
     ]
+  },
+  // ── macOS ── Universal app, signed and notarized. portable.txt next to Dolphin.app keeps User/ in this folder.
+  "macos": {
+    "source": {
+      "type": "url",
+      "version": "2506",
+      "url": "https://dl.dolphin-emu.org/releases/{version}/dolphin-{version}-universal.dmg",
+      "sha256": null
+    },
+    "executable": "Dolphin.app/Contents/MacOS/Dolphin",
+    "dependencies": [],
+    // macOS has no XInput: Dolphin reads controllers through SDL and addresses them by the name SDL reports.
+    "controller": {
+      "file": "User/Config/GCPadNew.ini",
+      "format": "ini",
+      "description": "Players 1 and 2 · SDL controller",
+      "settings": {
+        "GCPad2": {
+          "Device": "SDL/{port1}/{name1}",
+          "Buttons/A": "`Button A`", "Buttons/B": "`Button B`", "Buttons/X": "`Button X`", "Buttons/Y": "`Button Y`",
+          "Buttons/Z": "`Shoulder R`", "Buttons/Start": "`Start`",
+          "Main Stick/Up": "`Left Y+`", "Main Stick/Down": "`Left Y-`", "Main Stick/Left": "`Left X-`", "Main Stick/Right": "`Left X+`",
+          "C-Stick/Up": "`Right Y+`", "C-Stick/Down": "`Right Y-`", "C-Stick/Left": "`Right X-`", "C-Stick/Right": "`Right X+`",
+          "Triggers/L": "`Trigger L`", "Triggers/R": "`Trigger R`",
+          "Triggers/L-Analog": "`Trigger L`", "Triggers/R-Analog": "`Trigger R`",
+          "D-Pad/Up": "`Pad N`", "D-Pad/Down": "`Pad S`", "D-Pad/Left": "`Pad W`", "D-Pad/Right": "`Pad E`",
+          "Rumble/Motor": "`Motor L` | `Motor R`"
+        },
+        "GCPad1": {
+          "Device": "SDL/{port0}/{name0}",
+          "Buttons/A": "`Button A`", "Buttons/B": "`Button B`", "Buttons/X": "`Button X`", "Buttons/Y": "`Button Y`",
+          "Buttons/Z": "`Shoulder R`", "Buttons/Start": "`Start`",
+          "Main Stick/Up": "`Left Y+`", "Main Stick/Down": "`Left Y-`", "Main Stick/Left": "`Left X-`", "Main Stick/Right": "`Left X+`",
+          "C-Stick/Up": "`Right Y+`", "C-Stick/Down": "`Right Y-`", "C-Stick/Left": "`Right X-`", "C-Stick/Right": "`Right X+`",
+          "Triggers/L": "`Trigger L`", "Triggers/R": "`Trigger R`",
+          "Triggers/L-Analog": "`Trigger L`", "Triggers/R-Analog": "`Trigger R`",
+          "D-Pad/Up": "`Pad N`", "D-Pad/Down": "`Pad S`", "D-Pad/Left": "`Pad W`", "D-Pad/Right": "`Pad E`",
+          "Rumble/Motor": "`Motor L` | `Motor R`"
+        }
+      }
+    }
   }
 }

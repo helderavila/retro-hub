@@ -1,0 +1,144 @@
+<UserControl x:Class="RetroHub.Mac.Views.BiosView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:RetroHub.Mac.Controls"
+             xmlns:vm="using:RetroHub.Mac.ViewModels"
+             xmlns:l="using:RetroHub.Mac.Helpers"
+             x:DataType="vm:BiosViewModel"
+             DragDrop.AllowDrop="True">
+
+    <!-- Columns: file 1.3* · MD5 1.9* · description 2* · status 1.8* -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="{StaticResource Page.Padding}">
+
+            <Grid>
+                <StackPanel MaxWidth="600" HorizontalAlignment="Left">
+                    <TextBlock Text="BIOS" Theme="{StaticResource Text.Display}" />
+                    <TextBlock Theme="{StaticResource Text.Secondary}" Margin="0,6,0,0"
+                               Text="{l:T 'Retro Hub does not download BIOS files, they are copyrighted firmware. Point to where your console dumps are: each file is recognized by its MD5 (the name does not matter), renamed and copied to the emulators.'}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Theme="{StaticResource Button.Secondary}" Command="{Binding ImportFilesCommand}" Margin="0,0,8,0" Content="{l:T 'Files…'}" />
+                    <Button Theme="{StaticResource Button.Primary}" Command="{Binding ImportFolderCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Icon Data="{StaticResource Icon.Download}" Width="14" Height="14" Margin="0,0,8,0" />
+                            <TextBlock Text="{l:T 'Import BIOS'}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Drop zone (dashed border) -->
+            <Panel Margin="0,28,0,0">
+                <Border x:Name="DropZone" CornerRadius="{StaticResource Radius.Lg}" Background="{StaticResource Brush.Bg.Subtle}" />
+                <Rectangle RadiusX="12" RadiusY="12" Stroke="{StaticResource Brush.Border.Strong}" StrokeThickness="1"
+                           StrokeDashArray="4,4" IsHitTestVisible="False" />
+                <DockPanel Margin="20,18">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Theme="{StaticResource Button.Icon}" Command="{Binding OpenFolderCommand}" ToolTip.Tip="{l:T 'Open the BIOS folder'}" Margin="0,0,4,0">
+                            <ui:Icon Data="{StaticResource Icon.External}" Width="14" Height="14" />
+                        </Button>
+                        <Button Theme="{StaticResource Button.Icon}" Command="{Binding VerifyCommand}" ToolTip.Tip="{l:T 'Check again'}" Margin="0,0,4,0">
+                            <ui:Icon Data="{StaticResource Icon.Refresh}" Width="14" Height="14" />
+                        </Button>
+                        <Button Theme="{StaticResource Button.Secondary.Small}" Command="{Binding SyncCommand}" Content="{l:T 'Copy to emulators'}" />
+                    </StackPanel>
+                    <ui:Icon DockPanel.Dock="Left" Data="{StaticResource Icon.Download}" Width="18" Height="18"
+                             Foreground="{StaticResource Brush.Text.Tertiary}" VerticalAlignment="Center" />
+                    <StackPanel Margin="16,0,16,0" VerticalAlignment="Center">
+                        <TextBlock Text="{l:T 'Drag folders, .bin or .zip files here'}" Foreground="{StaticResource Brush.Text.Secondary}" />
+                        <TextBlock Text="{Binding BiosDir}" Margin="0,4,0,0" Theme="{StaticResource Text.Mono.Tertiary}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </DockPanel>
+            </Panel>
+
+            <StackPanel Orientation="Horizontal" Margin="2,16,0,0">
+                <Ellipse Theme="{StaticResource StatusDot}" Fill="{StaticResource Brush.Text.Primary}"
+                         IsVisible="{Binding IsBusy}" Margin="0,0,10,0" />
+                <TextBlock Text="{Binding BusyText}" Theme="{StaticResource Text.Mono.Tertiary}" Margin="0,0,12,0"
+                           IsVisible="{Binding BusyText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <TextBlock Text="{Binding Summary}" Theme="{StaticResource Text.Mono.Tertiary}" />
+            </StackPanel>
+            <TextBlock Margin="2,8,0,0" Theme="{StaticResource Text.Mono.Tertiary}">
+                <Run Text="{l:T 'no BIOS needed ·'}" /> <Run Text="{Binding NoBiosNeeded}" Foreground="{StaticResource Brush.Text.Secondary}" />
+                <Run Text="{l:T '   (* emulated BIOS)'}" />
+            </TextBlock>
+
+            <!-- Notice -->
+            <Border Margin="0,16,0,0" IsVisible="{Binding Notice, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="1" CornerRadius="{StaticResource Radius.Md}" Padding="14,0,6,0" MinHeight="40">
+                <DockPanel>
+                    <Ellipse DockPanel.Dock="Left" Theme="{StaticResource StatusDot}" Fill="{Binding Notice.Kind, Converter={StaticResource StatusBrush}, FallbackValue={x:Null}}" />
+                    <Button DockPanel.Dock="Right" Theme="{StaticResource Button.Icon}" Command="{Binding DismissNoticeCommand}">
+                        <ui:Icon Data="{StaticResource Icon.X}" Width="12" Height="12" />
+                    </Button>
+                    <TextBlock Text="{Binding Notice.Message, FallbackValue=''}" Margin="10,10" Theme="{StaticResource Text.Secondary}" />
+                </DockPanel>
+            </Border>
+
+            <!-- One panel per system -->
+            <ItemsControl ItemsSource="{Binding Systems}" Margin="0,24,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BiosSystemItem">
+                        <ContentControl Theme="{StaticResource Surface}" Margin="0,0,0,16">
+                            <StackPanel>
+                                <DockPanel Margin="20,14">
+                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Ellipse Theme="{StaticResource StatusDot}" Fill="{Binding StatusKind, Converter={StaticResource StatusBrush}}" />
+                                        <TextBlock Text="{Binding StatusText}" Margin="8,0,0,0" FontSize="{StaticResource Font.Size.Sm}"
+                                                   Foreground="{StaticResource Brush.Text.Secondary}" />
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}" FontWeight="{StaticResource Font.Weight.Medium}"
+                                                       FontSize="{StaticResource Font.Size.Md}" VerticalAlignment="Center" />
+                                            <Border Theme="{StaticResource Badge}" Margin="10,0,0,0">
+                                                <TextBlock Text="{Binding ShortName}" Theme="{StaticResource Badge.Text}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Note}" Theme="{StaticResource Text.Tertiary}" Margin="0,4,0,0"
+                                                   IsVisible="{Binding Note, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                    </StackPanel>
+                                </DockPanel>
+                                <Border Theme="{StaticResource Divider}" />
+
+                                <Grid Margin="{StaticResource Row.Padding}" Height="34" ColumnDefinitions="1.3*,1.9*,2*,1.8*">
+                                    <TextBlock Grid.Column="0" Text="{l:T FILE}" Theme="{StaticResource Text.Overline}" />
+                                    <TextBlock Grid.Column="1" Text="MD5" Theme="{StaticResource Text.Overline}" />
+                                    <TextBlock Grid.Column="2" Text="{l:T DESCRIPTION}" Theme="{StaticResource Text.Overline}" />
+                                    <TextBlock Grid.Column="3" Text="{l:T STATUS}" Theme="{StaticResource Text.Overline}" />
+                                </Grid>
+
+                                <ItemsControl ItemsSource="{Binding Rows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:BiosRow">
+                                            <StackPanel>
+                                                <Border Theme="{StaticResource Divider}" />
+                                                <Grid Margin="{StaticResource Row.Padding}" MinHeight="44" ToolTip.Tip="{Binding FoundPath}"
+                                                      Background="Transparent" ColumnDefinitions="1.3*,1.9*,2*,1.8*">
+                                                    <TextBlock Grid.Column="0" Text="{Binding File}" Theme="{StaticResource Text.Mono}"
+                                                               Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding Md5}" Theme="{StaticResource Text.Mono.Tertiary}"
+                                                               TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding Description}" FontSize="{StaticResource Font.Size.Sm}"
+                                                               Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                                                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Ellipse Theme="{StaticResource StatusDot}" Fill="{Binding StatusKind, Converter={StaticResource StatusBrush}}" />
+                                                        <TextBlock Text="{Binding StatusText}" Margin="8,0,0,0" FontSize="{StaticResource Font.Size.Sm}"
+                                                                   Foreground="{StaticResource Brush.Text.Secondary}" TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ContentControl>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

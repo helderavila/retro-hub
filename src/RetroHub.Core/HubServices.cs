@@ -31,7 +31,8 @@ public sealed class HubServices : IDisposable
     public required BackupService Backup { get; init; }
     public required CustomEmulators CustomEmulators { get; init; }
 
-    public static HubServices Create(string appBaseDirectory)
+    /// <param name="gamepads">Connected controllers for the controller mapping; null = the platform default (XInput on Windows).</param>
+    public static HubServices Create(string appBaseDirectory, Func<IReadOnlyList<IGamepadDevice>>? gamepads = null)
     {
         var paths = AppPaths.Create(appBaseDirectory);
         var manifests = ManifestRepository.Load(paths.Manifests, paths.UserManifests);
@@ -49,7 +50,7 @@ public sealed class HubServices : IDisposable
         http.DefaultRequestHeaders.UserAgent.ParseAdd("RetroHub/0.1");
 
         var dependencies = new DependencyInstaller();
-        var controllers = new ControllerConfigurator(db);
+        var controllers = gamepads is null ? new ControllerConfigurator(db) : new ControllerConfigurator(db) { Devices = gamepads };
         return new HubServices
         {
             Paths = paths,

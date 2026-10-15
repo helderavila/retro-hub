@@ -1,0 +1,29 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="using:RetroHub.Mac.Helpers"
+        x:Class="RetroHub.Mac.Views.ConfirmDialog"
+        SystemDecorations="None" CanResize="False" Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        FontFamily="{StaticResource Font.Sans}" Foreground="{StaticResource Brush.Text.Primary}">
+
+    <!-- Themed confirmation dialog: surface, subtle border, primary button on the right -->
+    <Border Width="480" Margin="24" Background="{StaticResource Brush.Surface}" CornerRadius="{StaticResource Radius.Lg}"
+            BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1"
+            BoxShadow="0 8 40 0 #99000000">
+        <StackPanel>
+            <StackPanel Margin="24,22,24,0">
+                <TextBlock x:Name="TitleText" Theme="{StaticResource Text.Title}" TextWrapping="Wrap" />
+                <TextBlock x:Name="MessageText" Theme="{StaticResource Text.Secondary}" Margin="0,10,0,0" />
+                <Border x:Name="DetailBox" Margin="0,14,0,0" Background="{StaticResource Brush.Bg}" CornerRadius="{StaticResource Radius.Md}"
+                        BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="1" Padding="12,10" IsVisible="False">
+                    <TextBlock x:Name="DetailText" Theme="{StaticResource Text.Mono.Tertiary}" TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="24,22,24,20">
+                <Button x:Name="CancelButton" Theme="{StaticResource Button.Secondary}" Content="{l:T 'Cancel'}" IsCancel="True" Margin="0,0,8,0" Click="Cancel_Click" />
+                <Button x:Name="ConfirmButton" Theme="{StaticResource Button.Primary}" IsDefault="True" Click="Confirm_Click" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

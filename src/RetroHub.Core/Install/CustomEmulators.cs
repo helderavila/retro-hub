@@ -40,6 +40,7 @@ public sealed partial class CustomEmulators(AppPaths paths, ManifestRepository m
     public EmulatorManifest CreateLocal(string name, string executablePath, IReadOnlyList<string> systems, string args)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(L.T("Give the emulator a name."));
+        executablePath = Util.Platform.ResolveAppBundle(executablePath); // macOS: "Foo.app" → its binary
         if (!File.Exists(executablePath)) throw new FileNotFoundException(L.T("Choose the emulator's .exe file."), executablePath);
         if (systems.Count == 0) throw new ArgumentException(L.T("Select at least one system."));
         var unknown = systems.Where(s => manifests.GetSystem(s) is null).ToList();
@@ -64,7 +65,9 @@ public sealed partial class CustomEmulators(AppPaths paths, ManifestRepository m
     /// <summary>Copies a .json manifest to the user's folder (same format as the ones shipped with the app).</summary>
     public EmulatorManifest Import(string jsonPath)
     {
-        var manifest = ManifestRepository.ReadEmulator(jsonPath);
+        var manifest = manifests.ReadEmulator(jsonPath);
+        if (!manifest.SupportedHere)
+            throw new InvalidDataException(L.T("This manifest has no download for this system (add a \"macos\" block)."));
         if (string.IsNullOrWhiteSpace(manifest.Id) || string.IsNullOrWhiteSpace(manifest.Name))
             throw new InvalidDataException(L.T("The manifest must have \"id\" and \"name\"."));
         // The id becomes a file name: lowercase letters, digits and hyphens only.

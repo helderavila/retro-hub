@@ -1,0 +1,19 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="RetroHub.Mac.App"
+             RequestedThemeVariant="Dark"
+             Name="Retro Hub">
+    <!-- Fluent first: Controls.axaml builds some themes on top of its TextBox -->
+    <Application.Styles>
+        <FluentTheme />
+        <StyleInclude Source="avares://RetroHub/Themes/Styles.axaml" />
+    </Application.Styles>
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Controls.axaml already merges Tokens.axaml and Icons.axaml -->
+                <ResourceInclude Source="avares://RetroHub/Themes/Controls.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

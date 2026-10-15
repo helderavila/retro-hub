@@ -1,0 +1,144 @@
+<!--
+  Retro Hub design tokens (same values as RetroHub.App/Themes/Tokens.xaml).
+  Every color, typography, spacing, radius and motion value lives here.
+  To adjust the theme, edit only this file.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- ═══ Base colors ═══════════════════════════════════════════════════ -->
+    <Color x:Key="Color.Bg">#FF000000</Color>
+    <Color x:Key="Color.Bg.Subtle">#FF0A0A0A</Color>
+    <Color x:Key="Color.Surface">#FF111111</Color>
+    <Color x:Key="Color.Surface.Raised">#FF161616</Color>
+    <Color x:Key="Color.Surface.Hover">#FF1C1C1C</Color>
+
+    <!-- Borders: white at 6–12% opacity (alpha 0F / 14 / 1F) -->
+    <Color x:Key="Color.Border.Subtle">#0FFFFFFF</Color>
+    <Color x:Key="Color.Border">#17FFFFFF</Color>
+    <Color x:Key="Color.Border.Strong">#24FFFFFF</Color>
+
+    <!-- Text: hierarchy through shades of gray -->
+    <Color x:Key="Color.Text.Primary">#FFFFFFFF</Color>
+    <Color x:Key="Color.Text.Secondary">#FFA1A1A1</Color>
+    <Color x:Key="Color.Text.Tertiary">#FF666666</Color>
+    <Color x:Key="Color.Text.Inverse">#FF000000</Color>
+
+    <!-- Status: the only color in the theme -->
+    <Color x:Key="Color.Status.Ok">#FF3ECF8E</Color>
+    <Color x:Key="Color.Status.Warn">#FFF5A524</Color>
+    <Color x:Key="Color.Status.Error">#FFF0524F</Color>
+
+    <!-- Effects -->
+    <Color x:Key="Color.Glow">#14FFFFFF</Color>
+    <Color x:Key="Color.Overlay.Hover">#0AFFFFFF</Color>
+    <Color x:Key="Color.Selection">#40FFFFFF</Color>
+
+    <!-- ═══ Brushes ══════════════════════════════════════════════════════ -->
+    <SolidColorBrush x:Key="Brush.Bg" Color="{StaticResource Color.Bg}" />
+    <SolidColorBrush x:Key="Brush.Bg.Subtle" Color="{StaticResource Color.Bg.Subtle}" />
+    <SolidColorBrush x:Key="Brush.Surface" Color="{StaticResource Color.Surface}" />
+    <SolidColorBrush x:Key="Brush.Surface.Raised" Color="{StaticResource Color.Surface.Raised}" />
+    <SolidColorBrush x:Key="Brush.Surface.Hover" Color="{StaticResource Color.Surface.Hover}" />
+    <SolidColorBrush x:Key="Brush.Border.Subtle" Color="{StaticResource Color.Border.Subtle}" />
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}" />
+    <SolidColorBrush x:Key="Brush.Border.Strong" Color="{StaticResource Color.Border.Strong}" />
+    <SolidColorBrush x:Key="Brush.Text.Primary" Color="{StaticResource Color.Text.Primary}" />
+    <SolidColorBrush x:Key="Brush.Text.Secondary" Color="{StaticResource Color.Text.Secondary}" />
+    <SolidColorBrush x:Key="Brush.Text.Tertiary" Color="{StaticResource Color.Text.Tertiary}" />
+    <SolidColorBrush x:Key="Brush.Text.Inverse" Color="{StaticResource Color.Text.Inverse}" />
+    <SolidColorBrush x:Key="Brush.Status.Ok" Color="{StaticResource Color.Status.Ok}" />
+    <SolidColorBrush x:Key="Brush.Status.Warn" Color="{StaticResource Color.Status.Warn}" />
+    <SolidColorBrush x:Key="Brush.Status.Error" Color="{StaticResource Color.Status.Error}" />
+    <SolidColorBrush x:Key="Brush.Overlay.Hover" Color="{StaticResource Color.Overlay.Hover}" />
+    <SolidColorBrush x:Key="Brush.Selection" Color="{StaticResource Color.Selection}" />
+
+    <!-- Subtle radial glow at the top of the content area -->
+    <RadialGradientBrush x:Key="Brush.TopGlow" Center="50%,0%" GradientOrigin="50%,0%" RadiusX="65%" RadiusY="100%">
+        <GradientStop Color="#16FFFFFF" Offset="0" />
+        <GradientStop Color="#05FFFFFF" Offset="0.55" />
+        <GradientStop Color="#00FFFFFF" Offset="1" />
+    </RadialGradientBrush>
+
+    <!-- Light line at the top of panels/sections -->
+    <LinearGradientBrush x:Key="Brush.TopHighlight" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Color="#00FFFFFF" Offset="0" />
+        <GradientStop Color="#33FFFFFF" Offset="0.5" />
+        <GradientStop Color="#00FFFFFF" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Cover placeholder -->
+    <LinearGradientBrush x:Key="Brush.CoverPlaceholder" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#FF181818" Offset="0" />
+        <GradientStop Color="#FF0C0C0C" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- ═══ Typography ═══════════════════════════════════════════════════
+         Inter is embedded (Avalonia.Fonts.Inter); mono falls back to the system's. -->
+    <FontFamily x:Key="Font.Sans">fonts:Inter#Inter, Geist, SF Pro Text, Helvetica Neue</FontFamily>
+    <FontFamily x:Key="Font.Mono">JetBrains Mono, Geist Mono, SF Mono, Menlo</FontFamily>
+
+    <sys:Double x:Key="Font.Size.Xs">11</sys:Double>
+    <sys:Double x:Key="Font.Size.Sm">12</sys:Double>
+    <sys:Double x:Key="Font.Size.Base">13</sys:Double>
+    <sys:Double x:Key="Font.Size.Md">14</sys:Double>
+    <sys:Double x:Key="Font.Size.Lg">16</sys:Double>
+    <sys:Double x:Key="Font.Size.Xl">20</sys:Double>
+    <sys:Double x:Key="Font.Size.Display">28</sys:Double>
+
+    <FontWeight x:Key="Font.Weight.Regular">Normal</FontWeight>
+    <FontWeight x:Key="Font.Weight.Medium">Medium</FontWeight>
+    <FontWeight x:Key="Font.Weight.Semibold">SemiBold</FontWeight>
+
+    <!-- ═══ Spacing (4px scale) ═══════════════════════════════════════ -->
+    <sys:Double x:Key="Space.1">4</sys:Double>
+    <sys:Double x:Key="Space.2">8</sys:Double>
+    <sys:Double x:Key="Space.3">12</sys:Double>
+    <sys:Double x:Key="Space.4">16</sys:Double>
+    <sys:Double x:Key="Space.6">24</sys:Double>
+    <sys:Double x:Key="Space.8">32</sys:Double>
+    <sys:Double x:Key="Space.10">40</sys:Double>
+    <sys:Double x:Key="Space.12">48</sys:Double>
+
+    <Thickness x:Key="Page.Padding">48,40,48,48</Thickness>
+    <Thickness x:Key="Section.Gap">0,32,0,0</Thickness>
+    <Thickness x:Key="Row.Padding">20,0,20,0</Thickness>
+
+    <!-- ═══ Radii ════════════════════════════════════════════════════════ -->
+    <CornerRadius x:Key="Radius.Sm">6</CornerRadius>
+    <CornerRadius x:Key="Radius.Md">8</CornerRadius>
+    <CornerRadius x:Key="Radius.Lg">12</CornerRadius>
+    <CornerRadius x:Key="Radius.CoverTop">11,11,0,0</CornerRadius>
+    <CornerRadius x:Key="Radius.Pill">14</CornerRadius>
+
+    <!-- ═══ Controls ════════════════════════════════════════════════════ -->
+    <sys:Double x:Key="Control.Height">32</sys:Double>
+    <sys:Double x:Key="Control.Height.Sm">28</sys:Double>
+    <sys:Double x:Key="Sidebar.Width">224</sys:Double>
+    <sys:Double x:Key="Card.Width">176</sys:Double>
+    <sys:Double x:Key="Card.CoverHeight">232</sys:Double>
+
+    <!-- ═══ Motion (150–200ms, ease-out) ═════════════════════════════════
+         Used by Transitions in Controls.axaml (Avalonia has no storyboards on triggers). -->
+    <sys:TimeSpan x:Key="Motion.Fast">0:0:0.15</sys:TimeSpan>
+    <sys:TimeSpan x:Key="Motion.Normal">0:0:0.2</sys:TimeSpan>
+
+    <!-- ═══ TV mode (read from ~3 m) ═══════════════════════════════════════ -->
+    <sys:Double x:Key="Tv.Font.Title">52</sys:Double>
+    <sys:Double x:Key="Tv.Font.Body">22</sys:Double>
+    <sys:Double x:Key="Tv.Font.Small">18</sys:Double>
+    <sys:Double x:Key="Tv.Card.Width">264</sys:Double>
+    <sys:Double x:Key="Tv.Card.Height">352</sys:Double>
+    <Thickness x:Key="Tv.Safe">96,56,96,48</Thickness>
+
+    <!-- Xbox controller button glyphs (official colors, only in hint circles) -->
+    <SolidColorBrush x:Key="Brush.Pad.A" Color="#FF5DC21E" />
+    <SolidColorBrush x:Key="Brush.Pad.B" Color="#FFE53935" />
+    <SolidColorBrush x:Key="Brush.Pad.X" Color="#FF2E7DF6" />
+    <SolidColorBrush x:Key="Brush.Pad.Y" Color="#FFF5B800" />
+
+    <!-- Background grain: 0–255 max alpha per pixel (generated in NoiseBrush) -->
+    <sys:Int32 x:Key="Grain.MaxAlpha">9</sys:Int32>
+
+</ResourceDictionary>

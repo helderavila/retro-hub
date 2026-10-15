@@ -31,12 +31,16 @@ public class LocalizationTests
         }
     }
 
+    /// <summary>Texts only the Mac app has (Finder, Trash, Rosetta…).</summary>
+    private static string MacI18nDir => Path.GetFullPath(Path.Combine(I18nDir, "..", "..", "RetroHub.Mac", "i18n"));
+
     [Fact]
     public void Every_translation_keeps_the_same_placeholders()
     {
         var options = new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true };
         var problems = new List<string>();
-        foreach (var file in Directory.EnumerateFiles(Path.Combine(I18nDir, "pt-BR"), "*.json"))
+        foreach (var file in Directory.EnumerateFiles(Path.Combine(I18nDir, "pt-BR"), "*.json")
+                     .Concat(Directory.EnumerateFiles(Path.Combine(MacI18nDir, "pt-BR"), "*.json")))
         {
             using var doc = JsonDocument.Parse(File.ReadAllText(file), options);
             foreach (var entry in doc.RootElement.EnumerateObject())

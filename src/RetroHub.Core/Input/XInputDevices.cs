@@ -2,9 +2,24 @@ using System.Runtime.InteropServices;
 
 namespace RetroHub.Core.Input;
 
-/// <summary>A connected XInput controller: player (slot), vendor, product and version.</summary>
-public sealed record XInputDeviceInfo(int Slot, ushort VendorId, ushort ProductId, ushort Version, byte SubType)
+/// <summary>A connected controller as emulators see it: player slot and the SDL GUID they store in their config.</summary>
+public interface IGamepadDevice
 {
+    int Slot { get; }
+    string SdlGuid { get; }
+    /// <summary>Name the emulator shows for it (Dolphin on macOS addresses controllers as "SDL/0/&lt;name&gt;").</summary>
+    string Name { get; }
+}
+
+/// <summary>A controller reported by SDL itself (macOS), which already knows the GUID.</summary>
+public sealed record SdlGamepadDevice(int Slot, string SdlGuid, string Name) : IGamepadDevice;
+
+/// <summary>A connected XInput controller: player (slot), vendor, product and version.</summary>
+public sealed record XInputDeviceInfo(int Slot, ushort VendorId, ushort ProductId, ushort Version, byte SubType) : IGamepadDevice
+{
+    /// <summary>XInput has no product names; Dolphin calls every XInput controller "Gamepad".</summary>
+    public string Name => "Gamepad";
+
     /// <summary>
     /// GUID SDL assigns to this controller, in the format SDL-based emulators store (name CRC zeroed, as SDL's GetGUID does for XInput):
     /// USB bus 0x0003 · 0000 · vendor · 0000 · product · 0000 · version · 'x' · subtype — all little-endian.

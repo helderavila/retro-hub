@@ -1,0 +1,388 @@
+<!-- Game page: full screen over the library. DataContext = GameDetailsViewModel. -->
+<UserControl x:Class="RetroHub.Mac.Views.GamePageView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:RetroHub.Mac.Controls"
+             xmlns:vm="using:RetroHub.Mac.ViewModels"
+             xmlns:views="using:RetroHub.Mac.Views"
+             xmlns:l="using:RetroHub.Mac.Helpers"
+             x:DataType="vm:GameDetailsViewModel"
+             Background="{StaticResource Brush.Bg}">
+
+    <UserControl.Resources>
+        <ControlTheme x:Key="Field.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Mono.Tertiary}">
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </ControlTheme>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- Favorite star filled when the game is a favorite -->
+        <Style Selector="ui|Icon.favorite">
+            <Setter Property="Fill" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+        </Style>
+        <!-- Month column: brighter bar and its value on hover (resting values here: DataTemplate values would beat the hover style) -->
+        <Style Selector="Grid.month Border.bar">
+            <Setter Property="Background" Value="{StaticResource Brush.Text.Secondary}" />
+        </Style>
+        <Style Selector="Grid.month TextBlock.value">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+        <Style Selector="Grid.month:pointerover Border.bar">
+            <Setter Property="Background" Value="{StaticResource Brush.Text.Primary}" />
+        </Style>
+        <Style Selector="Grid.month:pointerover TextBlock.value">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <!-- ═══ Header (like the Steam game page): wide game art with the title on top ═══ -->
+                <Panel Height="300" ClipToBounds="True">
+                    <Image Source="{Binding HeroImage}" Stretch="UniformToFill" Opacity="0.75" Margin="-30">
+                        <Image.Effect>
+                            <BlurEffect Radius="14" />
+                        </Image.Effect>
+                    </Image>
+                    <Rectangle>
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                <GradientStop Offset="0" Color="#33000000" />
+                                <GradientStop Offset="0.55" Color="#80000000" />
+                                <GradientStop Offset="1" Color="{StaticResource Color.Bg}" />
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <StackPanel Margin="40,0,40,22" VerticalAlignment="Bottom">
+                        <Border Theme="{StaticResource Badge}" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding SystemName}" Theme="{StaticResource Badge.Text}" />
+                        </Border>
+                        <TextBlock Text="{Binding Title}" FontSize="44" FontWeight="{StaticResource Font.Weight.Semibold}"
+                                   Foreground="{StaticResource Brush.Text.Primary}" TextWrapping="Wrap" Margin="0,10,0,0">
+                            <TextBlock.Effect>
+                                <DropShadowEffect BlurRadius="18" OffsetX="0" OffsetY="0" Opacity="0.8" Color="Black" />
+                            </TextBlock.Effect>
+                        </TextBlock>
+                        <TextBlock Margin="0,8,0,0" FontSize="{StaticResource Font.Size.Md}" Foreground="{StaticResource Brush.Text.Secondary}" TextWrapping="Wrap">
+                            <Run Text="{Binding InfoLine}" /><Run Text="   " /><Run Text="{Binding PeopleLine}" Foreground="{StaticResource Brush.Text.Tertiary}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Panel>
+
+                <!-- ═══ Play bar: big button, numbers and actions ═══ -->
+                <Border Margin="40,4,40,0" Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Lg}" Padding="16,14">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Theme="{StaticResource Button.Primary}" Command="{Binding PlayCommand}" Height="46" Padding="34,0"
+                                    FontSize="{StaticResource Font.Size.Lg}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:Icon Data="{StaticResource Icon.Play}" Width="14" Height="14" Margin="0,0,10,0"
+                                             Foreground="{StaticResource Brush.Text.Inverse}" Fill="{StaticResource Brush.Text.Inverse}" />
+                                    <TextBlock Text="{l:T 'PLAY'}" />
+                                </StackPanel>
+                            </Button>
+                            <Button Theme="{StaticResource Button.Secondary}" Command="{Binding ContinueCommand}" Height="46" Padding="18,0" Margin="10,0,0,0"
+                                    IsVisible="{Binding CanContinue}" ToolTip.Tip="{l:T 'Opens at the most recent save'}">
+                                <TextBlock Text="{l:T 'Continue from save'}" />
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Theme="{StaticResource Button.Icon}" Width="38" Height="38" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="{l:T 'Favorite'}" Margin="0,0,2,0">
+                                <ui:Icon Data="{StaticResource Icon.Star}" Width="16" Height="16" Classes.favorite="{Binding Item.Favorite}" />
+                            </Button>
+                            <Button Theme="{StaticResource Button.Icon}" Width="38" Height="38" Command="{Binding ChangeCoverCommand}" ToolTip.Tip="{l:T 'Change cover'}" Margin="0,0,2,0">
+                                <ui:Icon Data="{StaticResource Icon.Library}" Width="16" Height="16" />
+                            </Button>
+                            <Button Theme="{StaticResource Button.Icon}" Width="38" Height="38" Command="{Binding CreateShortcutCommand}" ToolTip.Tip="{l:T 'Create desktop shortcut'}" Margin="0,0,2,0">
+                                <ui:Icon Data="{StaticResource Icon.External}" Width="16" Height="16" />
+                            </Button>
+                            <Button Theme="{StaticResource Button.Icon}" Width="38" Height="38" Command="{Binding OpenFolderCommand}" ToolTip.Tip="{l:T 'Show in Finder'}">
+                                <ui:Icon Data="{StaticResource Icon.Folder}" Width="16" Height="16" />
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Numbers, in the middle -->
+                        <WrapPanel VerticalAlignment="Center" Margin="28,0,12,0">
+                            <StackPanel Margin="0,0,32,0">
+                                <TextBlock Text="{l:T 'LAST PLAYED'}" Theme="{StaticResource Text.Overline}" />
+                                <TextBlock Text="{Binding LastPlayedTile}" FontSize="{StaticResource Font.Size.Md}" FontWeight="{StaticResource Font.Weight.Medium}" Margin="0,4,0,0" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,32,0">
+                                <TextBlock Text="{l:T 'PLAY TIME'}" Theme="{StaticResource Text.Overline}" />
+                                <TextBlock Text="{Binding PlaytimeText}" FontSize="{StaticResource Font.Size.Md}" FontWeight="{StaticResource Font.Weight.Medium}" Margin="0,4,0,0" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,32,0">
+                                <TextBlock Text="{l:T 'SESSIONS'}" Theme="{StaticResource Text.Overline}" />
+                                <TextBlock FontSize="{StaticResource Font.Size.Md}" FontWeight="{StaticResource Font.Weight.Medium}" Margin="0,4,0,0">
+                                    <Run Text="{Binding SessionCount}" /><Run Text="  ·  " Foreground="{StaticResource Brush.Text.Tertiary}" /><Run Text="{Binding AverageLine}"
+                                                                                       Foreground="{StaticResource Brush.Text.Tertiary}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </WrapPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- ═══ Body ═══ -->
+                <Grid Margin="40,10,40,56" ColumnDefinitions="*,36,320">
+
+                    <StackPanel>
+                        <TextBlock Margin="2,0,0,0" Theme="{StaticResource Text.Mono.Tertiary}">
+                            <Run Text="{Binding AddedText}" /><Run Text="{Binding FirstPlayedText}" />
+                        </TextBlock>
+                        <!-- Notice -->
+                        <Border Margin="0,20,0,0" IsVisible="{Binding Notice, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}"
+                                BorderThickness="1" CornerRadius="{StaticResource Radius.Md}" Padding="12,0,4,0" MinHeight="36">
+                            <DockPanel>
+                                <Ellipse DockPanel.Dock="Left" Theme="{StaticResource StatusDot}" Fill="{Binding Notice.Kind, Converter={StaticResource StatusBrush}, FallbackValue={x:Null}}" />
+                                <Button DockPanel.Dock="Right" Theme="{StaticResource Button.Icon}" Command="{Binding DismissNoticeCommand}">
+                                    <ui:Icon Data="{StaticResource Icon.X}" Width="11" Height="11" />
+                                </Button>
+                                <TextBlock Text="{Binding Notice.Message, FallbackValue=''}" Margin="10,8" FontSize="{StaticResource Font.Size.Sm}"
+                                           Foreground="{StaticResource Brush.Text.Secondary}" TextWrapping="Wrap" />
+                            </DockPanel>
+                        </Border>
+
+                        <!-- About -->
+                        <DockPanel Margin="0,36,0,12">
+                            <Button DockPanel.Dock="Right" Theme="{StaticResource Button.Secondary.Small}" Command="{Binding EditInfoCommand}"
+                                    IsVisible="{Binding !IsEditing}"
+                                    ToolTip.Tip="{l:T 'Fill in or fix year, genre, developer and synopsis'}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:Icon Data="{StaticResource Icon.Edit}" Width="11" Height="11" Margin="0,0,6,0" />
+                                    <TextBlock Text="{l:T 'Edit info'}" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="{l:T 'ABOUT'}" Theme="{StaticResource Text.Overline}" VerticalAlignment="Center" />
+                        </DockPanel>
+
+                        <StackPanel IsVisible="{Binding !IsEditing}" MaxWidth="760" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding Description}" FontSize="{StaticResource Font.Size.Md}" LineHeight="23"
+                                       Foreground="{StaticResource Brush.Text.Secondary}" TextWrapping="Wrap"
+                                       IsVisible="{Binding HasDescription}" />
+                            <TextBlock Theme="{StaticResource Text.Tertiary}" TextWrapping="Wrap"
+                                       IsVisible="{Binding !HasDescription}"
+                                       Text="{l:T 'No synopsis for this game yet. Use “Edit info” to write one.'}" />
+                            <TextBlock Text="{l:T 'fetching info…'}" Theme="{StaticResource Text.Mono.Tertiary}" Margin="0,6,0,0"
+                                       IsVisible="{Binding IsLoadingInfo}" />
+                        </StackPanel>
+
+                        <!-- Editing -->
+                        <ContentControl Theme="{StaticResource Surface}" IsVisible="{Binding IsEditing}">
+                            <StackPanel Margin="20">
+                                <UniformGrid Columns="3">
+                                    <StackPanel Margin="0,0,12,14">
+                                        <TextBlock Text="{l:T 'year'}" Theme="{StaticResource Field.Label}" />
+                                        <TextBox Theme="{StaticResource TextBox.Field}" Text="{Binding EditYear}" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,12,14">
+                                        <TextBlock Text="{l:T 'genre'}" Theme="{StaticResource Field.Label}" />
+                                        <TextBox Theme="{StaticResource TextBox.Field}" Text="{Binding EditGenre}" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,0,14">
+                                        <TextBlock Text="{l:T 'players'}" Theme="{StaticResource Field.Label}" />
+                                        <TextBox Theme="{StaticResource TextBox.Field}" Text="{Binding EditPlayers}" />
+                                    </StackPanel>
+                                </UniformGrid>
+                                <UniformGrid Columns="2">
+                                    <StackPanel Margin="0,0,12,14">
+                                        <TextBlock Text="{l:T 'developer'}" Theme="{StaticResource Field.Label}" />
+                                        <TextBox Theme="{StaticResource TextBox.Field}" Text="{Binding EditDeveloper}" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,0,14">
+                                        <TextBlock Text="{l:T 'publisher'}" Theme="{StaticResource Field.Label}" />
+                                        <TextBox Theme="{StaticResource TextBox.Field}" Text="{Binding EditPublisher}" />
+                                    </StackPanel>
+                                </UniformGrid>
+                                <TextBlock Text="{l:T 'synopsis'}" Theme="{StaticResource Field.Label}" />
+                                <TextBox Theme="{StaticResource TextBox.Area}" MinHeight="140" Text="{Binding EditDescription}" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                                    <Button Theme="{StaticResource Button.Ghost}" Content="{l:T 'Cancel'}" Command="{Binding CancelEditCommand}" Margin="0,0,8,0" />
+                                    <Button Theme="{StaticResource Button.Primary}" Content="{l:T 'Save'}" Command="{Binding SaveInfoCommand}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </ContentControl>
+
+                        <!-- Images -->
+                        <StackPanel IsVisible="{Binding HasArt}">
+                            <TextBlock Text="{l:T 'IMAGES'}" Theme="{StaticResource Text.Overline}" Margin="0,36,0,12" />
+                            <UniformGrid Columns="2" Margin="0,0,-16,0">
+                                <StackPanel Margin="0,0,16,0" IsVisible="{Binding TitleImage, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <Border CornerRadius="{StaticResource Radius.Lg}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" ClipToBounds="True">
+                                        <Image Source="{Binding TitleImage}" Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None" />
+                                    </Border>
+                                    <TextBlock Text="{l:T 'title screen'}" Theme="{StaticResource Text.Mono.Tertiary}" Margin="2,8,0,0" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,16,0" IsVisible="{Binding SnapImage, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <Border CornerRadius="{StaticResource Radius.Lg}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" ClipToBounds="True">
+                                        <Image Source="{Binding SnapImage}" Stretch="Uniform" RenderOptions.BitmapInterpolationMode="None" />
+                                    </Border>
+                                    <TextBlock Text="{l:T 'in game'}" Theme="{StaticResource Text.Mono.Tertiary}" Margin="2,8,0,0" />
+                                </StackPanel>
+                            </UniformGrid>
+                        </StackPanel>
+
+                        <!-- Saves -->
+                        <StackPanel IsVisible="{Binding HasSaves}">
+                            <TextBlock Text="{l:T 'SAVES'}" Theme="{StaticResource Text.Overline}" Margin="0,36,0,12" />
+                            <ItemsControl ItemsSource="{Binding Saves}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:SaveStateItem">
+                                        <Border Width="220" Margin="0,0,14,14" Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}"
+                                                BorderThickness="1" CornerRadius="{StaticResource Radius.Lg}" Padding="8">
+                                            <StackPanel>
+                                                <Border Height="150" CornerRadius="{StaticResource Radius.Md}" Background="{StaticResource Brush.Bg}" ClipToBounds="True">
+                                                    <Panel>
+                                                        <ui:Icon Data="{StaticResource Icon.Gamepad}" Width="22" Height="22" Foreground="{StaticResource Brush.Border.Strong}" />
+                                                        <Image Source="{Binding Thumbnail}" Stretch="UniformToFill" />
+                                                    </Panel>
+                                                </Border>
+                                                <DockPanel Margin="4,10,0,2">
+                                                    <Button DockPanel.Dock="Right" Theme="{StaticResource Button.Secondary.Small}" Content="{l:T 'Load'}"
+                                                            VerticalAlignment="Center" Command="{Binding LoadCommand}" ToolTip.Tip="{Binding LoadTooltip}" />
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Title}" FontSize="{StaticResource Font.Size.Sm}" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding When}" Margin="0,3,0,0" Theme="{StaticResource Text.Mono.Tertiary}" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <!-- History -->
+                        <StackPanel IsVisible="{Binding HasSessions}">
+                            <TextBlock Text="{l:T 'HISTORY'}" Theme="{StaticResource Text.Overline}" Margin="0,36,0,12" />
+                            <Grid ColumnDefinitions="*,16,260">
+                                <ContentControl Theme="{StaticResource Surface}">
+                                    <StackPanel Margin="20,16,20,14">
+                                        <TextBlock Text="{l:T 'Last 12 months'}" Theme="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" />
+                                        <ItemsControl ItemsSource="{Binding Months}" Margin="0,16,0,0">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <UniformGrid Rows="1" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:StatBar">
+                                                    <Grid Classes="month" Background="Transparent" ToolTip.Tip="{Binding Tooltip}" Margin="3,0" RowDefinitions="Auto,120,Auto">
+                                                        <TextBlock Classes="value" Text="{Binding ValueText}" Theme="{StaticResource Text.Mono.Tertiary}"
+                                                                   HorizontalAlignment="Center" Margin="0,0,0,6" />
+                                                        <Border Grid.Row="1" Classes="bar" Height="{Binding ColumnHeight}" Width="16" VerticalAlignment="Bottom"
+                                                                CornerRadius="4,4,0,0" />
+                                                        <Border Grid.Row="1" Height="1" VerticalAlignment="Bottom" Background="{StaticResource Brush.Border}" Margin="-3,0" />
+                                                        <TextBlock Grid.Row="2" Text="{Binding Label}" Theme="{StaticResource Text.Mono.Tertiary}"
+                                                                   HorizontalAlignment="Center" Margin="0,8,0,0" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ContentControl>
+                                <ContentControl Grid.Column="2" Theme="{StaticResource Surface}">
+                                    <StackPanel Margin="20,16,20,10">
+                                        <TextBlock Text="{l:T 'Recent sessions'}" Theme="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" Margin="0,0,0,12" />
+                                        <ItemsControl ItemsSource="{Binding RecentSessions}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="vm:SessionRow">
+                                                    <DockPanel Margin="0,0,0,8">
+                                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Duration}" Theme="{StaticResource Text.Mono}" />
+                                                        <TextBlock Text="{Binding When}" Theme="{StaticResource Text.Mono.Tertiary}" />
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ContentControl>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- ═══ Side column ═══ -->
+                    <StackPanel Grid.Column="2">
+                        <ContentControl Theme="{StaticResource Surface}">
+                            <StackPanel Margin="20,16,20,8">
+                                <TextBlock Text="{l:T 'DETAILS'}" Theme="{StaticResource Text.Overline}" Margin="0,0,0,12" />
+                                <ItemsControl ItemsSource="{Binding Facts}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:InfoRow">
+                                            <Grid Margin="0,0,0,10" ColumnDefinitions="110,*">
+                                                <TextBlock Text="{Binding Label}" Theme="{StaticResource Text.Tertiary}" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap"
+                                                           FontSize="{StaticResource Font.Size.Sm}" Foreground="{StaticResource Brush.Text.Primary}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ContentControl>
+
+                        <TextBlock Text="{l:T 'ON THE WEB'}" Theme="{StaticResource Text.Overline}" Margin="0,28,0,10" />
+                        <WrapPanel>
+                            <Button Theme="{StaticResource Button.Secondary.Small}" Command="{Binding OpenWebCommand}" CommandParameter="youtube" Margin="0,0,8,8"
+                                    ToolTip.Tip="{l:T 'Gameplay videos on YouTube'}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:Icon Data="{StaticResource Icon.Play}" Width="10" Height="10" Margin="0,0,6,0" />
+                                    <TextBlock Text="{l:T 'Gameplay'}" />
+                                </StackPanel>
+                            </Button>
+                            <Button Theme="{StaticResource Button.Secondary.Small}" Command="{Binding OpenWebCommand}" CommandParameter="wikipedia" Margin="0,0,8,8"
+                                    ToolTip.Tip="{l:T 'Wikipedia article'}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:Icon Data="{StaticResource Icon.External}" Width="10" Height="10" Margin="0,0,6,0" />
+                                    <TextBlock Text="{l:T 'Wikipedia'}" />
+                                </StackPanel>
+                            </Button>
+                            <Button Theme="{StaticResource Button.Secondary.Small}" Command="{Binding OpenWebCommand}" CommandParameter="guide" Margin="0,0,8,8"
+                                    ToolTip.Tip="{l:T 'Walkthroughs and guides'}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:Icon Data="{StaticResource Icon.Search}" Width="10" Height="10" Margin="0,0,6,0" />
+                                    <TextBlock Text="{l:T 'Walkthrough'}" />
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+
+                        <views:GameManagePanel Margin="0,28,0,0" />
+
+                        <WrapPanel Margin="0,28,0,0">
+                            <Button Theme="{StaticResource Button.Ghost}" Command="{Binding RemoveCommand}" Margin="-10,0,8,0"
+                                    ToolTip.Tip="{l:T 'Removes it from the list; the file stays on disk'}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:Icon Data="{StaticResource Icon.X}" Width="12" Height="12" Margin="0,0,6,0" />
+                                    <TextBlock Text="{l:T 'Remove from library'}" />
+                                </StackPanel>
+                            </Button>
+                            <Button Theme="{StaticResource Button.Ghost}" Command="{Binding DeleteCommand}" Foreground="{StaticResource Brush.Status.Error}"
+                                    ToolTip.Tip="{l:T 'Sends the file to the Trash'}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:Icon Data="{StaticResource Icon.Trash}" Width="12" Height="12" Margin="0,0,6,0" />
+                                    <TextBlock Text="{l:T 'Delete file'}" />
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Back (pinned to the corner) -->
+        <Button Theme="{StaticResource Button.Secondary}" Command="{Binding CloseCommand}" HorizontalAlignment="Left" VerticalAlignment="Top"
+                Margin="20,16,0,0" Background="#99000000" ToolTip.Tip="{l:T 'Back to home (Esc)'}">
+            <StackPanel Orientation="Horizontal">
+                <ui:Icon Data="{StaticResource Icon.ArrowLeft}" Width="14" Height="14" Margin="0,0,8,0" />
+                <TextBlock Text="{l:T 'Home'}" />
+            </StackPanel>
+        </Button>
+    </Panel>
+</UserControl>

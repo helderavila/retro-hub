@@ -27,7 +27,7 @@ public class BiosImportTests
         paths.EnsureCreated();
         var db = new LibraryDatabase(paths.Database);
         db.Initialize();
-        return (new BiosVerifier(ManifestRepository.Load(paths.Manifests), paths, db), paths);
+        return (new BiosVerifier(ManifestRepository.LoadFor(null, paths.Manifests), paths, db), paths);
     }
 
     [Fact]

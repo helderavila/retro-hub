@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using RetroHub.Core.Localization;
 using RetroHub.Core.Models;
@@ -22,6 +23,7 @@ public sealed class ManifestRepository
 
     private readonly string _manifestsDir;
     private readonly string? _userDir;
+    private readonly string? _platform;
 
     private Dictionary<string, SystemDefinition> _systems = [];
     private Dictionary<string, EmulatorManifest> _emulators = [];
@@ -33,15 +35,19 @@ public sealed class ManifestRepository
     public IReadOnlyList<DependencyDefinition> Dependencies { get; private set; } = [];
     public IReadOnlyList<string> Warnings { get; private set; } = [];
 
-    private ManifestRepository(string manifestsDir, string? userDir)
+    private ManifestRepository(string manifestsDir, string? userDir, string? platform)
     {
         _manifestsDir = manifestsDir;
         _userDir = userDir;
+        _platform = platform;
         Reload();
     }
 
     /// <param name="userDir">User manifests folder (systems\, emulators\); null = app manifests only.</param>
-    public static ManifestRepository Load(string manifestsDir, string? userDir = null) => new(manifestsDir, userDir);
+    public static ManifestRepository Load(string manifestsDir, string? userDir = null) => new(manifestsDir, userDir, Util.Platform.ManifestKey);
+
+    /// <summary>Loads the manifests as a given platform sees them: null = Windows (top-level keys), "macos" = with the macOS blocks applied.</summary>
+    public static ManifestRepository LoadFor(string? platform, string manifestsDir, string? userDir = null) => new(manifestsDir, userDir, platform);
 
     /// <summary>Rereads the manifests (after the user adds, imports or removes an emulator).</summary>
     public void Reload()
@@ -51,19 +57,22 @@ public sealed class ManifestRepository
         var depsPath = Path.Combine(_manifestsDir, "dependencies.json");
         var dependencies = File.Exists(depsPath) ? Read<DependenciesManifest>(depsPath).Dependencies : [];
 
-        var emulators = ReadAll<EmulatorManifest>(Path.Combine(_manifestsDir, "emulators")).Select(x => x.Item).ToList();
+        var emulators = ReadAll<EmulatorManifest>(Path.Combine(_manifestsDir, "emulators"), _platform).Select(x => x.Item)
+            .Where(e => e.SupportedHere).ToList();
 
         var problems = new List<string>();
         if (_userDir is not null)
         {
             // User manifests come last and replace the app's ones with the same id.
-            foreach (var (file, extra) in ReadAll<SystemsManifest>(Path.Combine(_userDir, "systems"), problems))
+            foreach (var (file, extra) in ReadAll<SystemsManifest>(Path.Combine(_userDir, "systems"), _platform, problems))
             {
                 systems.RemoveAll(s => extra.Systems.Any(x => string.Equals(x.Id, s.Id, StringComparison.OrdinalIgnoreCase)));
                 systems.AddRange(extra.Systems);
             }
-            foreach (var (file, emulator) in ReadAll<EmulatorManifest>(Path.Combine(_userDir, "emulators"), problems))
+            foreach (var (file, emulator) in ReadAll<EmulatorManifest>(Path.Combine(_userDir, "emulators"), _platform, problems))
             {
+                if (!emulator.SupportedHere)
+                    continue;
                 emulator.UserManifestPath = file;
                 emulators.RemoveAll(e => string.Equals(e.Id, emulator.Id, StringComparison.OrdinalIgnoreCase));
                 emulators.Add(emulator);
@@ -89,21 +98,21 @@ public sealed class ManifestRepository
     }
 
     /// <summary>Reads every .json in a folder. With <paramref name="problems"/>, an invalid file becomes a warning instead of an error.</summary>
-    private static List<(string File, T Item)> ReadAll<T>(string dir, List<string>? problems = null)
+    private static List<(string File, T Item)> ReadAll<T>(string dir, string? platform, List<string>? problems = null)
     {
         var list = new List<(string, T)>();
         if (!Directory.Exists(dir))
             return list;
         foreach (var file in Directory.EnumerateFiles(dir, "*.json").Order(StringComparer.OrdinalIgnoreCase))
         {
-            try { list.Add((file, Read<T>(file))); }
+            try { list.Add((file, Read<T>(file, platform))); }
             catch (InvalidDataException ex) when (problems is not null) { problems.Add(ex.Message); }
         }
         return list;
     }
 
-    /// <summary>Reads and checks an emulator manifest (to import a user file).</summary>
-    public static EmulatorManifest ReadEmulator(string path) => Read<EmulatorManifest>(path);
+    /// <summary>Reads and checks an emulator manifest (to import a user file), as this repository's platform sees it.</summary>
+    public EmulatorManifest ReadEmulator(string path) => Read<EmulatorManifest>(path, _platform);
 
     public SystemDefinition? GetSystem(string id) => _systems.GetValueOrDefault(id);
     public EmulatorManifest? GetEmulator(string id) => _emulators.GetValueOrDefault(id);
@@ -115,10 +124,13 @@ public sealed class ManifestRepository
     public IEnumerable<EmulatorManifest> EmulatorsForSystem(string systemId) =>
         Emulators.Where(e => e.Systems.Contains(systemId, StringComparer.OrdinalIgnoreCase));
 
-    private static T Read<T>(string path)
+    private static T Read<T>(string path, string? platform = null)
     {
         try
         {
+            if (typeof(T) == typeof(EmulatorManifest))
+                return (T)(object)ReadEmulatorForPlatform(path, platform);
+
             using var stream = File.OpenRead(path);
             return JsonSerializer.Deserialize<T>(stream, JsonOptions)
                 ?? throw new InvalidDataException(L.F("Empty manifest: {0}", path));
@@ -126,6 +138,67 @@ public sealed class ManifestRepository
         catch (JsonException ex)
         {
             throw new InvalidDataException(L.F("Invalid manifest ({0}): {1}", Path.GetFileName(path), ex.Message), ex);
+        }
+    }
+
+    private static readonly JsonDocumentOptions DocumentOptions = new()
+    {
+        CommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true,
+    };
+
+    /// <summary>
+    /// Emulator manifest with the platform block applied: on macOS, each key inside "macos": { … } replaces the top-level one
+    /// (source, executable, launch, controller…). Without that block, a downloadable emulator is Windows-only there
+    /// (<see cref="EmulatorManifest.SupportedHere"/> = false); a "local" one (an app already on the computer) works anywhere.
+    /// </summary>
+    internal static EmulatorManifest ReadEmulatorForPlatform(string path, string? platformKey)
+    {
+        var text = File.ReadAllText(path);
+        if (JsonNode.Parse(text, documentOptions: DocumentOptions) is not JsonObject root)
+            throw new InvalidDataException(L.F("Empty manifest: {0}", path));
+
+        var hasBlock = false;
+        if (platformKey is not null && root[platformKey] is JsonObject block)
+        {
+            hasBlock = true;
+            foreach (var (key, value) in block.ToList())
+            {
+                block.Remove(key);
+                root[key] = value;
+            }
+        }
+        foreach (var key in new[] { "macos", "windows" })
+            root.Remove(key);
+
+        var manifest = root.Deserialize<EmulatorManifest>(JsonOptions)
+            ?? throw new InvalidDataException(L.F("Empty manifest: {0}", path));
+        manifest.SupportedHere = platformKey is null || hasBlock || manifest.Source.Type == "local";
+        ApplyDataDir(manifest);
+        return manifest;
+    }
+
+    /// <summary>"dataDir": prefixes it to every data path, so the rest of the app keeps working relative to the install folder.</summary>
+    private static void ApplyDataDir(EmulatorManifest m)
+    {
+        if (string.IsNullOrWhiteSpace(m.DataDir))
+            return;
+        string In(string relative) => Path.Combine(m.DataDir, relative);
+
+        if (m.BiosDir is not null) m.BiosDir = In(m.BiosDir);
+        if (m.Controller is { } controller) controller.File = In(controller.File);
+        if (m.Achievements is { } achievements) achievements.File = In(achievements.File);
+        if (m.Graphics is { } graphics)
+        {
+            graphics.File = In(graphics.File);
+            foreach (var toggle in graphics.Toggles)
+                if (toggle.File is { } file) file.Path = In(file.Path);
+        }
+        if (m.Saves is { } saves)
+        {
+            foreach (var location in saves.States)
+                location.Dir = In(location.Dir);
+            saves.Backup = saves.Backup.Select(In).ToList();
         }
     }
 

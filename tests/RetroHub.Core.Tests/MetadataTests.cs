@@ -47,7 +47,7 @@ public class MetadataTests
 
         var db = new LibraryDatabase(paths.Database);
         db.Initialize();
-        var service = new MetadataService(new HttpClient(), paths, ManifestRepository.Load(paths.Manifests), db);
+        var service = new MetadataService(new HttpClient(), paths, ManifestRepository.LoadFor(null, paths.Manifests), db);
         return (service, db, paths);
     }
 

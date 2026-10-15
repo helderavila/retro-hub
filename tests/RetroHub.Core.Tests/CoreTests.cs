@@ -8,7 +8,7 @@ namespace RetroHub.Core.Tests;
 public class ManifestTests
 {
     internal static ManifestRepository Load() =>
-        ManifestRepository.Load(Path.Combine(AppContext.BaseDirectory, "manifests"));
+        ManifestRepository.LoadFor(null, Path.Combine(AppContext.BaseDirectory, "manifests"));
 
     [Fact]
     public void Shipped_manifests_load_without_warnings()

@@ -14,20 +14,20 @@ public class LaunchCancelTests
     public async Task Cancelling_closes_the_emulator_and_returns()
     {
         using var dir = new TempDir();
-        // Emulador falso: um cmd que ficaria 60 s rodando.
+        // Emulador falso: um shell que ficaria 60 s rodando.
         dir.File("manifests/systems.json", """{ "systems": [ { "id": "nes", "name": "NES", "shortName": "NES", "extensions": [".nes"] } ] }""");
         dir.File("manifests/emulators/fake.json", """
             { "id": "fake", "name": "Fake", "systems": ["nes"], "source": { "type": "url", "url": "https://example.invalid/x.zip" },
               "executable": "cmd.exe",
-              "launch": [ { "systems": ["nes"], "args": "/c ping -n 60 127.0.0.1 >nul & rem {rom}" } ] }
-            """);
-        var manifests = ManifestRepository.Load(Path.Combine(dir.Path, "manifests"));
+              "launch": [ { "systems": ["nes"], "args": "ARGS" } ] }
+            """.Replace("ARGS", System.Text.Json.JsonEncodedText.Encode(TestPlatform.LongRunningArgs).ToString()));
+        var manifests = ManifestRepository.LoadFor(null, Path.Combine(dir.Path, "manifests"));
         var db = new LibraryDatabase(Path.Combine(dir.Path, "lib.db"));
         db.Initialize();
         db.SaveInstalledEmulator(new InstalledEmulator
         {
             Id = "fake", Version = "1", InstallDir = dir.Path, InstalledAt = DateTimeOffset.UtcNow,
-            ExecutablePath = Path.Combine(Environment.SystemDirectory, "cmd.exe"),
+            ExecutablePath = TestPlatform.Shell,
         });
         var rom = dir.File("game.nes", new byte[16]);
         var game = new Game { Id = 1, SystemId = "nes", Title = "Game", Path = rom };
@@ -40,7 +40,7 @@ public class LaunchCancelTests
 
         Assert.True(sw.Elapsed < TimeSpan.FromSeconds(10), $"demorou {sw.Elapsed}");
         Assert.True(elapsed >= TimeSpan.FromSeconds(1));
-        Assert.DoesNotContain(Process.GetProcessesByName("PING"), p => SafeStart(p) > DateTime.Now - sw.Elapsed - TimeSpan.FromSeconds(1));
+        Assert.DoesNotContain(Process.GetProcessesByName(TestPlatform.LongRunningProcess), p => SafeStart(p) > DateTime.Now - sw.Elapsed - TimeSpan.FromSeconds(1));
     }
 
     private static DateTime SafeStart(Process p)

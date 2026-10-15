@@ -1,0 +1,191 @@
+<UserControl x:Class="RetroHub.Mac.Views.FoldersView"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:RetroHub.Mac.Controls"
+             xmlns:vm="using:RetroHub.Mac.ViewModels"
+             xmlns:l="using:RetroHub.Mac.Helpers"
+             x:DataType="vm:FoldersViewModel">
+
+    <!-- Systems table columns: system 1.6* · folder names 1.8* · extensions 2.4* · emulator 1* -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="{StaticResource Page.Padding}">
+
+            <Grid>
+                <StackPanel MaxWidth="560" HorizontalAlignment="Left">
+                    <TextBlock Text="{l:T Folders}" Theme="{StaticResource Text.Display}" />
+                    <TextBlock Theme="{StaticResource Text.Secondary}" Margin="0,6,0,0"
+                               Text="{l:T 'The scan goes through these folders and identifies each game by its extension, file header and folder name.'}" />
+                </StackPanel>
+                <Button Theme="{StaticResource Button.Primary}" Command="{Binding AddFolderCommand}"
+                        HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Icon Data="{StaticResource Icon.Plus}" Width="14" Height="14" Margin="0,0,8,0" />
+                        <TextBlock Text="{l:T 'Add folder'}" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- ROM folders -->
+            <ContentControl Theme="{StaticResource Surface}" Margin="{StaticResource Section.Gap}">
+                <StackPanel>
+                    <Grid Margin="{StaticResource Row.Padding}" Height="40">
+                        <TextBlock Text="{l:T 'ROM FOLDERS'}" Theme="{StaticResource Text.Overline}" />
+                    </Grid>
+                    <TextBlock Text="{l:T 'No folders yet.'}" Theme="{StaticResource Text.Tertiary}" Margin="20,4,20,20"
+                               IsVisible="{Binding !HasFolders}" />
+                    <ItemsControl x:Name="FolderRows" ItemsSource="{Binding Folders}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <StackPanel>
+                                    <Border Theme="{StaticResource Divider}" />
+                                    <DockPanel Margin="{StaticResource Row.Padding}" Height="52">
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Theme="{StaticResource Button.Icon}" ToolTip.Tip="{l:T 'Open in Finder'}" Margin="0,0,4,0"
+                                                    Command="{Binding #FolderRows.((vm:FoldersViewModel)DataContext).OpenFolderCommand}" CommandParameter="{Binding}">
+                                                <ui:Icon Data="{StaticResource Icon.External}" Width="14" Height="14" />
+                                            </Button>
+                                            <Button Theme="{StaticResource Button.Icon}" ToolTip.Tip="{l:T 'Remove (files are not deleted)'}"
+                                                    Command="{Binding #FolderRows.((vm:FoldersViewModel)DataContext).RemoveFolderCommand}" CommandParameter="{Binding}">
+                                                <ui:Icon Data="{StaticResource Icon.Trash}" Width="14" Height="14" />
+                                            </Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <ui:Icon Data="{StaticResource Icon.Folder}" Width="14" Height="14" Foreground="{StaticResource Brush.Text.Tertiary}" />
+                                            <TextBlock Text="{Binding}" Margin="12,0,0,0" Theme="{StaticResource Text.Mono}"
+                                                       Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ContentControl>
+
+            <!-- Recognized systems -->
+            <TextBlock Text="{l:T 'Recognized systems'}" Theme="{StaticResource Text.Title}" Margin="0,48,0,0" />
+            <TextBlock Theme="{StaticResource Text.Secondary}" Margin="0,6,0,0" MaxWidth="620" HorizontalAlignment="Left"
+                       Text="{l:T 'Extensions like .iso, .chd and .bin are shared by several systems. When the header is not enough, the folder name decides, so organize them into folders such as ps2/ and gamecube/.'}" />
+
+            <ContentControl Theme="{StaticResource Surface}" Margin="0,20,0,0">
+                <StackPanel>
+                    <Grid Margin="{StaticResource Row.Padding}" Height="40" ColumnDefinitions="1.6*,1.8*,2.4*,1*">
+                        <TextBlock Grid.Column="0" Text="{l:T SYSTEM}" Theme="{StaticResource Text.Overline}" />
+                        <TextBlock Grid.Column="1" Text="{l:T 'FOLDER NAMES'}" Theme="{StaticResource Text.Overline}" />
+                        <TextBlock Grid.Column="2" Text="{l:T EXTENSIONS}" Theme="{StaticResource Text.Overline}" />
+                        <TextBlock Grid.Column="3" Text="{l:T EMULATOR}" Theme="{StaticResource Text.Overline}" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding Systems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SystemInfoRow">
+                                <StackPanel>
+                                    <Border Theme="{StaticResource Divider}" />
+                                    <Grid Margin="{StaticResource Row.Padding}" MinHeight="44" ColumnDefinitions="1.6*,1.8*,2.4*,1*">
+                                        <DockPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <Border Theme="{StaticResource Badge}" Width="44" DockPanel.Dock="Left">
+                                                <TextBlock Text="{Binding ShortName}" Theme="{StaticResource Badge.Text}" HorizontalAlignment="Center" />
+                                            </Border>
+                                            <TextBlock Text="{Binding Name}" Margin="12,0,16,0" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Name}" />
+                                        </DockPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding Folders}" Theme="{StaticResource Text.Mono}" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Extensions}" Theme="{StaticResource Text.Mono.Tertiary}" TextWrapping="Wrap" Margin="0,8,12,8" />
+                                        <TextBlock Grid.Column="3" Text="{Binding Emulator}" FontSize="{StaticResource Font.Size.Sm}"
+                                                   Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
+                                    </Grid>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ContentControl>
+
+            <!-- Save backup -->
+            <TextBlock Text="{l:T 'Save backup'}" Theme="{StaticResource Text.Title}" Margin="0,48,0,0" />
+            <TextBlock Theme="{StaticResource Text.Secondary}" Margin="0,6,0,0" MaxWidth="620" HorizontalAlignment="Left"
+                       Text="{l:T 'Memory cards, saves and save states from every emulator in a dated .zip. Keep it in an iCloud Drive or Google Drive folder for a cloud copy. The 10 most recent are kept.'}" />
+            <ContentControl Theme="{StaticResource Surface}" Margin="0,20,0,0">
+                <StackPanel Margin="20,16">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Theme="{StaticResource Button.Icon}" Command="{Binding OpenBackupDirCommand}" ToolTip.Tip="{l:T 'Open the backup folder'}" Margin="0,0,4,0">
+                                <ui:Icon Data="{StaticResource Icon.External}" Width="14" Height="14" />
+                            </Button>
+                            <Button Theme="{StaticResource Button.Secondary.Small}" Content="{l:T 'Change folder…'}" Command="{Binding ChangeBackupDirCommand}" Margin="0,0,8,0" />
+                            <Button Theme="{StaticResource Button.Primary}" Command="{Binding BackupNowCommand}" Height="28" Padding="12,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:Icon Data="{StaticResource Icon.Download}" Width="13" Height="13" Margin="0,0,6,0" />
+                                    <TextBlock Text="{l:T 'Back up now'}" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding BackupDir}" Theme="{StaticResource Text.Mono}" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding LastBackupText}" Theme="{StaticResource Text.Mono.Tertiary}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+                    <CheckBox Margin="0,16,0,0" IsChecked="{Binding AutoBackup}" Content="{l:T 'Automatic backup once a day (when Retro Hub opens)'}" />
+                    <TextBlock Text="{Binding BackupNotice.Message, FallbackValue=''}" Margin="30,10,0,0" Theme="{StaticResource Text.Tertiary}" TextWrapping="Wrap"
+                               IsVisible="{Binding BackupNotice, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    <TextBlock Text="{l:T 'backing up…'}" Margin="30,10,0,0" Theme="{StaticResource Text.Mono.Tertiary}"
+                               IsVisible="{Binding IsBackingUp}" />
+                </StackPanel>
+            </ContentControl>
+
+            <!-- Preferences -->
+            <TextBlock Text="{l:T Preferences}" Theme="{StaticResource Text.Title}" Margin="0,48,0,0" />
+            <ContentControl Theme="{StaticResource Surface}" Margin="0,20,0,0">
+                <StackPanel Margin="20,16">
+                    <CheckBox IsChecked="{Binding StartInTv}" Content="{l:T 'Start in TV mode'}" />
+                    <TextBlock Text="{l:T 'To use your Mac as a console on the TV. B on the controller returns to this screen. You can also open it with F11.'}"
+                               Theme="{StaticResource Text.Tertiary}" Margin="30,4,0,0" TextWrapping="Wrap" />
+
+                    <!-- Interface language (applied on restart) -->
+                    <DockPanel Margin="0,20,0,0">
+                        <TextBlock Text="{l:T LANGUAGE}" Theme="{StaticResource Text.Overline}" Width="200" Margin="0,0,0,6" VerticalAlignment="Center" />
+                        <ListBox Theme="{StaticResource Chips}" ItemsSource="{Binding Languages}"
+                                 SelectedValueBinding="{ReflectionBinding Code}" SelectedValue="{Binding SelectedLanguage}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:LanguageOption">
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                    <DockPanel Margin="0,4,0,0" IsVisible="{Binding LanguageRestartNeeded}">
+                        <Button DockPanel.Dock="Right" Theme="{StaticResource Button.Secondary.Small}" Content="{l:T 'Restart now'}"
+                                Command="{Binding RestartCommand}" VerticalAlignment="Center" />
+                        <TextBlock Text="{l:T 'Restart Retro Hub to change the language.'}" Theme="{StaticResource Text.Tertiary}"
+                                   VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,12,0" />
+                    </DockPanel>
+                </StackPanel>
+            </ContentControl>
+
+            <!-- Data -->
+            <TextBlock Text="{l:T Data}" Theme="{StaticResource Text.Title}" Margin="0,48,0,0" />
+            <ContentControl Theme="{StaticResource Surface}" Margin="0,20,0,0">
+                <StackPanel Margin="20,16">
+                    <DockPanel>
+                        <TextBlock Text="{l:T 'LIBRARY AND EMULATORS'}" Theme="{StaticResource Text.Overline}" Width="200" />
+                        <TextBlock Text="{Binding DataRoot}" Theme="{StaticResource Text.Mono}" TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                    <DockPanel Margin="0,12,0,0">
+                        <TextBlock Text="{l:T MANIFESTS}" Theme="{StaticResource Text.Overline}" Width="200" />
+                        <TextBlock Text="{Binding ManifestsDir}" Theme="{StaticResource Text.Mono}" TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                    <ItemsControl ItemsSource="{Binding ManifestWarnings}" Margin="0,12,0,0" IsVisible="{Binding HasWarnings}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <Ellipse Theme="{StaticResource StatusDot}" Fill="{StaticResource Brush.Status.Warn}" />
+                                    <TextBlock Text="{Binding}" Margin="10,0,0,0" Theme="{StaticResource Text.Mono}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ContentControl>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

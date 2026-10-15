@@ -54,7 +54,7 @@ public sealed partial class GameLauncher(ManifestRepository manifests, LibraryDa
 
             if (profile.Core is { } core)
             {
-                var corePath = Path.Combine(install.InstallDir, emulator.Cores?.TargetDir ?? "cores", $"{core}_libretro.dll");
+                var corePath = Path.Combine(install.InstallDir, emulator.Cores?.TargetDir ?? "cores", Util.Platform.CoreFileName(core));
                 if (!File.Exists(corePath))
                 {
                     problems.Add(L.F("{0}: core '{1}' is not installed.", emulator.Name, core));
@@ -112,6 +112,12 @@ public sealed partial class GameLauncher(ManifestRepository manifests, LibraryDa
             WorkingDirectory = plan.WorkingDirectory,
             UseShellExecute = false,
         };
+        foreach (var (name, value) in plan.Emulator.Environment)
+        {
+            var expanded = value.Replace("{emuDir}", plan.Installed.InstallDir);
+            if (name == "HOME") Directory.CreateDirectory(expanded);
+            psi.Environment[name] = expanded;
+        }
 
         var startedAt = DateTimeOffset.UtcNow;
         var stopwatch = Stopwatch.StartNew();
@@ -122,12 +128,12 @@ public sealed partial class GameLauncher(ManifestRepository manifests, LibraryDa
         }
         catch (OperationCanceledException)
         {
-            // "Quit game" (TV Mode): asks it to close like the window's X; if it does not respond in 4 s, kills it.
+            // "Quit game" (TV Mode): asks it to close like the window's X (SIGTERM on macOS); if it does not respond in 4 s, kills it.
             await Task.Run(() =>
             {
                 try
                 {
-                    process.CloseMainWindow();
+                    Util.Platform.RequestClose(process);
                     if (!process.WaitForExit(4000))
                         process.Kill(entireProcessTree: true);
                 }

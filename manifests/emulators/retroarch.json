@@ -72,5 +72,68 @@
     "format": "flat",
     "takesCredentials": true,
     "enable": { "": { "cheevos_enable": "true", "cheevos_username": "{user}", "cheevos_password": "{password}" } }
+  },
+  // ── macOS ── Universal app (Apple Silicon + Intel), signed and notarized by libretro.
+  // portable.txt next to RetroArch.app keeps config (config/retroarch.cfg), cores, saves and BIOS in this folder.
+  // Each key here replaces the one above on macOS.
+  "macos": {
+    "source": {
+      "type": "url",
+      "version": "1.22.2",
+      "url": "https://buildbot.libretro.com/stable/{version}/apple/osx/universal/RetroArch_Metal.dmg",
+      "sha256": null
+    },
+    "executable": "RetroArch.app/Contents/MacOS/RetroArch",
+    "postInstall": [
+      { "action": "createFile", "path": "portable.txt" },
+      { "action": "createDir", "path": "system" },
+      { "action": "createDir", "path": "config" }
+    ],
+    "cores": {
+      "urlTemplate": "https://buildbot.libretro.com/nightly/apple/osx/{arch}/latest/{core}_libretro.dylib.zip",
+      "targetDir": "cores"
+    },
+    "launch": [
+      { "systems": ["nes"],               "core": "mesen",            "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" },
+      { "systems": ["snes"],              "core": "snes9x",           "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" },
+      { "systems": ["n64"],               "core": "mupen64plus_next", "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" },
+      { "systems": ["gb", "gbc"],         "core": "gambatte",         "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" },
+      { "systems": ["gba"],               "core": "mgba",             "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" },
+      { "systems": ["nds"],               "core": "melondsds",        "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" },
+      { "systems": ["sms", "genesis", "segacd"], "core": "genesis_plus_gx", "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" },
+      { "systems": ["saturn"],            "core": "mednafen_saturn",  "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" },
+      { "systems": ["dreamcast"],         "core": "flycast",          "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" },
+      { "systems": ["arcade"],            "core": "fbneo",            "args": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\"" }
+    ],
+    // macOS has no XInput: the MFi driver (Game Controller framework) reads Xbox, PlayStation and MFi controllers.
+    "controller": {
+      "file": "config/retroarch.cfg",
+      "format": "flat",
+      "description": "MFi autoconfig (all cores)",
+      "settings": {
+        "": { "input_joypad_driver": "mfi", "input_autodetect_enable": "true" }
+      }
+    },
+    "saves": {
+      "states": [ { "dir": "states", "pattern": "{romName}.state*", "slot": "\\.state(\\d*)$" } ],
+      "loadStateArgs": "-f -L \"{emuDir}/cores/{core}_libretro.dylib\" \"{rom}\" --entryslot={slot}",
+      "backup": ["saves", "states"]
+    },
+    "preserve": ["config/retroarch.cfg", "portable.txt"],
+    // The CRT filter toggle is Windows-only: on macOS the slang shaders live inside the app bundle.
+    "graphics": {
+      "file": "config/retroarch.cfg",
+      "format": "flat",
+      "aspect": { "values": {
+        "Auto": { "": { "video_aspect_ratio_auto": "true" } },
+        "4:3": { "": { "video_aspect_ratio_auto": "false", "aspect_ratio_index": "0" } },
+        "16:9": { "": { "video_aspect_ratio_auto": "false", "aspect_ratio_index": "1" } } } }
+    },
+    "achievements": {
+      "file": "config/retroarch.cfg",
+      "format": "flat",
+      "takesCredentials": true,
+      "enable": { "": { "cheevos_enable": "true", "cheevos_username": "{user}", "cheevos_password": "{password}" } }
+    }
   }
 }

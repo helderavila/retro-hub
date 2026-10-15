@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>Seus jogos antigos num lugar só.</b><br>
-  Um hub para Windows que instala emuladores, organiza a biblioteca e abre cada jogo no emulador certo, com mouse ou controle.
+  Um hub para Windows e macOS que instala emuladores, organiza a biblioteca e abre cada jogo no emulador certo, com mouse ou controle.
 </p>
 
 <p align="center">
@@ -91,6 +91,18 @@ Abre pelo botão **Modo TV**, por **F11**, pelo atalho "Retro Hub (Modo TV)" ou 
 | B | Esc | sair do Modo TV |
 | Back + Start (segurar 1 s) | — | fechar o jogo e voltar |
 
+## macOS
+
+O app do Mac (`src/RetroHub.Mac`, Avalonia) tem as mesmas telas, o mesmo design e os mesmos recursos, e compartilha todo o resto com o app do Windows: a lógica, os manifestos e as traduções.
+
+- **Requisitos:** macOS 12 ou mais novo, Apple Silicon ou Intel.
+- **Instalar:** abra o `RetroHub-<versão>-macos-<arch>.dmg` e arraste o Retro Hub para Aplicativos. Builds sem assinatura Developer ID mostram o aviso de "desenvolvedor não identificado" na primeira vez: clique com o botão direito no app › **Abrir**.
+- **Dados:** `~/Library/Application Support/RetroHub` (um `portable.txt` dentro de `Retro Hub.app/Contents/MacOS` troca para `./data` ali).
+- **Emuladores** são os apps oficiais para macOS, baixados para a pasta do Retro Hub e mantidos nela: RetroArch, PCSX2 e Dolphin no modo portátil; DuckStation e PPSSPP rodam com a pasta pessoal apontando para dentro dela.
+- **PCSX2** ainda não tem versão para Apple Silicon: roda pelo Rosetta 2 (o botão **Dependências** verifica).
+- **Controles** são lidos pelo SDL3 (Xbox, PlayStation, Switch Pro e MFi); o RetroArch usa o driver MFi.
+- **Diferenças:** sem winget (os emuladores vêm como apps), Finder e Lixo no lugar de Explorer e Lixeira, e o Modo TV mostra a arte do jogo em vez dos vídeos de prévia.
+
 ## Adicionar emuladores
 
 Na tela **Emuladores**:
@@ -133,14 +145,17 @@ Os seus manifestos ficam em `%LOCALAPPDATA%\RetroHub\manifests` e não são apag
 
 Os manifestos em [`manifests/emulators`](manifests/emulators) mostram todos os campos opcionais em uso.
 
+**macOS:** um bloco `"macos"` substitui as chaves de topo que ele nomeia (em geral `source`, `executable`, `launch`, `controller`). Sem ele, um emulador baixável só aparece no Windows. Duas chaves ajudam emuladores que guardam os dados na pasta pessoal: `"environment": { "HOME": "{emuDir}/home" }` define variáveis para o processo do emulador, e `"dataDir"` faz os caminhos de controle, gráficos e saves partirem dessa pasta.
+
 **Hash:** fontes do GitHub usam o SHA-256 que o GitHub publica para cada arquivo. Links fixos sem hash ficam marcados como "sem hash" e o SHA-256 obtido é registrado; preencha `"sha256"` para exigir a conferência.
 
 ## Compilar
 
-Precisa do [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) no Windows 10 ou 11.
+Precisa do [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) no Windows 10 ou 11, ou no macOS.
 
 ```bash
-dotnet run --project src/RetroHub.App
+dotnet run --project src/RetroHub.App     # Windows
+dotnet run --project src/RetroHub.Mac     # macOS
 ```
 
 ```bash
@@ -155,6 +170,16 @@ powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
 
 Gera `dist\RetroHub-Setup-<versão>.exe` com o app self-contained. A versão vem de `Directory.Build.props`.
 
+App e imagem de disco do macOS:
+
+```bash
+installer/build-mac.sh            # arm64 ou x64; o padrão é a arquitetura deste Mac
+```
+
+Gera `dist/Retro Hub.app` e `dist/RetroHub-<versão>-macos-<arch>.dmg`, com assinatura ad-hoc. Defina `SIGN_IDENTITY="Developer ID Application: …"` para assinar para distribuição (com hardened runtime) e depois notarize o .dmg.
+
+`RETROHUB_NET_TESTS=1 dotnet test` num Mac também instala os cinco emuladores de verdade (~410 MB) para conferir downloads, extração e assinaturas de código.
+
 ### Estrutura
 
 ```
@@ -166,11 +191,15 @@ src/RetroHub.Core/          lógica sem WPF (testável)
   Install/                    versões (GitHub/Forgejo/URL), download, SHA-256, extração, winget, emuladores do usuário
   Scanning/                   scanner, cabeçalhos de disco, ISO 9660, .cue/.gdi/.m3u, títulos
   Library/                    SQLite: jogos, sessões, coleções, emuladores, configurações
-  Launch/ Input/ Saves/       abrir jogos, controle Xbox (XInput/SDL), save states e backup
+  Launch/ Input/ Saves/       abrir jogos, controles (XInput/SDL), save states e backup
   Covers/ Metadata/ Bios/     capas, informações e verificação de ROM, BIOS por MD5
 src/RetroHub.App/           WPF + MVVM (CommunityToolkit.Mvvm)
   Themes/                     tokens de design, ícones e estilos (preto e branco)
   Views/ ViewModels/          biblioteca, página do jogo, emuladores, BIOS, pastas, Modo TV
+src/RetroHub.Mac/           Avalonia + MVVM, mesma estrutura e design (macOS)
+  Themes/                     os mesmos tokens; os estilos do WPF viram ControlThemes com as mesmas chaves
+  Input/                      controles pelo SDL3
+  i18n/pt-BR/                 textos só do Mac (Finder, Lixo, Rosetta)
 tests/RetroHub.Core.Tests/  xUnit com imagens de disco sintéticas
 docs/                       site (GitHub Pages) e imagens do README
 ```

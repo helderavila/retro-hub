@@ -83,5 +83,22 @@
     ]
   },
   // Achievements login is done inside PCSX2 (Settings › Achievements); here we only enable them.
-  "achievements": { "file": "inis/PCSX2.ini", "enable": { "Achievements": { "Enabled": "true" } } }
+  "achievements": { "file": "inis/PCSX2.ini", "enable": { "Achievements": { "Enabled": "true" } } },
+  // ── macOS ── Signed and notarized, but Intel-only: on Apple Silicon it runs through Rosetta 2
+  // (macOS offers to install it the first time). portable.txt next to the .app keeps inis, bios, memcards and sstates here.
+  "macos": {
+    "description": "PlayStation 2 emulator. On Apple Silicon it runs through Rosetta 2.",
+    "source": {
+      "type": "github",
+      "repo": "PCSX2/pcsx2",
+      "asset": "macos-Qt\\.tar\\.xz$"
+    },
+    // The bundle name carries the version (PCSX2-v2.8.2.app).
+    "executable": "PCSX2-*.app/Contents/MacOS/PCSX2",
+    "postInstall": [
+      { "action": "createFile", "path": "portable.txt" }
+    ],
+    "dependencies": [],
+    "preserve": ["portable.txt"]
+  }
 }

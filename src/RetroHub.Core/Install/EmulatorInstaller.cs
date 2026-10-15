@@ -73,6 +73,7 @@ public sealed class EmulatorInstaller(
 
         var exe = FindExecutable(target, manifest.Executable)
             ?? throw new FileNotFoundException(L.F("Executable '{0}' not found in {1}.", manifest.Executable, target));
+        ArchiveExtractor.PrepareForLaunch(target, exe);
 
         if (manifest.Cores is not null)
         {
@@ -103,6 +104,7 @@ public sealed class EmulatorInstaller(
     private InstalledEmulator RegisterLocal(EmulatorManifest manifest, IProgress<InstallUpdate> progress)
     {
         var path = manifest.Source.Path ?? throw new InvalidDataException(L.F("{0}: local source without 'path'.", manifest.Name));
+        path = Platform.ResolveAppBundle(path);
         string exe;
         if (File.Exists(path))
             exe = path;
@@ -157,7 +159,7 @@ public sealed class EmulatorInstaller(
             var core = cores[i];
             progress.Report(new InstallUpdate(L.F("Core {0}/{1}: {2}", i + 1, cores.Count, core), (double)i / cores.Count, null));
 
-            var url = manifest.Cores.UrlTemplate.Replace("{core}", core);
+            var url = manifest.Cores.UrlTemplate.Replace("{core}", core).Replace("{arch}", Platform.MacArch);
             var zip = Path.Combine(paths.Downloads, manifest.Id, "cores", $"{core}.zip");
             try
             {

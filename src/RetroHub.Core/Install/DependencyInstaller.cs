@@ -32,7 +32,8 @@ public sealed class DependencyInstaller
 
     public async Task EnsureAsync(IReadOnlyCollection<DependencyDefinition> deps, IProgress<InstallUpdate> progress, CancellationToken ct)
     {
-        if (deps.Count == 0)
+        // winget and the VC++ runtime are Windows things; macOS emulators ship self-contained app bundles.
+        if (deps.Count == 0 || !Platform.IsWindows)
             return;
 
         progress.Report(new InstallUpdate(L.T("Checking dependencies"), null, null));

@@ -1,0 +1,76 @@
+<Window x:Class="RetroHub.Mac.Views.CoverPickerDialog"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:RetroHub.Mac.Controls"
+        xmlns:l="using:RetroHub.Mac.Helpers"
+        SystemDecorations="None" CanResize="False" Background="Transparent" TransparencyLevelHint="Transparent"
+        Width="820" Height="600" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        FontFamily="{StaticResource Font.Sans}" Foreground="{StaticResource Brush.Text.Primary}">
+
+    <Window.Resources>
+        <ControlTheme x:Key="Result.Item" TargetType="ListBoxItem">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="Row" Padding="10,7" CornerRadius="{StaticResource Radius.Sm}" Background="Transparent" Cursor="Hand">
+                        <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:pointerover /template/ Border#Row">
+                <Setter Property="Background" Value="{StaticResource Brush.Overlay.Hover}" />
+            </Style>
+            <Style Selector="^:selected /template/ Border#Row">
+                <Setter Property="Background" Value="{StaticResource Brush.Surface.Raised}" />
+            </Style>
+        </ControlTheme>
+    </Window.Resources>
+
+    <Border Margin="20" Background="{StaticResource Brush.Surface}" CornerRadius="{StaticResource Radius.Lg}"
+            BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1" BoxShadow="0 8 40 0 #99000000">
+        <Grid Margin="24,20,24,20" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*,240">
+
+            <TextBlock Grid.ColumnSpan="2" Text="{l:T 'Change cover'}" Theme="{StaticResource Text.Title}" />
+            <TextBox x:Name="Query" Grid.Row="1" Theme="{StaticResource TextBox.Search}" Watermark="{l:T 'Search the cover archive'}"
+                     Margin="0,16,16,12" />
+
+            <ListBox x:Name="Results" Grid.Row="2" Margin="0,0,16,0" Background="Transparent" BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" ItemContainerTheme="{StaticResource Result.Item}"
+                     SelectionChanged="Results_SelectionChanged" DoubleTapped="Results_DoubleTapped">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <TextBlock Text="{Binding}" Foreground="{StaticResource Brush.Text.Secondary}" TextTrimming="CharacterEllipsis" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock x:Name="Status" Grid.Row="2" Margin="10,8,16,0" VerticalAlignment="Top" Theme="{StaticResource Text.Tertiary}" />
+
+            <!-- Preview -->
+            <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Margin="0,16,0,0" CornerRadius="{StaticResource Radius.Md}"
+                    Background="{StaticResource Brush.CoverPlaceholder}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1"
+                    VerticalAlignment="Top" Height="320">
+                <Panel>
+                    <TextBlock x:Name="PreviewHint" Text="{l:T 'preview'}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Theme="{StaticResource Text.Mono.Tertiary}" />
+                    <Image x:Name="Preview" Stretch="Uniform" Margin="6" />
+                </Panel>
+            </Border>
+
+            <DockPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,18,0,0">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <Button Theme="{StaticResource Button.Secondary}" Margin="0,0,8,0" Click="FromFile_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Icon Data="{StaticResource Icon.Folder}" Width="14" Height="14" Margin="0,0,8,0" />
+                            <TextBlock Text="{l:T 'Image from computer…'}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Theme="{StaticResource Button.Ghost}" Content="{l:T 'No cover'}" Click="None_Click" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Theme="{StaticResource Button.Secondary}" Content="{l:T 'Cancel'}" IsCancel="True" Margin="0,0,8,0" Click="Cancel_Click" />
+                    <Button x:Name="UseButton" Theme="{StaticResource Button.Primary}" Content="{l:T 'Use this cover'}" IsDefault="True"
+                            IsEnabled="False" Click="Use_Click" />
+                </StackPanel>
+            </DockPanel>
+        </Grid>
+    </Border>
+</Window>

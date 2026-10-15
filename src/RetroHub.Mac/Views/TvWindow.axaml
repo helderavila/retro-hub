@@ -1,0 +1,436 @@
+<Window x:Class="RetroHub.Mac.Views.TvWindow"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:RetroHub.Mac.Controls"
+        xmlns:vm="using:RetroHub.Mac.ViewModels"
+        xmlns:l="using:RetroHub.Mac.Helpers"
+        x:DataType="vm:TvViewModel"
+        Title="{l:T 'Retro Hub · TV Mode'}"
+        SystemDecorations="None" WindowState="FullScreen" ShowInTaskbar="True"
+        Background="{StaticResource Brush.Bg}"
+        Foreground="{StaticResource Brush.Text.Primary}"
+        FontFamily="{StaticResource Font.Sans}"
+        Cursor="None" UseLayoutRounding="True">
+
+    <Window.Resources>
+        <!-- Circle with the button letter (A, B, Y…) -->
+        <ControlTheme x:Key="PadGlyph" TargetType="Border">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+        </ControlTheme>
+        <ControlTheme x:Key="PadGlyph.Text" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Inverse}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </ControlTheme>
+        <ControlTheme x:Key="PadPill" TargetType="Border">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="Background" Value="{StaticResource Brush.Surface.Raised}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Strong}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </ControlTheme>
+        <ControlTheme x:Key="Hint.Text" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{StaticResource Tv.Font.Small}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,36,0" />
+        </ControlTheme>
+
+        <!-- Shelf item: cover that grows when selected -->
+        <ControlTheme x:Key="ShelfItem" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,40,0" />
+            <Setter Property="RenderTransformOrigin" Value="50%,100%" />
+            <Setter Property="RenderTransform" Value="scale(1)" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut" />
+                </Transitions>
+            </Setter>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Panel>
+                        <Border Name="Glow" CornerRadius="16" Margin="-10" Opacity="0" Background="{StaticResource Brush.Overlay.Hover}">
+                            <Border.Effect>
+                                <BlurEffect Radius="24" />
+                            </Border.Effect>
+                            <Border.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+                                </Transitions>
+                            </Border.Transitions>
+                        </Border>
+                        <ContentPresenter Name="PART_ContentPresenter" Opacity="0.4"
+                                          Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}">
+                            <ContentPresenter.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+                                </Transitions>
+                            </ContentPresenter.Transitions>
+                        </ContentPresenter>
+                    </Panel>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:selected">
+                <Setter Property="RenderTransform" Value="scale(1.08)" />
+            </Style>
+            <Style Selector="^:selected /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Opacity" Value="1" />
+            </Style>
+            <Style Selector="^:selected /template/ Border#Glow">
+                <Setter Property="Opacity" Value="1" />
+            </Style>
+        </ControlTheme>
+
+        <DataTemplate x:Key="ShelfCard" x:DataType="vm:GameItemViewModel">
+            <Border Classes="frame" Width="{StaticResource Tv.Card.Width}" Height="{StaticResource Tv.Card.Height}" CornerRadius="14"
+                    Background="{StaticResource Brush.CoverPlaceholder}" Padding="0">
+                <Panel>
+                    <!-- Placeholder only without a cover: Avalonia fades layers one by one, so it would show through a faded cover -->
+                    <StackPanel VerticalAlignment="Center" Margin="20" IsVisible="{Binding !HasCover}">
+                        <TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" FontFamily="{StaticResource Font.Mono}"
+                                   FontSize="56" Foreground="{StaticResource Brush.Border.Strong}" />
+                        <TextBlock Text="{Binding Title}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                                   Margin="0,16,0,0" FontSize="{StaticResource Tv.Font.Small}" Foreground="{StaticResource Brush.Text.Tertiary}" />
+                    </StackPanel>
+                    <ui:CoverArt CornerRadius="11" Source="{Binding CoverImage}" IsVisible="{Binding HasCover}" />
+                    <Border Width="34" Height="34" CornerRadius="17" Margin="12" Background="#B3000000"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" IsVisible="{Binding Favorite}">
+                        <ui:Icon Data="{StaticResource Icon.Star}" Width="16" Height="16"
+                                 Foreground="{StaticResource Brush.Pad.Y}" Fill="{StaticResource Brush.Pad.Y}" />
+                    </Border>
+                </Panel>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Window.Styles>
+        <!-- Shelf card frame; the selected one gets a thick white border, visible from afar -->
+        <Style Selector="Border.frame">
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="ListBoxItem:selected Border.frame">
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="BorderThickness" Value="4" />
+        </Style>
+        <!-- System tab: the active one is a white pill -->
+        <Style Selector="Border.tab">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Border.tab TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Tertiary}" />
+        </Style>
+        <Style Selector="Border.tab.active">
+            <Setter Property="Background" Value="{StaticResource Brush.Text.Primary}" />
+        </Style>
+        <Style Selector="Border.tab.active TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Inverse}" />
+        </Style>
+    </Window.Styles>
+
+    <Panel ClipToBounds="True">
+        <!-- Background: blurred art of the selected game -->
+        <Image Source="{Binding Selected.CoverImage, FallbackValue={x:Null}}" Stretch="UniformToFill" Opacity="0.32"
+               RenderTransformOrigin="50%,50%" RenderTransform="scale(1.25)">
+            <Image.Effect>
+                <BlurEffect Radius="90" />
+            </Image.Effect>
+        </Image>
+        <!-- (The Windows app plays a local preview video here; Avalonia has no built-in media player, so the Mac shows the art.) -->
+        <Rectangle>
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Color="#99000000" Offset="0" />
+                    <GradientStop Color="#33000000" Offset="0.45" />
+                    <GradientStop Color="#F2000000" Offset="1" />
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Rectangle Fill="{StaticResource Brush.TopGlow}" Height="420" VerticalAlignment="Top" />
+
+        <Grid Margin="{StaticResource Tv.Safe}" RowDefinitions="Auto,*,Auto,Auto">
+
+            <!-- Top: brand · system tabs · clock -->
+            <DockPanel Grid.Row="0">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="/Assets/logo-mark.png" Width="44" Height="44" RenderOptions.BitmapInterpolationMode="HighQuality" />
+                    <Image Source="/Assets/logo-wordmark.png" Height="30" Margin="16,0,0,0" VerticalAlignment="Center"
+                           RenderOptions.BitmapInterpolationMode="HighQuality" />
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding Clock}" VerticalAlignment="Center"
+                           FontFamily="{StaticResource Font.Mono}" FontSize="24" Foreground="{StaticResource Brush.Text.Secondary}" />
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border Theme="{StaticResource PadPill}">
+                        <TextBlock Text="LB" Theme="{StaticResource Hint.Text}" Margin="0" FontFamily="{StaticResource Font.Mono}" />
+                    </Border>
+                    <ItemsControl ItemsSource="{Binding Tabs}" Margin="6,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TvTab">
+                                <Border Classes="tab" Classes.active="{Binding IsActive}" Height="44" Padding="22,0" Margin="4,0" CornerRadius="22">
+                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center"
+                                               FontSize="{StaticResource Tv.Font.Body}" FontWeight="Medium" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Border Theme="{StaticResource PadPill}" Margin="0">
+                        <TextBlock Text="RB" Theme="{StaticResource Hint.Text}" Margin="0" FontFamily="{StaticResource Font.Mono}" />
+                    </Border>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Shelf -->
+            <ListBox x:Name="Shelf" Grid.Row="1" VerticalAlignment="Center" Margin="0,40,0,0"
+                     ItemsSource="{Binding Games}" SelectedIndex="{Binding SelectedIndex}"
+                     ItemTemplate="{StaticResource ShelfCard}" ItemContainerTheme="{StaticResource ShelfItem}"
+                     Background="Transparent" BorderThickness="0" Focusable="False"
+                     SelectionChanged="Shelf_SelectionChanged" IsVisible="{Binding HasGames}">
+                <ListBox.Template>
+                    <ControlTemplate>
+                        <ScrollViewer Name="PART_ScrollViewer" Focusable="False" Padding="0"
+                                      HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                            <!-- Margin inside the scrollable area so the growing card is not clipped -->
+                            <ItemsPresenter Name="PART_ItemsPresenter" Margin="48,64,48,40" ItemsPanel="{TemplateBinding ItemsPanel}" />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ListBox.Template>
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+            </ListBox>
+
+            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding !HasGames}">
+                <TextBlock Text="{l:T 'No games here'}" FontSize="{StaticResource Tv.Font.Title}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <TextBlock Text="{l:T 'Add ROM folders in desktop mode and scan.'}" Margin="0,12,0,0"
+                           FontSize="{StaticResource Tv.Font.Body}" Foreground="{StaticResource Brush.Text.Secondary}" HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Selected game details -->
+            <StackPanel Grid.Row="2" Margin="24,0,0,36" IsVisible="{Binding HasGames}">
+                <TextBlock Text="{Binding Selected.Title, FallbackValue=''}" FontSize="{StaticResource Tv.Font.Title}" FontWeight="SemiBold"
+                           TextTrimming="CharacterEllipsis" />
+                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                    <Border Theme="{StaticResource Badge}" Padding="10,3">
+                        <TextBlock Text="{Binding Selected.SystemName, FallbackValue=''}" Theme="{StaticResource Badge.Text}" FontSize="15" />
+                    </Border>
+                    <TextBlock Margin="18,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource Font.Mono}"
+                               FontSize="{StaticResource Tv.Font.Small}" Foreground="{StaticResource Brush.Text.Secondary}">
+                        <Run Text="{l:T 'played ·'}" /> <Run Text="{Binding Selected.PlaytimeText, FallbackValue=''}" />
+                    </TextBlock>
+                </StackPanel>
+                <TextBlock Text="{Binding Message}" Margin="0,14,0,0" FontSize="{StaticResource Tv.Font.Small}"
+                           Foreground="{StaticResource Brush.Status.Error}" TextWrapping="Wrap"
+                           IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+
+            <!-- Controller hints -->
+            <DockPanel Grid.Row="3" Margin="24,0,0,0">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Border Theme="{StaticResource PadPill}">
+                        <TextBlock Text="Back + Start" FontFamily="{StaticResource Font.Mono}" FontSize="14"
+                                   Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="{l:T 'hold to quit the game'}" Theme="{StaticResource Hint.Text}" Margin="0" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Border Theme="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.A}">
+                        <TextBlock Text="A" Theme="{StaticResource PadGlyph.Text}" />
+                    </Border>
+                    <TextBlock Text="{l:T Play}" Theme="{StaticResource Hint.Text}" />
+                    <Border Theme="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.X}">
+                        <TextBlock Text="X" Theme="{StaticResource PadGlyph.Text}" />
+                    </Border>
+                    <TextBlock Text="{l:T Continue}" Theme="{StaticResource Hint.Text}" />
+                    <Border Theme="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.Y}">
+                        <TextBlock Text="Y" Theme="{StaticResource PadGlyph.Text}" />
+                    </Border>
+                    <TextBlock Text="{l:T Favorite}" Theme="{StaticResource Hint.Text}" />
+                    <Border Theme="{StaticResource PadPill}">
+                        <TextBlock Text="▼" FontSize="13" Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="{l:T Details}" Theme="{StaticResource Hint.Text}" />
+                    <Border Theme="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.B}">
+                        <TextBlock Text="B" Theme="{StaticResource PadGlyph.Text}" />
+                    </Border>
+                    <TextBlock Text="{l:T 'Exit TV Mode'}" Theme="{StaticResource Hint.Text}" />
+                </StackPanel>
+            </DockPanel>
+        </Grid>
+
+        <!-- ═══ Game page (▼ on the shelf) ═══ -->
+        <Panel IsVisible="{Binding Page, Converter={x:Static ObjectConverters.IsNotNull}}" Background="{StaticResource Brush.Bg}">
+            <Panel DataContext="{Binding Page}" x:DataType="vm:GameDetailsViewModel">
+                <Image Source="{Binding HeroImage}" Stretch="UniformToFill" Opacity="0.35" RenderTransformOrigin="50%,50%" RenderTransform="scale(1.2)">
+                    <Image.Effect>
+                        <BlurEffect Radius="70" />
+                    </Image.Effect>
+                </Image>
+                <Rectangle>
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                            <GradientStop Color="#E6000000" Offset="0" />
+                            <GradientStop Color="#99000000" Offset="1" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+
+                <Grid Margin="{StaticResource Tv.Safe}" RowDefinitions="*,Auto" ColumnDefinitions="Auto,*">
+
+                    <!-- Large cover -->
+                    <Border Width="{StaticResource Tv.Card.Width}" Height="{StaticResource Tv.Card.Height}" CornerRadius="14" VerticalAlignment="Center"
+                            Background="{StaticResource Brush.CoverPlaceholder}" BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1"
+                            RenderTransformOrigin="50%,50%" RenderTransform="scale(1.25)" Margin="24,0,0,0"
+                            BoxShadow="0 10 60 0 #B3000000">
+                        <Panel>
+                            <TextBlock Text="{Binding Item.Initials}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       FontFamily="{StaticResource Font.Mono}" FontSize="56" Foreground="{StaticResource Brush.Border.Strong}" />
+                            <ui:CoverArt CornerRadius="13" Source="{Binding Item.CoverImage}" IsVisible="{Binding Item.HasCover}" />
+                        </Panel>
+                    </Border>
+
+                    <!-- Info (↑/↓ scrolls) -->
+                    <ScrollViewer x:Name="PageScroll" Grid.Column="1" Margin="110,0,24,0" VerticalScrollBarVisibility="Hidden" Focusable="False"
+                                  VerticalAlignment="Center">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Theme="{StaticResource Badge}" Padding="10,3">
+                                    <TextBlock Text="{Binding SystemName}" Theme="{StaticResource Badge.Text}" FontSize="15" />
+                                </Border>
+                                <Border Width="34" Height="34" CornerRadius="17" Margin="14,0,0,0" Background="#B3000000"
+                                        IsVisible="{Binding Item.Favorite}">
+                                    <ui:Icon Data="{StaticResource Icon.Star}" Width="16" Height="16"
+                                             Foreground="{StaticResource Brush.Pad.Y}" Fill="{StaticResource Brush.Pad.Y}" />
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Title}" FontSize="52" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,16,0,0" />
+                            <TextBlock Text="{Binding InfoLine}" FontSize="{StaticResource Tv.Font.Body}" Foreground="{StaticResource Brush.Text.Secondary}"
+                                       TextWrapping="Wrap" Margin="0,14,0,0" />
+                            <TextBlock Text="{Binding PeopleLine}" FontSize="{StaticResource Tv.Font.Small}" Foreground="{StaticResource Brush.Text.Tertiary}"
+                                       TextWrapping="Wrap" Margin="0,6,0,0" />
+
+                            <!-- Numbers -->
+                            <StackPanel Orientation="Horizontal" Margin="0,32,0,0">
+                                <StackPanel Margin="0,0,56,0">
+                                    <TextBlock Text="{l:T 'TIME PLAYED'}" Theme="{StaticResource Text.Overline}" FontSize="13" />
+                                    <TextBlock Text="{Binding PlaytimeText}" FontSize="34" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                </StackPanel>
+                                <StackPanel Margin="0,0,56,0">
+                                    <TextBlock Text="{l:T SESSIONS}" Theme="{StaticResource Text.Overline}" FontSize="13" />
+                                    <TextBlock Text="{Binding SessionCount}" FontSize="34" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="{l:T 'LAST PLAYED'}" Theme="{StaticResource Text.Overline}" FontSize="13" />
+                                    <TextBlock Text="{Binding LastPlayedTile}" FontSize="34" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Synopsis -->
+                            <TextBlock Text="{Binding Description}" FontSize="{StaticResource Tv.Font.Small}" LineHeight="32" MaxWidth="980" HorizontalAlignment="Left"
+                                       Foreground="{StaticResource Brush.Text.Secondary}" TextWrapping="Wrap" Margin="0,32,0,0"
+                                       IsVisible="{Binding HasDescription}" />
+
+                            <!-- Images -->
+                            <StackPanel Orientation="Horizontal" Margin="0,32,0,0" IsVisible="{Binding HasArt}">
+                                <Border CornerRadius="12" BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1" Margin="0,0,20,0" ClipToBounds="True"
+                                        IsVisible="{Binding TitleImage, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <Image Source="{Binding TitleImage}" Height="230" RenderOptions.BitmapInterpolationMode="None" />
+                                </Border>
+                                <Border CornerRadius="12" BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1" ClipToBounds="True"
+                                        IsVisible="{Binding SnapImage, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <Image Source="{Binding SnapImage}" Height="230" RenderOptions.BitmapInterpolationMode="None" />
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Saves -->
+                            <StackPanel Margin="0,32,0,0" IsVisible="{Binding HasSaves}">
+                                <TextBlock Text="SAVES" Theme="{StaticResource Text.Overline}" FontSize="13" Margin="0,0,0,12" />
+                                <ItemsControl ItemsSource="{Binding Saves}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SaveStateItem">
+                                            <StackPanel Width="220" Margin="0,0,20,16">
+                                                <Border Height="150" CornerRadius="10" Background="{StaticResource Brush.Surface}" ClipToBounds="True"
+                                                        BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
+                                                    <Panel>
+                                                        <ui:Icon Data="{StaticResource Icon.Gamepad}" Width="26" Height="26" Foreground="{StaticResource Brush.Border.Strong}" />
+                                                        <Image Source="{Binding Thumbnail}" Stretch="UniformToFill" />
+                                                    </Panel>
+                                                </Border>
+                                                <TextBlock Text="{Binding When}" FontFamily="{StaticResource Font.Mono}" FontSize="14"
+                                                           Foreground="{StaticResource Brush.Text.Tertiary}" Margin="2,8,0,0" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Controller hints -->
+                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="24,24,0,0">
+                        <Border Theme="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.A}">
+                            <TextBlock Text="A" Theme="{StaticResource PadGlyph.Text}" />
+                        </Border>
+                        <TextBlock Text="{l:T Play}" Theme="{StaticResource Hint.Text}" />
+                        <StackPanel Orientation="Horizontal" IsVisible="{Binding CanContinue}">
+                            <Border Theme="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.X}">
+                                <TextBlock Text="X" Theme="{StaticResource PadGlyph.Text}" />
+                            </Border>
+                            <TextBlock Text="{l:T Continue}" Theme="{StaticResource Hint.Text}" />
+                        </StackPanel>
+                        <Border Theme="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.Y}">
+                            <TextBlock Text="Y" Theme="{StaticResource PadGlyph.Text}" />
+                        </Border>
+                        <TextBlock Text="{l:T Favorite}" Theme="{StaticResource Hint.Text}" />
+                        <Border Theme="{StaticResource PadPill}">
+                            <TextBlock Text="LB  RB" FontFamily="{StaticResource Font.Mono}" FontSize="14" Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="{l:T 'Switch game'}" Theme="{StaticResource Hint.Text}" />
+                        <Border Theme="{StaticResource PadPill}">
+                            <TextBlock Text="▲▼" FontSize="13" Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="{l:T Scroll}" Theme="{StaticResource Hint.Text}" />
+                        <Border Theme="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.B}">
+                            <TextBlock Text="B" Theme="{StaticResource PadGlyph.Text}" />
+                        </Border>
+                        <TextBlock Text="{l:T Back}" Theme="{StaticResource Hint.Text}" />
+                    </StackPanel>
+                </Grid>
+            </Panel>
+        </Panel>
+
+        <!-- Game running -->
+        <Panel Background="#E6000000" IsVisible="{Binding IsPlaying}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="{l:T 'Now playing'}" HorizontalAlignment="Center" FontSize="{StaticResource Tv.Font.Body}"
+                           Foreground="{StaticResource Brush.Text.Secondary}" />
+                <TextBlock Text="{Binding Selected.Title, FallbackValue=''}" HorizontalAlignment="Center" Margin="0,8,0,0"
+                           FontSize="{StaticResource Tv.Font.Title}" FontWeight="SemiBold" />
+                <TextBlock HorizontalAlignment="Center" Margin="0,24,0,0" FontSize="{StaticResource Tv.Font.Small}"
+                           Foreground="{StaticResource Brush.Text.Tertiary}"
+                           Text="{l:T 'Hold Back + Start on the controller to close the game and return.'}" />
+            </StackPanel>
+        </Panel>
+
+        <l:GrainLayer MaxAlpha="{StaticResource Grain.MaxAlpha}" />
+    </Panel>
+</Window>

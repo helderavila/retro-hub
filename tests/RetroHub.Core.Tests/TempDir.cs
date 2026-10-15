@@ -21,3 +21,15 @@ internal sealed class TempDir : IDisposable
         try { Directory.Delete(Path, recursive: true); } catch (IOException) { }
     }
 }
+
+/// <summary>An executable present on every machine, to stand in for an emulator.</summary>
+internal static class TestPlatform
+{
+    public static string Shell => OperatingSystem.IsWindows() ? System.IO.Path.Combine(Environment.SystemDirectory, "cmd.exe") : "/bin/sh";
+
+    /// <summary>Arguments that keep <see cref="Shell"/> running for about a minute.</summary>
+    public static string LongRunningArgs => OperatingSystem.IsWindows() ? "/c ping -n 60 127.0.0.1 >nul & rem {rom}" : "-c \"sleep 60\" {rom}";
+
+    /// <summary>Name of the process <see cref="LongRunningArgs"/> leaves running.</summary>
+    public static string LongRunningProcess => OperatingSystem.IsWindows() ? "PING" : "sleep";
+}

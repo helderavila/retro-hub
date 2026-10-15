@@ -26,7 +26,7 @@ public class UserManifestTests
         paths.EnsureCreated();
         var db = new LibraryDatabase(paths.Database);
         db.Initialize();
-        return (paths, ManifestRepository.Load(paths.Manifests, paths.UserManifests), db);
+        return (paths, ManifestRepository.LoadFor(null, paths.Manifests, paths.UserManifests), db);
     }
 
     [Fact]

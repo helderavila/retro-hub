@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>All your classic games in one place.</b><br>
-  A Windows hub that installs emulators, organizes your library and opens each game in the right emulator, with a mouse or a controller.
+  A Windows and macOS hub that installs emulators, organizes your library and opens each game in the right emulator, with a mouse or a controller.
 </p>
 
 <p align="center">
@@ -90,6 +90,18 @@ Open it with the **TV Mode** button, **F11**, the "Retro Hub (TV mode)" shortcut
 | B | Esc | leave TV mode |
 | Back + Start (hold 1 s) | — | close the game and return |
 
+## macOS
+
+The Mac app (`src/RetroHub.Mac`, Avalonia) has the same screens, design and features, and shares everything else with the Windows app: the core logic, the manifests and the translations.
+
+- **Requirements:** macOS 12 or later, Apple Silicon or Intel.
+- **Install:** open `RetroHub-<version>-macos-<arch>.dmg` and drag Retro Hub to Applications. Builds without a Developer ID signature show the "unidentified developer" prompt the first time: right-click the app › **Open**.
+- **Data:** `~/Library/Application Support/RetroHub` (a `portable.txt` inside `Retro Hub.app/Contents/MacOS` switches to `./data` there).
+- **Emulators** are the official macOS apps, downloaded into Retro Hub's folder and kept self-contained: RetroArch, PCSX2 and Dolphin in their portable mode; DuckStation and PPSSPP run with their home folder inside it.
+- **PCSX2** has no Apple Silicon build yet: it runs through Rosetta 2 (the **Dependencies** button checks for it).
+- **Controllers** are read through SDL3 (Xbox, PlayStation, Switch Pro and MFi controllers); RetroArch uses its MFi driver.
+- **Differences:** no winget (emulators ship as app bundles), Finder and the Trash instead of Explorer and the Recycle Bin, and TV mode shows the game art instead of preview videos.
+
 ## Adding emulators
 
 In the **Emulators** screen:
@@ -126,9 +138,12 @@ Your manifests live in `%LOCALAPPDATA%\RetroHub\manifests` and are never deleted
   "preserve": ["config"],               // optional: what an update never overwrites
   "controller": { … },                  // optional: automatic controller mapping
   "graphics": { … },                    // optional: quality presets and resolution
-  "saves": { … }                        // optional: save states and backup
+  "saves": { … },                       // optional: save states and backup
+  "macos": { … }                        // optional: keys that replace the ones above on macOS
 }
 ```
+
+**macOS:** a `"macos"` block overrides the top-level keys it names (usually `source`, `executable`, `launch`, `controller`). Without it, a downloadable emulator only appears on Windows. Two keys help emulators that keep their data in the home folder: `"environment": { "HOME": "{emuDir}/home" }` sets variables for the emulator process, and `"dataDir"` makes the controller, graphics and save paths relative to that folder.
 
 The manifests in [`manifests/emulators`](manifests/emulators) show every optional field in use.
 
@@ -140,10 +155,11 @@ The UI text in the code is English and is also the translation key: `L.T("Instal
 
 ## Building
 
-Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) on Windows 10 or 11.
+Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) on Windows 10 or 11, or macOS.
 
 ```bash
-dotnet run --project src/RetroHub.App
+dotnet run --project src/RetroHub.App     # Windows
+dotnet run --project src/RetroHub.Mac     # macOS
 ```
 
 ```bash
@@ -158,6 +174,16 @@ powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
 
 Produces `dist\RetroHub-Setup-<version>.exe` with a self-contained app. The version comes from `Directory.Build.props`.
 
+macOS app and disk image:
+
+```bash
+installer/build-mac.sh            # arm64 or x64; defaults to this Mac
+```
+
+Produces `dist/Retro Hub.app` and `dist/RetroHub-<version>-macos-<arch>.dmg`, signed ad-hoc. Set `SIGN_IDENTITY="Developer ID Application: …"` to sign for distribution (with the hardened runtime), then notarize the .dmg.
+
+`RETROHUB_NET_TESTS=1 dotnet test` on a Mac also installs the five emulators for real (~410 MB) to check the downloads, extraction and code signatures.
+
 ### Layout
 
 ```
@@ -169,13 +195,17 @@ src/RetroHub.Core/          logic without WPF (testable)
   Install/                    versions (GitHub/Forgejo/URL), download, SHA-256, extraction, winget, user emulators
   Scanning/                   scanner, disc headers, ISO 9660, .cue/.gdi/.m3u, titles
   Library/                    SQLite: games, sessions, collections, emulators, settings
-  Launch/ Input/ Saves/       launching games, Xbox controller (XInput/SDL), save states and backup
+  Launch/ Input/ Saves/       launching games, controllers (XInput/SDL), save states and backup
   Covers/ Metadata/ Bios/     covers, game info and ROM verification, BIOS by MD5
   Localization/               L.T / L.F (English keys, translations from i18n/)
 src/RetroHub.App/           WPF + MVVM (CommunityToolkit.Mvvm)
   Themes/                     design tokens, icons and styles (black and white)
   Views/ ViewModels/          library, game page, emulators, BIOS, folders, TV mode
   i18n/pt-BR/                 Portuguese translation
+src/RetroHub.Mac/           Avalonia + MVVM, same structure and design (macOS)
+  Themes/                     the same tokens; WPF styles become ControlThemes with the same keys
+  Input/                      controllers through SDL3
+  i18n/pt-BR/                 Mac-only texts (Finder, Trash, Rosetta)
 tests/RetroHub.Core.Tests/  xUnit with synthetic disc images
 docs/                       website (GitHub Pages) and README images
 ```

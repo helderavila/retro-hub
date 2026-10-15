@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>RetroHub</AssemblyName>
+    <RootNamespace>RetroHub.Mac</RootNamespace>
+    <Product>Retro Hub</Product>
+    <Description>Hub de emuladores e jogos antigos</Description>
+    <RuntimeIdentifiers>osx-arm64;osx-x64</RuntimeIdentifiers>
+    <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Bindings are checked at build time: every view and DataTemplate declares x:DataType. -->
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.22" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <!-- Controllers (TV mode navigation, connected count, SDL GUIDs for emulator mappings). Ships libSDL3.dylib for arm64 and x64. -->
+    <PackageReference Include="ppy.SDL3-CS" Version="2026.1002.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RetroHub.Core\RetroHub.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Same manifests and translations as the Windows app, copied next to the executable. -->
+  <ItemGroup>
+    <Content Include="..\..\manifests\**\*.json" Link="manifests\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\RetroHub.App\i18n\**\*.json" Link="i18n\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Mac-only texts (Finder, Trash, Rosetta…), loaded together with the shared ones -->
+    <Content Include="i18n\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Logo shared with the Windows app -->
+  <ItemGroup>
+    <AvaloniaResource Include="..\RetroHub.App\Assets\logo-mark.png" Link="Assets\logo-mark.png" />
+    <AvaloniaResource Include="..\RetroHub.App\Assets\logo-wordmark.png" Link="Assets\logo-wordmark.png" />
+  </ItemGroup>
+
+</Project>
