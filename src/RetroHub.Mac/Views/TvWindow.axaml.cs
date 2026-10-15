@@ -21,10 +21,18 @@ public partial class TvWindow : Window
         if (Helpers.Snapshot.Requested)
         {
             // Development captures: a normal window instead of taking over the screen.
-            WindowState = WindowState.Normal;
             SystemDecorations = SystemDecorations.Full;
             Width = 1600;
             Height = 900;
+        }
+        else
+        {
+            // Borderless window over the whole screen, menu bar and Dock hidden (like the borderless maximized window on Windows).
+            // Not macOS native full screen: that one leaves a borderless window small in a black Space, and takes Esc for itself.
+            Opened += (_, _) => CoverScreen();
+            Activated += (_, _) => Helpers.MacPresentation.SetKiosk(true);
+            Deactivated += (_, _) => Helpers.MacPresentation.SetKiosk(false);
+            Closed += (_, _) => Helpers.MacPresentation.SetKiosk(false);
         }
 
         _pad.Pressed += _vm.Handle;
@@ -80,8 +88,19 @@ public partial class TvWindow : Window
     private void BringToFront()
     {
         if (WindowState == WindowState.Minimized)
-            WindowState = WindowState.FullScreen;
+            WindowState = WindowState.Normal;
         Activate();
         Focus();
+    }
+
+    /// <summary>Fills the screen the window is on (the whole screen: menu bar and Dock get hidden while it is active).</summary>
+    private void CoverScreen()
+    {
+        if ((Screens.ScreenFromWindow(this) ?? Screens.Primary) is not { } screen)
+            return;
+        Helpers.MacPresentation.SetKiosk(true);
+        Position = screen.Bounds.Position;
+        Width = screen.Bounds.Width / screen.Scaling;
+        Height = screen.Bounds.Height / screen.Scaling;
     }
 }

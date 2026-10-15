@@ -6,7 +6,7 @@
         xmlns:l="using:RetroHub.Mac.Helpers"
         x:DataType="vm:TvViewModel"
         Title="{l:T 'Retro Hub · TV Mode'}"
-        SystemDecorations="None" WindowState="FullScreen" ShowInTaskbar="True"
+        SystemDecorations="None" CanResize="False" ShowInTaskbar="True"
         Background="{StaticResource Brush.Bg}"
         Foreground="{StaticResource Brush.Text.Primary}"
         FontFamily="{StaticResource Font.Sans}"
