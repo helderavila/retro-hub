@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>RetroHub</AssemblyName>
+    <RootNamespace>RetroHub.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\RetroHub.ico</ApplicationIcon>
+    <Product>Retro Hub</Product>
+    <Description>Hub de emuladores e jogos antigos</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RetroHub.Core\RetroHub.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Manifestos ficam na raiz do repositório e são copiados para ./manifests ao lado do .exe -->
+  <ItemGroup>
+    <Content Include="..\..\manifests\**\*.json" Link="manifests\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Coloque Inter/Geist e JetBrains Mono (.ttf) em Fonts/ — ver Fonts/README.md -->
+  <ItemGroup>
+    <Resource Include="Fonts\*.ttf" />
+    <Resource Include="Assets\RetroHub.ico" />
+    <!-- Logo anos 90 (pixel 3D): marca quadrada e "RETRO HUB" numa linha -->
+    <Resource Include="Assets\logo-mark.png" />
+    <Resource Include="Assets\logo-wordmark.png" />
+  </ItemGroup>
+
+</Project>

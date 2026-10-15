@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Retro Hub</title>
+  <meta name="description" content="Seus jogos antigos num lugar só. Um hub para Windows que instala emuladores, organiza a biblioteca e abre cada jogo no emulador certo.">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:title" content="Retro Hub">
+  <meta property="og:description" content="Seus jogos antigos num lugar só. Emuladores, biblioteca e Modo TV para Windows.">
+  <meta property="og:image" content="img/banner.png">
+  <link rel="icon" href="img/logo-mark.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Mesmos tokens do app (Themes/Tokens.xaml): preto, superfícies quase pretas, bordas brancas translúcidas */
+    :root {
+      --bg: #000000;
+      --bg-subtle: #0a0a0a;
+      --surface: #111111;
+      --surface-raised: #161616;
+      --border-subtle: rgba(255, 255, 255, .06);
+      --border: rgba(255, 255, 255, .09);
+      --border-strong: rgba(255, 255, 255, .14);
+      --text: #ffffff;
+      --text-2: #a1a1a1;
+      --text-3: #666666;
+      --ok: #3ecf8e;
+      --pad-a: #3fb34f; --pad-b: #e5403a; --pad-x: #2f6fdc; --pad-y: #f2b705;
+      --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px;
+      --sans: "Inter", "Segoe UI", system-ui, sans-serif;
+      --mono: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+      --page: 1120px;
+      --gutter: 24px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 15px/1.6 var(--sans); -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    /* Grão sutil, como no app */
+    body::after {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 100; opacity: .05;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    a { color: inherit; }
+    img { max-width: 100%; height: auto; display: block; }
+    .wrap { max-width: var(--page); margin: 0 auto; padding: 0 var(--gutter); }
+    .mono { font-family: var(--mono); }
+    .overline { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+
+    /* ── Barra superior ── */
+    header {
+      position: sticky; top: 0; z-index: 50; background: rgba(10, 10, 10, .82);
+      backdrop-filter: saturate(140%) blur(12px); border-bottom: 1px solid var(--border-subtle);
+    }
+    header .wrap { display: flex; align-items: center; gap: 28px; height: 60px; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .brand img.mark { width: 30px; height: 30px; }
+    .brand img.word { height: 19px; width: auto; }
+    nav { display: flex; gap: 24px; }
+    nav a { text-decoration: none; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); transition: color .15s; }
+    nav a:hover { color: var(--text-2); }
+    header .spacer { flex: 1; }
+
+    /* ── Botões (Button.Primary / Secondary do app) ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px;
+      border-radius: var(--radius-md); font: 500 14px var(--sans); text-decoration: none; white-space: nowrap;
+      border: 1px solid var(--border-strong); color: var(--text); background: transparent; transition: background .15s, opacity .15s;
+    }
+    .btn:hover { background: rgba(255, 255, 255, .06); }
+    .btn.primary { background: var(--text); color: #000; border-color: var(--text); }
+    .btn.primary:hover { opacity: .9; }
+    .btn.lg { height: 48px; padding: 0 24px; font-size: 15px; }
+    .btn svg { width: 16px; height: 16px; flex: none; }
+
+    /* ── Hero ── */
+    .hero { position: relative; padding: 96px 0 40px; text-align: center; }
+    .hero::before {
+      content: ""; position: absolute; inset: -60px 0 auto; height: 520px; pointer-events: none;
+      background: radial-gradient(60% 60% at 50% 0%, rgba(255, 255, 255, .09), transparent 70%);
+    }
+    .hero .logo { width: min(560px, 100%); margin: 0 auto 36px; image-rendering: pixelated; }
+    h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.05; letter-spacing: -.03em; margin: 0 auto; max-width: 820px; font-weight: 700; }
+    .lead { font-size: clamp(16px, 2vw, 19px); color: var(--text-2); max-width: 640px; margin: 20px auto 0; }
+    .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 32px; }
+    .meta { margin-top: 18px; font: 12px var(--mono); color: var(--text-3); }
+
+    /* Captura dentro de uma "janela" */
+    .shot {
+      margin: 64px auto 0; border-radius: var(--radius-lg); overflow: hidden; background: var(--surface);
+      border: 1px solid var(--border-strong); box-shadow: 0 40px 120px rgba(0, 0, 0, .8), 0 0 0 1px rgba(255, 255, 255, .02);
+    }
+    .shot .bar { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-subtle); }
+    .shot .bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--border-strong); }
+    .note { font: 12px var(--mono); color: var(--text-3); text-align: center; margin-top: 12px; }
+
+    /* ── Seções ── */
+    section { padding: 112px 0 0; }
+    .section-head { max-width: 640px; margin-bottom: 40px; }
+    .section-head h2 { font-size: clamp(26px, 3.5vw, 36px); line-height: 1.15; letter-spacing: -.02em; margin: 10px 0 0; font-weight: 700; }
+    .section-head p { color: var(--text-2); margin: 14px 0 0; }
+
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px;
+      transition: border-color .15s, background .15s;
+    }
+    .card:hover { border-color: var(--border-strong); background: var(--surface-raised); }
+    .card .icon {
+      width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center;
+      background: var(--bg); border: 1px solid var(--border); margin-bottom: 16px;
+    }
+    .card .icon svg { width: 18px; height: 18px; }
+    .card h3 { font-size: 15px; font-weight: 600; margin: 0; }
+    .card p { font-size: 14px; color: var(--text-2); margin: 6px 0 0; }
+
+    .split { display: grid; grid-template-columns: 1fr 1.35fr; gap: 56px; align-items: center; }
+    .split.reverse { grid-template-columns: 1.35fr 1fr; }
+    .split.reverse .text { order: 2; }
+    .split .frame { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-strong); background: var(--surface); }
+    ul.checks { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 10px; }
+    ul.checks li { display: flex; gap: 10px; color: var(--text-2); font-size: 14px; }
+    ul.checks li::before { content: ""; flex: none; width: 6px; height: 6px; margin-top: 9px; border-radius: 50%; background: var(--text); }
+
+    /* Botões do controle (como no Modo TV) */
+    .pads { display: flex; flex-wrap: wrap; gap: 14px 22px; margin-top: 24px; }
+    .pad { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-2); }
+    .pad b { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: #000; font-size: 12px; }
+    .pad .pill { height: 26px; padding: 0 10px; border-radius: 13px; display: grid; place-items: center; font: 12px var(--mono); color: var(--text-2); background: var(--surface-raised); border: 1px solid var(--border-strong); }
+
+    /* Tabela de emuladores (estilo da tela Emuladores) */
+    .table { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .row { display: grid; grid-template-columns: 220px 1fr; gap: 16px; padding: 18px 22px; border-top: 1px solid var(--border-subtle); align-items: center; }
+    .row:first-child { border-top: 0; }
+    .row.head { padding: 12px 22px; }
+    .row .name { font-weight: 500; }
+    .row .name small { display: block; font: 12px var(--mono); color: var(--text-3); font-weight: 400; margin-top: 2px; }
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .badge { font: 11px var(--mono); color: var(--text-2); padding: 2px 7px; border-radius: 5px; border: 1px solid var(--border-strong); background: var(--bg); }
+    .badge.you { color: var(--text); }
+
+    pre {
+      margin: 0; padding: 20px 22px; overflow-x: auto; background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); font: 13px/1.7 var(--mono); color: var(--text-2);
+    }
+    pre .k { color: var(--text); }
+    pre .c { color: var(--text-3); }
+
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; counter-reset: step; }
+    .step { border-top: 1px solid var(--border-strong); padding-top: 18px; }
+    .step::before { counter-increment: step; content: "0" counter(step); font: 12px var(--mono); color: var(--text-3); }
+    .step h3 { font-size: 15px; margin: 8px 0 0; font-weight: 600; }
+    .step p { font-size: 14px; color: var(--text-2); margin: 6px 0 0; }
+
+    .cta {
+      margin-top: 112px; padding: 64px 32px; text-align: center; border-radius: var(--radius-lg);
+      background: radial-gradient(70% 120% at 50% 0%, rgba(255, 255, 255, .08), transparent 70%), var(--surface);
+      border: 1px solid var(--border-strong);
+    }
+    .cta h2 { font-size: clamp(26px, 3.5vw, 36px); margin: 0; letter-spacing: -.02em; }
+    .cta p { color: var(--text-2); margin: 12px auto 0; max-width: 560px; }
+
+    .legal { margin-top: 64px; padding: 22px; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--bg-subtle); }
+    .legal p { margin: 0; font-size: 13px; color: var(--text-3); }
+    .legal p + p { margin-top: 8px; }
+    .legal strong { color: var(--text-2); font-weight: 600; }
+
+    footer { margin-top: 64px; border-top: 1px solid var(--border-subtle); }
+    footer .wrap { display: flex; align-items: center; gap: 16px; padding-top: 24px; padding-bottom: 40px; font-size: 13px; color: var(--text-3); flex-wrap: wrap; }
+    footer a { color: var(--text-2); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+      .split, .split.reverse { grid-template-columns: 1fr; gap: 28px; }
+      .split.reverse .text { order: 0; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      nav { display: none; }
+    }
+    @media (max-width: 600px) {
+      :root { --gutter: 16px; }
+      .grid, .steps { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; gap: 8px; }
+      .hero { padding-top: 56px; }
+      section { padding-top: 80px; }
+      header .btn span { display: none; }
+      .brand img.word { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="brand" href="#" aria-label="Retro Hub">
+      <img class="mark" src="img/logo-mark.png" alt="">
+      <img class="word" src="img/logo-wordmark.png" alt="Retro Hub">
+    </a>
+    <nav>
+      <a href="#recursos">Recursos</a>
+      <a href="#modo-tv">Modo TV</a>
+      <a href="#emuladores">Emuladores</a>
+      <a href="#" data-repo>GitHub</a>
+    </nav>
+    <div class="spacer"></div>
+    <a class="btn primary" href="#" data-download>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
+      <span>Baixar</span>
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="hero">
+      <img class="logo" src="img/banner.png" alt="Retro Hub">
+      <h1>Seus jogos antigos num lugar só.</h1>
+      <p class="lead">Um hub para Windows que instala emuladores, organiza a biblioteca e abre cada jogo no emulador certo, com mouse ou com controle.</p>
+      <div class="actions">
+        <a class="btn primary lg" href="#" data-download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>
+          Baixar para Windows
+        </a>
+        <a class="btn lg" href="#" data-repo>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6l-6 6 6 6M16 6l6 6-6 6"/></svg>
+          Código no GitHub
+        </a>
+      </div>
+      <p class="meta">grátis e open source · Windows 10 e 11 · não pede administrador</p>
+
+      <div class="shot">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <img src="img/biblioteca.png" alt="Biblioteca do Retro Hub: lista de jogos à esquerda, jogados recentemente e favoritos à direita" width="1440" height="900">
+      </div>
+      <p class="note">biblioteca de demonstração com jogos fictícios</p>
+    </div>
+
+    <!-- Recursos -->
+    <section id="recursos">
+      <div class="section-head">
+        <span class="overline">Recursos</span>
+        <h2>Tudo o que dava trabalho, resolvido.</h2>
+        <p>Sem configurar emulador por emulador, sem caçar capa, sem decorar onde ficou cada save.</p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg></div>
+          <h3>Emuladores em um clique</h3>
+          <p>Versões portáteis baixadas das fontes oficiais, com SHA-256 conferido e dependências instaladas pelo winget.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a7 7 0 1 0 14 0 7 7 0 1 0-14 0ZM20.5 20.5 16 16"/></svg></div>
+          <h3>Reconhece seus jogos</h3>
+          <p>Descobre o sistema pela extensão, pelo cabeçalho do disco ou pelo nome da pasta. Sem duplicados de .cue e .m3u.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3ZM14 3h7v7h-7ZM3 14h7v7H3ZM14 14h7v7h-7Z"/></svg></div>
+          <h3>Capas e informações</h3>
+          <p>Capas, tela de título, ano, gênero e sinopse de acervos abertos, sem conta. Tudo editável.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12a4 4 0 0 1 4 4v3a4 4 0 0 1-4 4c-1.4 0-2.3-1-3-2H9c-.7 1-1.6 2-3 2a4 4 0 0 1-4-4v-3a4 4 0 0 1 4-4ZM6 12.5h4M8 10.5v4M15 12h.01M18 13.5h.01"/></svg></div>
+          <h3>Controle configurado</h3>
+          <p>O controle Xbox é mapeado nos jogadores 1 e 2 de cada emulador, sem desfazer o que você ajustar depois.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3ZM16 2.5 12 7 8 2.5"/></svg></div>
+          <h3>Qualidade de imagem</h3>
+          <p>Níveis Original, Melhorado e Máximo, recomendados pela sua placa de vídeo. Widescreen, texturas HD e filtro CRT.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 3.5V8h-4.5"/></svg></div>
+          <h3>Saves e backup</h3>
+          <p>Save states com miniatura, "continuar do último save" e backup diário em .zip para onde você quiser.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Página do jogo -->
+    <section>
+      <div class="split">
+        <div class="text">
+          <span class="overline">Página do jogo</span>
+          <div class="section-head" style="margin-bottom:0">
+            <h2>Cada jogo com a sua página.</h2>
+            <p>Arte do jogo, botão de jogar e tudo sobre ele num lugar só.</p>
+          </div>
+          <ul class="checks">
+            <li>Tempo de jogo, sessões e histórico dos últimos 12 meses</li>
+            <li>Tela de título e imagem do jogo rodando</li>
+            <li>Saves com miniatura e "Carregar"</li>
+            <li>Ficha técnica, coleções e "Abrir com" outro emulador</li>
+            <li>Verificação da ROM contra as listas oficiais</li>
+          </ul>
+        </div>
+        <div class="frame"><img src="img/pagina-do-jogo.png" alt="Página de um jogo: arte no topo, botão Jogar, tempo de jogo, sinopse e histórico" width="1440" height="900" loading="lazy"></div>
+      </div>
+    </section>
+
+    <!-- Modo TV -->
+    <section id="modo-tv">
+      <div class="split reverse">
+        <div class="frame"><img src="img/modo-tv.png" alt="Modo TV: prateleira de capas em tela cheia com dicas dos botões do controle" width="1920" height="1080" loading="lazy"></div>
+        <div class="text">
+          <span class="overline">Modo TV</span>
+          <div class="section-head" style="margin-bottom:0">
+            <h2>Do sofá, só com o controle.</h2>
+            <p>Tela cheia, capas grandes e nada de mouse. Dá para abrir o Windows direto nele e usar o PC como console.</p>
+          </div>
+          <div class="pads">
+            <span class="pad"><b style="background:var(--pad-a)">A</b>Jogar</span>
+            <span class="pad"><b style="background:var(--pad-x)">X</b>Continuar</span>
+            <span class="pad"><b style="background:var(--pad-y)">Y</b>Favorito</span>
+            <span class="pad"><span class="pill">▼</span>Detalhes</span>
+            <span class="pad"><span class="pill">LB RB</span>Sistemas</span>
+            <span class="pad"><b style="background:var(--pad-b)">B</b>Sair</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Emuladores -->
+    <section id="emuladores">
+      <div class="section-head">
+        <span class="overline">Emuladores</span>
+        <h2>Os principais, prontos. E qualquer outro que você quiser.</h2>
+        <p>Os emuladores incluídos já vêm com controle, imagem e saves configurados. Para os outros, aponte o .exe ou importe um manifesto.</p>
+      </div>
+      <div class="table">
+        <div class="row head"><span class="overline">Emulador</span><span class="overline">Sistemas</span></div>
+        <div class="row"><span class="name">RetroArch<small>cores libretro</small></span>
+          <span class="badges"><span class="badge">NES</span><span class="badge">SNES</span><span class="badge">N64</span><span class="badge">GB</span><span class="badge">GBC</span><span class="badge">GBA</span><span class="badge">NDS</span><span class="badge">SMS</span><span class="badge">MD</span><span class="badge">SCD</span><span class="badge">SAT</span><span class="badge">DC</span><span class="badge">ARC</span></span></div>
+        <div class="row"><span class="name">DuckStation<small>github.com/stenzek/duckstation</small></span><span class="badges"><span class="badge">PS1</span></span></div>
+        <div class="row"><span class="name">PCSX2<small>github.com/PCSX2/pcsx2</small></span><span class="badges"><span class="badge">PS2</span></span></div>
+        <div class="row"><span class="name">PPSSPP<small>ppsspp.org</small></span><span class="badges"><span class="badge">PSP</span></span></div>
+        <div class="row"><span class="name">Dolphin<small>dolphin-emu.org</small></span><span class="badges"><span class="badge">GC</span><span class="badge">WII</span></span></div>
+        <div class="row"><span class="name">O seu <span class="badge you">seu</span><small>qualquer .exe do seu PC</small></span><span class="badges"><span class="badge">os sistemas que você marcar</span></span></div>
+      </div>
+      <div style="margin-top:16px">
+<pre><span class="c">// %LOCALAPPDATA%\RetroHub\manifests\emulators\meu-emulador.json</span>
+{
+  <span class="k">"id"</span>: "meu-emulador",
+  <span class="k">"name"</span>: "Meu Emulador",
+  <span class="k">"systems"</span>: ["snes", "gba"],
+  <span class="k">"source"</span>: { "type": "local", "path": "D:\\Emuladores\\MeuEmu\\meuemu.exe" },
+  <span class="k">"executable"</span>: "meuemu.exe",
+  <span class="k">"launch"</span>: [ { "systems": ["snes", "gba"], "args": "\"{rom}\" --fullscreen" } ]
+}</pre>
+      </div>
+    </section>
+
+    <!-- Como começar -->
+    <section>
+      <div class="section-head">
+        <span class="overline">Como começar</span>
+        <h2>Quatro passos e você está jogando.</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><h3>Instale</h3><p>Baixe o instalador. Ele não pede administrador nem precisa do .NET.</p></div>
+        <div class="step"><h3>Aponte as pastas</h3><p>Diga onde ficam as suas ROMs e clique em Escanear.</p></div>
+        <div class="step"><h3>Instale os emuladores</h3><p>Um clique em "Instalar selecionados" e eles ficam configurados.</p></div>
+        <div class="step"><h3>Jogue</h3><p>Dois cliques no jogo, ou F11 para o Modo TV.</p></div>
+      </div>
+    </section>
+
+    <div class="cta">
+      <h2>Pronto para jogar?</h2>
+      <p>Grátis, open source e sem conta. Seus jogos, seus saves e suas configurações ficam no seu computador.</p>
+      <div class="actions">
+        <a class="btn primary lg" href="#" data-download>Baixar para Windows</a>
+        <a class="btn lg" href="#" data-repo>Ver o código</a>
+      </div>
+    </div>
+
+    <div class="legal">
+      <p><strong>O Retro Hub não inclui e não baixa jogos, BIOS, chaves ou firmware.</strong> Use apenas cópias que você mesmo extraiu dos seus jogos e consoles.</p>
+      <p>Os emuladores são baixados das páginas oficiais de cada projeto, sob as licenças deles. Capas e informações vêm de acervos abertos do libretro; a arte pertence às editoras. Nomes de consoles e jogos são marcas dos seus donos e aparecem só para indicar compatibilidade. O Retro Hub não tem relação com nenhuma dessas empresas.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img src="img/logo-mark.png" alt="" width="22" height="22">
+    <span>Retro Hub · licença MIT</span>
+    <span style="flex:1"></span>
+    <a href="#" data-repo>GitHub</a>
+    <a href="#" data-download>Baixar</a>
+  </div>
+</footer>
+
+<script>
+  // No GitHub Pages (usuario.github.io/repositorio) os links apontam sozinhos para o repositório e para a última versão.
+  (function () {
+    var host = location.hostname, parts = location.pathname.split('/').filter(Boolean);
+    var repo = null;
+    if (/\.github\.io$/i.test(host)) {
+      var user = host.split('.')[0];
+      repo = 'https://github.com/' + user + '/' + (parts[0] || (user + '.github.io'));
+    }
+    document.querySelectorAll('[data-repo]').forEach(function (a) { if (repo) a.href = repo; });
+    document.querySelectorAll('[data-download]').forEach(function (a) { if (repo) a.href = repo + '/releases/latest'; });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+bin/
+obj/
+.vs/
+*.user
+TestResults/
+dist/
+
+# Configuração local de ferramentas
+.claude/
+
+# Cópia antiga do projeto (não faz parte do repositório)
+/RetroHub/
+
+# Capturas antigas com a biblioteca pessoal e capas reais (as do README ficam em docs/img)
+docs/screenshots/
+
+# Dados do usuário nunca entram no repositório
+*.db
+*.db-wal
+*.db-shm
+portable.txt
+data/

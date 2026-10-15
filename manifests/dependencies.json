@@ -1,0 +1,10 @@
+{
+  "dependencies": [
+    {
+      "id": "vcredist-x64",
+      "name": "Visual C++ Redistributable 2015–2022 (x64)",
+      "wingetId": "Microsoft.VCRedist.2015+.x64",
+      "description": "Runtime C++ exigido por PCSX2, Dolphin e DuckStation."
+    }
+  ]
+}

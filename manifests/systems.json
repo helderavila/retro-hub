@@ -1,0 +1,189 @@
+// Sistemas reconhecidos pelo Retro Hub.
+// - extensions: podem se repetir entre sistemas; o scanner desempata pelo conteúdo e pelo nome da pasta.
+// - thumbnails: pasta do sistema em thumbnails.libretro.com (capas buscadas pelo nome).
+// - dat: lista oficial de dumps no libretro-database (no-intro / redump / fbneo-split) — verificação e informações do jogo.
+// - bios: MD5 conforme a documentação do libretro. O Retro Hub NUNCA baixa BIOS.
+{
+  "schemaVersion": 1,
+  "systems": [
+    {
+      "id": "nes", "name": "Nintendo Entertainment System", "shortName": "NES", "manufacturer": "Nintendo",
+      "thumbnails": "Nintendo - Nintendo Entertainment System",
+      "dat": "no-intro",
+      "extensions": [".nes", ".fds", ".unf", ".unif"],
+      "folderAliases": ["nes", "famicom", "fc", "nintendo"],
+      "defaultEmulator": "retroarch"
+    },
+    {
+      "id": "snes", "name": "Super Nintendo", "shortName": "SNES", "manufacturer": "Nintendo",
+      "thumbnails": "Nintendo - Super Nintendo Entertainment System",
+      "dat": "no-intro",
+      "extensions": [".sfc", ".smc", ".bs"],
+      "folderAliases": ["snes", "super nintendo", "super famicom", "sfc"],
+      "defaultEmulator": "retroarch"
+    },
+    {
+      "id": "n64", "name": "Nintendo 64", "shortName": "N64", "manufacturer": "Nintendo",
+      "thumbnails": "Nintendo - Nintendo 64",
+      "dat": "no-intro",
+      "extensions": [".z64", ".n64", ".v64"],
+      "folderAliases": ["n64", "nintendo 64"],
+      "defaultEmulator": "retroarch"
+    },
+    {
+      "id": "gb", "name": "Game Boy", "shortName": "GB", "manufacturer": "Nintendo",
+      "thumbnails": "Nintendo - Game Boy",
+      "dat": "no-intro",
+      "extensions": [".gb"],
+      "folderAliases": ["gb", "game boy", "gameboy"],
+      "defaultEmulator": "retroarch"
+    },
+    {
+      "id": "gbc", "name": "Game Boy Color", "shortName": "GBC", "manufacturer": "Nintendo",
+      "thumbnails": "Nintendo - Game Boy Color",
+      "dat": "no-intro",
+      "extensions": [".gbc"],
+      "folderAliases": ["gbc", "game boy color", "gameboy color"],
+      "defaultEmulator": "retroarch"
+    },
+    {
+      "id": "gba", "name": "Game Boy Advance", "shortName": "GBA", "manufacturer": "Nintendo",
+      "thumbnails": "Nintendo - Game Boy Advance",
+      "dat": "no-intro",
+      "extensions": [".gba"],
+      "folderAliases": ["gba", "game boy advance", "gameboy advance"],
+      "defaultEmulator": "retroarch",
+      "biosRule": "none",
+      "biosHle": "mGBA usa BIOS emulada quando gba_bios.bin não existe",
+      "bios": [
+        { "file": "gba_bios.bin", "md5": ["a860e8c0b6d573d191e4ec7db1b1e4f6"], "size": 16384, "description": "BIOS do GBA (opcional — o mGBA tem HLE)", "optional": true }
+      ]
+    },
+    {
+      "id": "nds", "name": "Nintendo DS", "shortName": "NDS", "manufacturer": "Nintendo",
+      "thumbnails": "Nintendo - Nintendo DS",
+      "dat": "no-intro",
+      "extensions": [".nds"],
+      "folderAliases": ["nds", "ds", "nintendo ds"],
+      "defaultEmulator": "retroarch",
+      "biosHle": "melonDS DS traz BIOS e firmware livres embutidos"
+    },
+    {
+      "id": "gamecube", "name": "GameCube", "shortName": "GC", "manufacturer": "Nintendo",
+      "thumbnails": "Nintendo - GameCube",
+      "dat": "redump",
+      "extensions": [".iso", ".gcm", ".gcz", ".rvz", ".ciso"],
+      "folderAliases": ["gamecube", "gc", "ngc"],
+      "defaultEmulator": "dolphin"
+    },
+    {
+      "id": "wii", "name": "Wii", "shortName": "WII", "manufacturer": "Nintendo",
+      "thumbnails": "Nintendo - Wii",
+      "dat": "redump",
+      "extensions": [".iso", ".wbfs", ".rvz", ".gcz", ".wad"],
+      "folderAliases": ["wii"],
+      "defaultEmulator": "dolphin"
+    },
+    {
+      "id": "sms", "name": "Master System", "shortName": "SMS", "manufacturer": "Sega",
+      "thumbnails": "Sega - Master System - Mark III",
+      "dat": "no-intro",
+      "extensions": [".sms"],
+      "folderAliases": ["sms", "master system", "mastersystem"],
+      "defaultEmulator": "retroarch"
+    },
+    {
+      "id": "genesis", "name": "Mega Drive / Genesis", "shortName": "MD", "manufacturer": "Sega",
+      "thumbnails": "Sega - Mega Drive - Genesis",
+      "dat": "no-intro",
+      "extensions": [".md", ".gen", ".smd", ".bin"],
+      "folderAliases": ["genesis", "megadrive", "mega drive", "md"],
+      "defaultEmulator": "retroarch"
+    },
+    {
+      "id": "segacd", "name": "Sega CD / Mega-CD", "shortName": "SCD", "manufacturer": "Sega",
+      "thumbnails": "Sega - Mega-CD - Sega CD",
+      "dat": "redump",
+      "extensions": [".cue", ".chd", ".iso", ".bin"],
+      "folderAliases": ["segacd", "sega cd", "megacd", "mega cd"],
+      "defaultEmulator": "retroarch",
+      "biosRule": "any",
+      "bios": [
+        { "file": "bios_CD_U.bin", "md5": ["2efd74e3232ff260e371b99f84024f7f"], "size": 131072, "description": "Sega CD (EUA)" },
+        { "file": "bios_CD_E.bin", "md5": ["e66fa1dc5820d254611fdcdba0662372"], "size": 131072, "description": "Mega-CD (Europa)" },
+        { "file": "bios_CD_J.bin", "md5": ["278a9397d192149e84e820ac621a8edd"], "size": 131072, "description": "Mega-CD (Japão)" }
+      ]
+    },
+    {
+      "id": "saturn", "name": "Sega Saturn", "shortName": "SAT", "manufacturer": "Sega",
+      "thumbnails": "Sega - Saturn",
+      "dat": "redump",
+      "extensions": [".cue", ".chd", ".iso", ".bin", ".m3u"],
+      "folderAliases": ["saturn", "sega saturn"],
+      "defaultEmulator": "retroarch",
+      "biosRule": "any",
+      "bios": [
+        { "file": "sega_101.bin", "md5": ["85ec9ca47d8f6807718151cbcca8b964"], "size": 524288, "description": "Saturn (Japão)" },
+        { "file": "mpr-17933.bin", "md5": ["3240872c70984b6cbfda1586cab68dbe"], "size": 524288, "description": "Saturn (EUA/Europa)" }
+      ]
+    },
+    {
+      "id": "dreamcast", "name": "Dreamcast", "shortName": "DC", "manufacturer": "Sega",
+      "thumbnails": "Sega - Dreamcast",
+      "dat": "redump",
+      "extensions": [".gdi", ".cdi", ".chd", ".m3u"],
+      "folderAliases": ["dreamcast", "dc"],
+      "defaultEmulator": "retroarch",
+      "biosRule": "none",
+      "biosHle": "Flycast usa BIOS emulada quando dc_boot.bin não existe",
+      "bios": [
+        { "file": "dc_boot.bin", "md5": ["e10c53c2f8b90bab96ead2d368858623"], "size": 2097152, "description": "Boot ROM (opcional — o Flycast tem HLE)", "optional": true },
+        { "file": "dc_flash.bin", "md5": ["0a93f7940c455905bea6e392dfde92a4"], "size": 131072, "description": "Flash ROM", "optional": true }
+      ]
+    },
+    {
+      "id": "ps1", "name": "PlayStation", "shortName": "PS1", "manufacturer": "Sony",
+      "thumbnails": "Sony - PlayStation",
+      "dat": "redump",
+      "extensions": [".cue", ".chd", ".pbp", ".m3u", ".bin", ".iso", ".img", ".ecm"],
+      "folderAliases": ["ps1", "psx", "playstation", "playstation 1"],
+      "defaultEmulator": "duckstation",
+      "biosRule": "any",
+      "bios": [
+        { "file": "scph5501.bin", "md5": ["490f666e1afb15b7362b406ed1cea246"], "size": 524288, "description": "PS1 BIOS v3.0 (EUA)" },
+        { "file": "scph5500.bin", "md5": ["8dd7d5296a650fac7319bce665a6a53c"], "size": 524288, "description": "PS1 BIOS v3.0 (Japão)" },
+        { "file": "scph5502.bin", "md5": ["32736f17079d0b2b7024407c39bd3050"], "size": 524288, "description": "PS1 BIOS v3.0 (Europa)" },
+        { "file": "scph1001.bin", "md5": ["924e392ed05558ffdb115408c263dccf"], "size": 524288, "description": "PS1 BIOS v2.2 (EUA)" }
+      ]
+    },
+    {
+      "id": "ps2", "name": "PlayStation 2", "shortName": "PS2", "manufacturer": "Sony",
+      "thumbnails": "Sony - PlayStation 2",
+      "dat": "redump",
+      "extensions": [".iso", ".chd", ".cso", ".zso", ".bin", ".cue", ".img"],
+      "folderAliases": ["ps2", "playstation 2", "playstation2"],
+      "defaultEmulator": "pcsx2",
+      "biosRule": "any",
+      // Há dezenas de revisões de BIOS de PS2; aceitamos qualquer dump de 4 MiB com o ROMDIR ("RESET") no início.
+      "bios": [
+        { "file": "*.bin", "size": 4194304, "signature": "RESET", "description": "Qualquer BIOS de PS2 (dump de 4 MiB do seu console)" }
+      ]
+    },
+    {
+      "id": "psp", "name": "PlayStation Portable", "shortName": "PSP", "manufacturer": "Sony",
+      "thumbnails": "Sony - PlayStation Portable",
+      "dat": "redump",
+      "extensions": [".iso", ".cso", ".pbp", ".chd"],
+      "folderAliases": ["psp", "playstation portable"],
+      "defaultEmulator": "ppsspp"
+    },
+    {
+      "id": "arcade", "name": "Arcade (FinalBurn Neo)", "shortName": "ARC", "manufacturer": "Vários",
+      "thumbnails": "FBNeo - Arcade Games",
+      "dat": "fbneo-split",
+      "extensions": [".zip"],
+      "folderAliases": ["arcade", "fbneo", "fba", "mame", "neogeo"],
+      "defaultEmulator": "retroarch"
+    }
+  ]
+}

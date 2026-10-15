@@ -1,0 +1,141 @@
+<UserControl x:Class="RetroHub.App.Views.StatsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:RetroHub.App.Controls">
+
+    <UserControl.Resources>
+        <!-- Barra horizontal: uma série, um tom neutro; o valor escrito ao lado (texto em token de texto, não na cor da barra) -->
+        <DataTemplate x:Key="HBar">
+            <Grid Margin="0,0,0,10" Background="Transparent" ToolTip="{Binding Tooltip}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="76" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Label}" FontSize="{StaticResource Font.Size.Sm}" Foreground="{StaticResource Brush.Text.Secondary}"
+                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <!-- A barra ocupa "proporção" do espaço; o resto fica vazio -->
+                <Grid Grid.Column="1" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{Binding Ratio, Converter={StaticResource RatioToStar}}" />
+                        <ColumnDefinition Width="{Binding Ratio, Converter={StaticResource RatioToStar}, ConverterParameter=rest}" />
+                    </Grid.ColumnDefinitions>
+                    <Border x:Name="Bar" Height="10" CornerRadius="0,4,4,0" MinWidth="3" Background="{StaticResource Brush.Text.Secondary}" />
+                </Grid>
+                <TextBlock Grid.Column="2" Text="{Binding ValueText}" Style="{StaticResource Text.Mono}" HorizontalAlignment="Right" />
+            </Grid>
+            <DataTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Bar" Property="Background" Value="{StaticResource Brush.Text.Primary}" />
+                </Trigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="{StaticResource Page.Padding}">
+            <TextBlock Text="Estatísticas" Style="{StaticResource Text.Display}" />
+            <TextBlock Text="Contadas a partir do tempo em que cada emulador fica aberto pelo Retro Hub (sessões com menos de 10 s não contam)."
+                       Style="{StaticResource Text.Secondary}" Margin="0,6,0,0" MaxWidth="620" HorizontalAlignment="Left" />
+
+            <!-- Vazio -->
+            <ContentControl Style="{StaticResource Surface}" Margin="0,32,0,0"
+                            Visibility="{Binding HasData, Converter={StaticResource BoolToCollapsed}}">
+                <StackPanel Margin="24,28" HorizontalAlignment="Center">
+                    <ui:Icon Data="{StaticResource Icon.Chart}" Width="24" Height="24" Foreground="{StaticResource Brush.Text.Tertiary}" />
+                    <TextBlock Text="Ainda não há tempo jogado" Style="{StaticResource Text.Title}" Margin="0,14,0,0" HorizontalAlignment="Center" />
+                    <TextBlock Text="Jogue algo pelo Retro Hub e volte aqui." Style="{StaticResource Text.Tertiary}" Margin="0,6,0,0" HorizontalAlignment="Center" />
+                </StackPanel>
+            </ContentControl>
+
+            <StackPanel Visibility="{Binding HasData, Converter={StaticResource BoolToVisible}}">
+                <!-- Totais -->
+                <UniformGrid Columns="4" Margin="0,32,-16,0">
+                    <Border Style="{StaticResource Tile}">
+                        <StackPanel>
+                            <TextBlock Text="TEMPO TOTAL" Style="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{Binding TotalTime}" Style="{StaticResource Tile.Value}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Tile}">
+                        <StackPanel>
+                            <TextBlock Text="ÚLTIMOS 7 DIAS" Style="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{Binding WeekTime}" Style="{StaticResource Tile.Value}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Tile}">
+                        <StackPanel>
+                            <TextBlock Text="JOGOS JOGADOS" Style="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{Binding GamesPlayed}" Style="{StaticResource Tile.Value}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Tile}">
+                        <StackPanel>
+                            <TextBlock Text="SESSÕES" Style="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{Binding Sessions}" Style="{StaticResource Tile.Value}" />
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <!-- Últimos 14 dias (colunas) -->
+                <ContentControl Style="{StaticResource Surface}" Margin="0,24,0,0">
+                    <StackPanel Margin="24,20,24,16">
+                        <TextBlock Text="Últimos 14 dias" Style="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" />
+                        <ItemsControl ItemsSource="{Binding LastDays}" Margin="0,18,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="1" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Background="Transparent" ToolTip="{Binding Tooltip}" Margin="3,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="120" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock x:Name="Value" Text="{Binding ValueText}" Style="{StaticResource Text.Mono.Tertiary}"
+                                                   HorizontalAlignment="Center" Margin="0,0,0,6" Opacity="0" />
+                                        <Border Grid.Row="1" x:Name="Bar" Height="{Binding ColumnHeight}" Width="18" VerticalAlignment="Bottom"
+                                                CornerRadius="4,4,0,0" Background="{StaticResource Brush.Text.Secondary}" />
+                                        <Border Grid.Row="1" Height="1" VerticalAlignment="Bottom" Background="{StaticResource Brush.Border}" Margin="-3,0" />
+                                        <TextBlock Grid.Row="2" Text="{Binding Label}" Style="{StaticResource Text.Mono.Tertiary}"
+                                                   HorizontalAlignment="Center" Margin="0,8,0,0" />
+                                    </Grid>
+                                    <DataTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bar" Property="Background" Value="{StaticResource Brush.Text.Primary}" />
+                                            <Setter TargetName="Value" Property="Opacity" Value="1" />
+                                        </Trigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ContentControl>
+
+                <!-- Por sistema · mais jogados -->
+                <Grid Margin="0,24,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="24" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ContentControl Style="{StaticResource Surface}">
+                        <StackPanel Margin="24,20,24,12">
+                            <TextBlock Text="Tempo por sistema" Style="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" Margin="0,0,0,16" />
+                            <ItemsControl ItemsSource="{Binding BySystem}" ItemTemplate="{StaticResource HBar}" />
+                        </StackPanel>
+                    </ContentControl>
+                    <ContentControl Grid.Column="2" Style="{StaticResource Surface}">
+                        <StackPanel Margin="24,20,24,12">
+                            <TextBlock Text="Mais jogados" Style="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" Margin="0,0,0,16" />
+                            <ItemsControl ItemsSource="{Binding TopGames}" ItemTemplate="{StaticResource HBar}" />
+                        </StackPanel>
+                    </ContentControl>
+                </Grid>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

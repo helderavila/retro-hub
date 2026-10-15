@@ -1,0 +1,76 @@
+{
+  "id": "retroarch",
+  "name": "RetroArch",
+  "description": "Frontend libretro — um core por sistema.",
+  "homepage": "https://www.retroarch.com",
+  "license": "GPL-3.0",
+  "systems": ["nes", "snes", "n64", "gb", "gbc", "gba", "nds", "sms", "genesis", "segacd", "saturn", "dreamcast", "arcade"],
+  // O buildbot do libretro não publica hash: a instalação fica marcada como "sem hash".
+  // Para fixar, preencha "sha256" após conferir o arquivo manualmente.
+  "source": {
+    "type": "url",
+    "version": "1.21.0",
+    "url": "https://buildbot.libretro.com/stable/{version}/windows/x86_64/RetroArch.7z",
+    "sha256": null
+  },
+  "executable": "retroarch.exe",
+  "extract": { "stripRoot": true },
+  "postInstall": [
+    { "action": "createDir", "path": "system" }
+  ],
+  "dependencies": [],
+  "biosDir": "system",
+  "cores": {
+    "urlTemplate": "https://buildbot.libretro.com/nightly/windows/x86_64/latest/{core}_libretro.dll.zip",
+    "targetDir": "cores"
+  },
+  "launch": [
+    { "systems": ["nes"],               "core": "mesen",            "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" },
+    { "systems": ["snes"],              "core": "snes9x",           "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" },
+    { "systems": ["n64"],               "core": "mupen64plus_next", "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" },
+    { "systems": ["gb", "gbc"],         "core": "gambatte",         "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" },
+    { "systems": ["gba"],               "core": "mgba",             "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" },
+    { "systems": ["nds"],               "core": "melondsds",        "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" },
+    { "systems": ["sms", "genesis", "segacd"], "core": "genesis_plus_gx", "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" },
+    { "systems": ["saturn"],            "core": "mednafen_saturn",  "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" },
+    { "systems": ["dreamcast"],         "core": "flycast",          "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" },
+    { "systems": ["arcade"],            "core": "fbneo",            "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" }
+  ],
+  // RetroArch já reconhece controles Xbox pelos perfis de autoconfig; só garantimos o driver XInput.
+  "controller": {
+    "file": "retroarch.cfg",
+    "format": "flat",
+    "description": "Autoconfig XInput (todos os cores)",
+    "settings": {
+      "": { "input_joypad_driver": "xinput", "input_autodetect_enable": "true" }
+    }
+  },
+  // Save states: states/<nome da ROM>.state, .state1… (com miniatura .png ao lado). --entryslot carrega o slot ao abrir.
+  "saves": {
+    "states": [ { "dir": "states", "pattern": "{romName}.state*", "slot": "\\.state(\\d*)$" } ],
+    "loadStateArgs": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\" --entryslot={slot}",
+    "backup": ["saves", "states"]
+  },
+  "preserve": ["retroarch.cfg"],
+  "graphics": {
+    "file": "retroarch.cfg",
+    "format": "flat",
+    "aspect": { "values": {
+      "Auto": { "": { "video_aspect_ratio_auto": "true" } },
+      "4:3": { "": { "video_aspect_ratio_auto": "false", "aspect_ratio_index": "0" } },
+      "16:9": { "": { "video_aspect_ratio_auto": "false", "aspect_ratio_index": "1" } } } },
+    "toggles": [
+      { "id": "crt", "label": "Filtro CRT (TV antiga)",
+        "hint": "Linhas de varredura e máscara de TV de tubo em todos os jogos do RetroArch (shader crt-aperture).",
+        "on": { "": { "video_shader_enable": "true", "auto_shaders_enable": "true" } },
+        "off": { "": { "video_shader_enable": "false" } },
+        "file": { "path": "config/global.slangp", "content": "#reference \"../shaders/shaders_slang/crt/crt-aperture.slangp\"\n" } }
+    ]
+  },
+  "achievements": {
+    "file": "retroarch.cfg",
+    "format": "flat",
+    "takesCredentials": true,
+    "enable": { "": { "cheevos_enable": "true", "cheevos_username": "{user}", "cheevos_password": "{password}" } }
+  }
+}

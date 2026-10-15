@@ -1,0 +1,43 @@
+{
+  "id": "ppsspp",
+  "name": "PPSSPP",
+  "description": "Emulador de PlayStation Portable.",
+  "homepage": "https://www.ppsspp.org",
+  "license": "GPL-2.0-or-later",
+  "systems": ["psp"],
+  // Os binários Windows saem no site oficial. O zip já é portátil (memstick fica na própria pasta).
+  "source": {
+    "type": "url",
+    "version": "1.19.3",
+    "url": "https://www.ppsspp.org/files/1_19_3/ppsspp_win.zip",
+    "sha256": null
+  },
+  "executable": "PPSSPPWindows64.exe",
+  "extract": { "stripRoot": true },
+  "postInstall": [],
+  "dependencies": [],
+  "launch": [
+    { "systems": ["psp"], "args": "\"{rom}\" --fullscreen" }
+  ],
+  // Save states: memstick/PSP/PPSSPP_STATE/ULUS10041_1.00_0.ppst. O PPSSPP não carrega state pela linha de comando:
+  // eles aparecem na lista, e o jogo abre normalmente (carregue pelo menu do emulador).
+  "saves": {
+    "states": [ { "dir": "memstick/PSP/PPSSPP_STATE", "pattern": "{serialNoDash}_*.ppst", "slot": "_(\\d+)\\.ppst$" } ],
+    "backup": ["memstick/PSP/SAVEDATA", "memstick/PSP/PPSSPP_STATE"]
+  },
+  "preserve": [],
+  "graphics": {
+    "file": "memstick/PSP/SYSTEM/ppsspp.ini",
+    "presets": { "values": {
+      "Original": { "Graphics": { "InternalResolution": "1", "AnisotropyLevel": "0", "MultiSampleLevel": "0" } },
+      "Melhorado": { "Graphics": { "InternalResolution": "3", "AnisotropyLevel": "4", "MultiSampleLevel": "0" } },
+      "Máximo": { "Graphics": { "InternalResolution": "8", "AnisotropyLevel": "4", "MultiSampleLevel": "2" } } } },
+    "resolution": { "values": { "1x": { "Graphics": { "InternalResolution": "1" } }, "2x": { "Graphics": { "InternalResolution": "2" } }, "3x": { "Graphics": { "InternalResolution": "3" } }, "4x": { "Graphics": { "InternalResolution": "4" } }, "6x": { "Graphics": { "InternalResolution": "6" } }, "4K": { "Graphics": { "InternalResolution": "8" } } } },
+    "toggles": [
+      { "id": "hdtextures", "label": "Texturas HD",
+        "hint": "Coloque o pacote em memstick\\PSP\\TEXTURES\\<ID do jogo> (pasta do PPSSPP).",
+        "on": { "Graphics": { "ReplaceTextures": "True" } },
+        "off": { "Graphics": { "ReplaceTextures": "False" } } }
+    ]
+  }
+}

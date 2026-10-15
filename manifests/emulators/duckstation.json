@@ -1,0 +1,86 @@
+{
+  "id": "duckstation",
+  "name": "DuckStation",
+  "description": "Emulador de PlayStation focado em precisão e desempenho.",
+  "homepage": "https://www.duckstation.org",
+  "license": "CC-BY-NC-ND-4.0",
+  "systems": ["ps1"],
+  // A DuckStation publica builds contínuas na tag "latest".
+  "source": {
+    "type": "github",
+    "repo": "stenzek/duckstation",
+    "tag": "latest",
+    "asset": "^duckstation-windows-x64-release\\.zip$"
+  },
+  "executable": "duckstation-qt-x64-ReleaseLTCG.exe",
+  "extract": { "stripRoot": true },
+  "postInstall": [
+    { "action": "createFile", "path": "portable.txt" }
+  ],
+  "dependencies": ["vcredist-x64"],
+  "biosDir": "bios",
+  "launch": [
+    { "systems": ["ps1"], "args": "-batch -fullscreen \"{rom}\"" }
+  ],
+  "controller": {
+    "file": "settings.ini",
+    "format": "ini",
+    "description": "Jogadores 1 e 2 · DualShock analógico · vibração",
+    "settings": {
+      "Pad2": {
+        "Type": "AnalogController",
+        "Up": "SDL-1/DPadUp", "Right": "SDL-1/DPadRight", "Down": "SDL-1/DPadDown", "Left": "SDL-1/DPadLeft",
+        "Triangle": "SDL-1/FaceNorth", "Circle": "SDL-1/FaceEast", "Cross": "SDL-1/FaceSouth", "Square": "SDL-1/FaceWest",
+        "Select": "SDL-1/Back", "Start": "SDL-1/Start",
+        "L1": "SDL-1/LeftShoulder", "R1": "SDL-1/RightShoulder", "L2": "SDL-1/+LeftTrigger", "R2": "SDL-1/+RightTrigger",
+        "L3": "SDL-1/LeftStick", "R3": "SDL-1/RightStick",
+        "LUp": "SDL-1/-LeftY", "LRight": "SDL-1/+LeftX", "LDown": "SDL-1/+LeftY", "LLeft": "SDL-1/-LeftX",
+        "RUp": "SDL-1/-RightY", "RRight": "SDL-1/+RightX", "RDown": "SDL-1/+RightY", "RLeft": "SDL-1/-RightX",
+        "Analog": "SDL-1/Guide", "LargeMotor": "SDL-1/LargeMotor", "SmallMotor": "SDL-1/SmallMotor"
+      },
+      "InputSources": { "SDL": "true", "XInput": "false" },
+      "Pad1": {
+        "Type": "AnalogController",
+        "Up": "SDL-0/DPadUp", "Right": "SDL-0/DPadRight", "Down": "SDL-0/DPadDown", "Left": "SDL-0/DPadLeft",
+        "Triangle": "SDL-0/FaceNorth", "Circle": "SDL-0/FaceEast", "Cross": "SDL-0/FaceSouth", "Square": "SDL-0/FaceWest",
+        "Select": "SDL-0/Back", "Start": "SDL-0/Start",
+        "L1": "SDL-0/LeftShoulder", "R1": "SDL-0/RightShoulder", "L2": "SDL-0/+LeftTrigger", "R2": "SDL-0/+RightTrigger",
+        "L3": "SDL-0/LeftStick", "R3": "SDL-0/RightStick",
+        "LUp": "SDL-0/-LeftY", "LRight": "SDL-0/+LeftX", "LDown": "SDL-0/+LeftY", "LLeft": "SDL-0/-LeftX",
+        "RUp": "SDL-0/-RightY", "RRight": "SDL-0/+RightX", "RDown": "SDL-0/+RightY", "RLeft": "SDL-0/-RightX",
+        "Analog": "SDL-0/Guide", "LargeMotor": "SDL-0/LargeMotor", "SmallMotor": "SDL-0/SmallMotor"
+      }
+    }
+  },
+  // Save states: savestates/SLUS-00067_1.sav (e _resume.sav ao sair).
+  "saves": {
+    "states": [ { "dir": "savestates", "pattern": "{serial}_*.sav", "slot": "_(\\d+)\\.sav$" } ],
+    "loadStateArgs": "-batch -fullscreen -statefile \"{state}\" \"{rom}\"",
+    "backup": ["memcards", "savestates"]
+  },
+  "preserve": ["settings.ini", "portable.txt"],
+  "graphics": {
+    "file": "settings.ini",
+    "presets": { "values": {
+      "Original": { "GPU": { "ResolutionScale": "1", "PGXPEnable": "false", "Multisamples": "1" } },
+      "Melhorado": { "GPU": { "ResolutionScale": "3", "PGXPEnable": "true", "Multisamples": "1" } },
+      "Máximo": { "GPU": { "ResolutionScale": "8", "PGXPEnable": "true", "Multisamples": "4" } } } },
+    "resolution": { "values": { "1x": { "GPU": { "ResolutionScale": "1" } }, "2x": { "GPU": { "ResolutionScale": "2" } }, "3x": { "GPU": { "ResolutionScale": "3" } }, "4x": { "GPU": { "ResolutionScale": "4" } }, "6x": { "GPU": { "ResolutionScale": "6" } }, "8x": { "GPU": { "ResolutionScale": "8" } } } },
+    "aspect": { "values": {
+      "Auto": { "Display": { "AspectRatio": "Auto (Game Native)" } },
+      "4:3": { "Display": { "AspectRatio": "4:3" } },
+      "16:9": { "Display": { "AspectRatio": "16:9" } } } },
+    "toggles": [
+      { "id": "widescreen", "label": "Widescreen de verdade",
+        "hint": "Renderiza em 16:9 (funciona bem na maioria dos jogos 3D; alguns mostram objetos sumindo nas bordas).",
+        "on": { "GPU": { "WidescreenHack": "true" }, "Display": { "AspectRatio": "16:9" } },
+        "off": { "GPU": { "WidescreenHack": "false" }, "Display": { "AspectRatio": "Auto (Game Native)" } } },
+      { "id": "hdtextures", "label": "Texturas HD",
+        "hint": "Coloque o pacote em textures\\<serial> (pasta da DuckStation).",
+        "on": { "TextureReplacements": { "EnableTextureReplacements": "true" } },
+        "off": { "TextureReplacements": { "EnableTextureReplacements": "false" } } }
+    ]
+  },
+  // Login das conquistas é feito dentro da DuckStation (Configurações › Conquistas); aqui só ligamos.
+  "achievements": { "file": "settings.ini", "enable": { "Cheevos": { "Enabled": "true" } } }
+}

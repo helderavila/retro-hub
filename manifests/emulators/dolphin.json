@@ -1,0 +1,83 @@
+{
+  "id": "dolphin",
+  "name": "Dolphin",
+  "description": "Emulador de GameCube e Wii.",
+  "homepage": "https://dolphin-emu.org",
+  "license": "GPL-2.0-or-later",
+  "systems": ["gamecube", "wii"],
+  // O Dolphin distribui pelo próprio site (não pelo GitHub). Versão fixada; atualize ao sair uma nova release.
+  "source": {
+    "type": "url",
+    "version": "2506",
+    "url": "https://dl.dolphin-emu.org/releases/{version}/dolphin-{version}-x64.7z",
+    "sha256": null
+  },
+  "executable": "Dolphin.exe",
+  "extract": { "stripRoot": true },
+  "postInstall": [
+    { "action": "createFile", "path": "portable.txt" }
+  ],
+  "dependencies": ["vcredist-x64"],
+  "launch": [
+    { "systems": ["gamecube", "wii"], "args": "-b -e \"{rom}\"" }
+  ],
+  // GameCube 1 no primeiro controle XInput. O Wii Remote continua no teclado (mapeie em Controles › Wii Remote 1).
+  "controller": {
+    "file": "User/Config/GCPadNew.ini",
+    "format": "ini",
+    "description": "Jogadores 1 e 2 · controle Xbox",
+    "settings": {
+      "GCPad2": {
+        "Device": "XInput/1/Gamepad",
+        "Buttons/A": "`Button A`", "Buttons/B": "`Button B`", "Buttons/X": "`Button X`", "Buttons/Y": "`Button Y`",
+        "Buttons/Z": "`Shoulder R`", "Buttons/Start": "`Start`",
+        "Main Stick/Up": "`Left Y+`", "Main Stick/Down": "`Left Y-`", "Main Stick/Left": "`Left X-`", "Main Stick/Right": "`Left X+`",
+        "C-Stick/Up": "`Right Y+`", "C-Stick/Down": "`Right Y-`", "C-Stick/Left": "`Right X-`", "C-Stick/Right": "`Right X+`",
+        "Triggers/L": "`Trigger L`", "Triggers/R": "`Trigger R`",
+        "Triggers/L-Analog": "`Trigger L`", "Triggers/R-Analog": "`Trigger R`",
+        "D-Pad/Up": "`Pad N`", "D-Pad/Down": "`Pad S`", "D-Pad/Left": "`Pad W`", "D-Pad/Right": "`Pad E`",
+        "Rumble/Motor": "`Motor L` | `Motor R`"
+      },
+      "GCPad1": {
+        "Device": "XInput/0/Gamepad",
+        "Buttons/A": "`Button A`", "Buttons/B": "`Button B`", "Buttons/X": "`Button X`", "Buttons/Y": "`Button Y`",
+        "Buttons/Z": "`Shoulder R`", "Buttons/Start": "`Start`",
+        "Main Stick/Up": "`Left Y+`", "Main Stick/Down": "`Left Y-`", "Main Stick/Left": "`Left X-`", "Main Stick/Right": "`Left X+`",
+        "C-Stick/Up": "`Right Y+`", "C-Stick/Down": "`Right Y-`", "C-Stick/Left": "`Right X-`", "C-Stick/Right": "`Right X+`",
+        "Triggers/L": "`Trigger L`", "Triggers/R": "`Trigger R`",
+        "Triggers/L-Analog": "`Trigger L`", "Triggers/R-Analog": "`Trigger R`",
+        "D-Pad/Up": "`Pad N`", "D-Pad/Down": "`Pad S`", "D-Pad/Left": "`Pad W`", "D-Pad/Right": "`Pad E`",
+        "Rumble/Motor": "`Motor L` | `Motor R`"
+      }
+    }
+  },
+  // Save states: User/StateSaves/GALE01.s01 (ID do disco).
+  "saves": {
+    "states": [ { "dir": "User/StateSaves", "pattern": "{serial}.s*", "slot": "\\.s(\\d+)$" } ],
+    "loadStateArgs": "-b -s \"{state}\" -e \"{rom}\"",
+    "backup": ["User/GC", "User/Wii", "User/StateSaves"]
+  },
+  "preserve": ["portable.txt"],
+  "graphics": {
+    "file": "User/Config/GFX.ini",
+    "presets": { "values": {
+      "Original": { "Settings": { "InternalResolution": "1", "MSAA": "1" }, "Enhancements": { "MaxAnisotropy": "0" } },
+      "Melhorado": { "Settings": { "InternalResolution": "3", "MSAA": "1" }, "Enhancements": { "MaxAnisotropy": "4" } },
+      "Máximo": { "Settings": { "InternalResolution": "6", "MSAA": "4" }, "Enhancements": { "MaxAnisotropy": "4" } } } },
+    "resolution": { "values": { "1x": { "Settings": { "InternalResolution": "1" } }, "2x": { "Settings": { "InternalResolution": "2" } }, "3x": { "Settings": { "InternalResolution": "3" } }, "4x": { "Settings": { "InternalResolution": "4" } }, "6x": { "Settings": { "InternalResolution": "6" } }, "8x": { "Settings": { "InternalResolution": "8" } } } },
+    "aspect": { "values": {
+      "Auto": { "Settings": { "AspectRatio": "0" } },
+      "4:3": { "Settings": { "AspectRatio": "2" } },
+      "16:9": { "Settings": { "AspectRatio": "1" } } } },
+    "toggles": [
+      { "id": "widescreen", "label": "Widescreen de verdade",
+        "hint": "Hack de widescreen do Dolphin (amplia o campo de visão em 16:9).",
+        "on": { "Settings": { "wideScreenHack": "True", "AspectRatio": "1" } },
+        "off": { "Settings": { "wideScreenHack": "False", "AspectRatio": "0" } } },
+      { "id": "hdtextures", "label": "Texturas HD",
+        "hint": "Coloque o pacote em User\\Load\\Textures\\<ID do jogo> (pasta do Dolphin).",
+        "on": { "Settings": { "HiresTextures": "True" } },
+        "off": { "Settings": { "HiresTextures": "False" } } }
+    ]
+  }
+}

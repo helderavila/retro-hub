@@ -1,0 +1,143 @@
+<!--
+  Design tokens do Retro Hub.
+  Tudo que é cor, tipografia, espaçamento, raio e movimento mora aqui.
+  Para ajustar o tema, mexa só neste arquivo.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ═══ Cores base ═══════════════════════════════════════════════════ -->
+    <Color x:Key="Color.Bg">#FF000000</Color>
+    <Color x:Key="Color.Bg.Subtle">#FF0A0A0A</Color>
+    <Color x:Key="Color.Surface">#FF111111</Color>
+    <Color x:Key="Color.Surface.Raised">#FF161616</Color>
+    <Color x:Key="Color.Surface.Hover">#FF1C1C1C</Color>
+
+    <!-- Bordas: branco com 6–12% de opacidade (alfa 0F / 14 / 1F) -->
+    <Color x:Key="Color.Border.Subtle">#0FFFFFFF</Color>
+    <Color x:Key="Color.Border">#17FFFFFF</Color>
+    <Color x:Key="Color.Border.Strong">#24FFFFFF</Color>
+
+    <!-- Texto: hierarquia por tons de cinza -->
+    <Color x:Key="Color.Text.Primary">#FFFFFFFF</Color>
+    <Color x:Key="Color.Text.Secondary">#FFA1A1A1</Color>
+    <Color x:Key="Color.Text.Tertiary">#FF666666</Color>
+    <Color x:Key="Color.Text.Inverse">#FF000000</Color>
+
+    <!-- Status: a única cor do tema -->
+    <Color x:Key="Color.Status.Ok">#FF3ECF8E</Color>
+    <Color x:Key="Color.Status.Warn">#FFF5A524</Color>
+    <Color x:Key="Color.Status.Error">#FFF0524F</Color>
+
+    <!-- Efeitos -->
+    <Color x:Key="Color.Glow">#14FFFFFF</Color>
+    <Color x:Key="Color.Overlay.Hover">#0AFFFFFF</Color>
+    <Color x:Key="Color.Selection">#40FFFFFF</Color>
+
+    <!-- ═══ Brushes ══════════════════════════════════════════════════════ -->
+    <SolidColorBrush x:Key="Brush.Bg" Color="{StaticResource Color.Bg}" />
+    <SolidColorBrush x:Key="Brush.Bg.Subtle" Color="{StaticResource Color.Bg.Subtle}" />
+    <SolidColorBrush x:Key="Brush.Surface" Color="{StaticResource Color.Surface}" />
+    <SolidColorBrush x:Key="Brush.Surface.Raised" Color="{StaticResource Color.Surface.Raised}" />
+    <SolidColorBrush x:Key="Brush.Surface.Hover" Color="{StaticResource Color.Surface.Hover}" />
+    <SolidColorBrush x:Key="Brush.Border.Subtle" Color="{StaticResource Color.Border.Subtle}" />
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}" />
+    <SolidColorBrush x:Key="Brush.Border.Strong" Color="{StaticResource Color.Border.Strong}" />
+    <SolidColorBrush x:Key="Brush.Text.Primary" Color="{StaticResource Color.Text.Primary}" />
+    <SolidColorBrush x:Key="Brush.Text.Secondary" Color="{StaticResource Color.Text.Secondary}" />
+    <SolidColorBrush x:Key="Brush.Text.Tertiary" Color="{StaticResource Color.Text.Tertiary}" />
+    <SolidColorBrush x:Key="Brush.Text.Inverse" Color="{StaticResource Color.Text.Inverse}" />
+    <SolidColorBrush x:Key="Brush.Status.Ok" Color="{StaticResource Color.Status.Ok}" />
+    <SolidColorBrush x:Key="Brush.Status.Warn" Color="{StaticResource Color.Status.Warn}" />
+    <SolidColorBrush x:Key="Brush.Status.Error" Color="{StaticResource Color.Status.Error}" />
+    <SolidColorBrush x:Key="Brush.Overlay.Hover" Color="{StaticResource Color.Overlay.Hover}" />
+    <SolidColorBrush x:Key="Brush.Selection" Color="{StaticResource Color.Selection}" />
+
+    <!-- Brilho radial discreto no topo da área de conteúdo -->
+    <RadialGradientBrush x:Key="Brush.TopGlow" Center="0.5,0" GradientOrigin="0.5,0" RadiusX="0.65" RadiusY="1">
+        <GradientStop Color="#16FFFFFF" Offset="0" />
+        <GradientStop Color="#05FFFFFF" Offset="0.55" />
+        <GradientStop Color="#00FFFFFF" Offset="1" />
+    </RadialGradientBrush>
+
+    <!-- Linha de luz no topo de painéis/seções -->
+    <LinearGradientBrush x:Key="Brush.TopHighlight" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#00FFFFFF" Offset="0" />
+        <GradientStop Color="#33FFFFFF" Offset="0.5" />
+        <GradientStop Color="#00FFFFFF" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Placeholder de capa -->
+    <LinearGradientBrush x:Key="Brush.CoverPlaceholder" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF181818" Offset="0" />
+        <GradientStop Color="#FF0C0C0C" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- ═══ Tipografia ═══════════════════════════════════════════════════ -->
+    <FontFamily x:Key="Font.Sans">pack://application:,,,/Fonts/#Inter, Geist, Segoe UI Variable Text, Segoe UI</FontFamily>
+    <FontFamily x:Key="Font.Mono">pack://application:,,,/Fonts/#JetBrains Mono, Geist Mono, Cascadia Mono, Consolas</FontFamily>
+
+    <sys:Double x:Key="Font.Size.Xs">11</sys:Double>
+    <sys:Double x:Key="Font.Size.Sm">12</sys:Double>
+    <sys:Double x:Key="Font.Size.Base">13</sys:Double>
+    <sys:Double x:Key="Font.Size.Md">14</sys:Double>
+    <sys:Double x:Key="Font.Size.Lg">16</sys:Double>
+    <sys:Double x:Key="Font.Size.Xl">20</sys:Double>
+    <sys:Double x:Key="Font.Size.Display">28</sys:Double>
+
+    <FontWeight x:Key="Font.Weight.Regular">Normal</FontWeight>
+    <FontWeight x:Key="Font.Weight.Medium">Medium</FontWeight>
+    <FontWeight x:Key="Font.Weight.Semibold">SemiBold</FontWeight>
+
+    <!-- ═══ Espaçamento (escala de 4px) ══════════════════════════════════ -->
+    <sys:Double x:Key="Space.1">4</sys:Double>
+    <sys:Double x:Key="Space.2">8</sys:Double>
+    <sys:Double x:Key="Space.3">12</sys:Double>
+    <sys:Double x:Key="Space.4">16</sys:Double>
+    <sys:Double x:Key="Space.6">24</sys:Double>
+    <sys:Double x:Key="Space.8">32</sys:Double>
+    <sys:Double x:Key="Space.10">40</sys:Double>
+    <sys:Double x:Key="Space.12">48</sys:Double>
+
+    <Thickness x:Key="Page.Padding">48,40,48,48</Thickness>
+    <Thickness x:Key="Section.Gap">0,32,0,0</Thickness>
+    <Thickness x:Key="Row.Padding">20,0,20,0</Thickness>
+
+    <!-- ═══ Raios ════════════════════════════════════════════════════════ -->
+    <CornerRadius x:Key="Radius.Sm">6</CornerRadius>
+    <CornerRadius x:Key="Radius.Md">8</CornerRadius>
+    <CornerRadius x:Key="Radius.Lg">12</CornerRadius>
+    <CornerRadius x:Key="Radius.CoverTop">11,11,0,0</CornerRadius>
+    <CornerRadius x:Key="Radius.Pill">14</CornerRadius>
+
+    <!-- ═══ Controles ════════════════════════════════════════════════════ -->
+    <sys:Double x:Key="Control.Height">32</sys:Double>
+    <sys:Double x:Key="Control.Height.Sm">28</sys:Double>
+    <sys:Double x:Key="Sidebar.Width">224</sys:Double>
+    <sys:Double x:Key="Card.Width">176</sys:Double>
+    <sys:Double x:Key="Card.CoverHeight">232</sys:Double>
+
+    <!-- ═══ Movimento (150–200ms, ease-out) ══════════════════════════════ -->
+    <Duration x:Key="Motion.Fast">0:0:0.15</Duration>
+    <Duration x:Key="Motion.Normal">0:0:0.2</Duration>
+    <CubicEase x:Key="Motion.EaseOut" EasingMode="EaseOut" />
+
+    <!-- ═══ Modo TV (lido a ~3 m) ═══════════════════════════════════════ -->
+    <sys:Double x:Key="Tv.Font.Title">52</sys:Double>
+    <sys:Double x:Key="Tv.Font.Body">22</sys:Double>
+    <sys:Double x:Key="Tv.Font.Small">18</sys:Double>
+    <sys:Double x:Key="Tv.Card.Width">264</sys:Double>
+    <sys:Double x:Key="Tv.Card.Height">352</sys:Double>
+    <Thickness x:Key="Tv.Safe">96,56,96,48</Thickness>
+
+    <!-- Glifos dos botões do controle Xbox (cores oficiais, só nos círculos de dica) -->
+    <SolidColorBrush x:Key="Brush.Pad.A" Color="#FF5DC21E" />
+    <SolidColorBrush x:Key="Brush.Pad.B" Color="#FFE53935" />
+    <SolidColorBrush x:Key="Brush.Pad.X" Color="#FF2E7DF6" />
+    <SolidColorBrush x:Key="Brush.Pad.Y" Color="#FFF5B800" />
+
+    <!-- Grão do fundo: 0–255 de alfa máximo por pixel (gerado em NoiseBrush) -->
+    <sys:Int32 x:Key="Grain.MaxAlpha">9</sys:Int32>
+
+</ResourceDictionary>

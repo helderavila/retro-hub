@@ -1,0 +1,466 @@
+<Window x:Class="RetroHub.App.Views.TvWindow"
+        Icon="/Assets/RetroHub.ico"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:RetroHub.App.Controls"
+        xmlns:vm="clr-namespace:RetroHub.App.ViewModels"
+        Title="Retro Hub · Modo TV"
+        WindowStyle="None" ResizeMode="NoResize" WindowState="Maximized" ShowInTaskbar="True"
+        Background="{StaticResource Brush.Bg}"
+        Foreground="{StaticResource Brush.Text.Primary}"
+        FontFamily="{StaticResource Font.Sans}"
+        Cursor="None" UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Ideal">
+
+    <Window.Resources>
+        <!-- Círculo com a letra do botão (A, B, Y…) -->
+        <Style x:Key="PadGlyph" TargetType="Border">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+        </Style>
+        <Style x:Key="PadGlyph.Text" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Inverse}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="PadPill" TargetType="Border">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Margin" Value="0,0,10,0" />
+            <Setter Property="Background" Value="{StaticResource Brush.Surface.Raised}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border.Strong}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style x:Key="Hint.Text" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{StaticResource Tv.Font.Small}" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,36,0" />
+        </Style>
+
+        <!-- Item da prateleira: capa que cresce quando selecionada -->
+        <Style x:Key="ShelfItem" TargetType="ListBoxItem">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Margin" Value="0,0,40,0" />
+            <Setter Property="RenderTransformOrigin" Value="0.5,1" />
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Grid>
+                            <Border x:Name="Glow" CornerRadius="16" Margin="-10" Opacity="0" Background="{StaticResource Brush.Overlay.Hover}">
+                                <Border.Effect>
+                                    <BlurEffect Radius="24" />
+                                </Border.Effect>
+                            </Border>
+                            <ContentPresenter x:Name="Content" Opacity="0.4" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.08"
+                                                             Duration="{StaticResource Motion.Normal}" EasingFunction="{StaticResource Motion.EaseOut}" />
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.08"
+                                                             Duration="{StaticResource Motion.Normal}" EasingFunction="{StaticResource Motion.EaseOut}" />
+                                            <DoubleAnimation Storyboard.TargetName="Content" Storyboard.TargetProperty="Opacity" To="1"
+                                                             Duration="{StaticResource Motion.Normal}" />
+                                            <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="1"
+                                                             Duration="{StaticResource Motion.Normal}" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1"
+                                                             Duration="{StaticResource Motion.Normal}" EasingFunction="{StaticResource Motion.EaseOut}" />
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1"
+                                                             Duration="{StaticResource Motion.Normal}" EasingFunction="{StaticResource Motion.EaseOut}" />
+                                            <DoubleAnimation Storyboard.TargetName="Content" Storyboard.TargetProperty="Opacity" To="0.4"
+                                                             Duration="{StaticResource Motion.Normal}" />
+                                            <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="0"
+                                                             Duration="{StaticResource Motion.Normal}" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="ShelfCard" DataType="{x:Type vm:GameItemViewModel}">
+            <Border x:Name="Frame" Width="{StaticResource Tv.Card.Width}" Height="{StaticResource Tv.Card.Height}" CornerRadius="14"
+                    Background="{StaticResource Brush.CoverPlaceholder}" Padding="0"
+                    BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
+                <Grid>
+                    <StackPanel VerticalAlignment="Center" Margin="20">
+                        <TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" FontFamily="{StaticResource Font.Mono}"
+                                   FontSize="56" Foreground="{StaticResource Brush.Border.Strong}" />
+                        <TextBlock Text="{Binding Title}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                                   Margin="0,16,0,0" FontSize="{StaticResource Tv.Font.Small}" Foreground="{StaticResource Brush.Text.Tertiary}" />
+                    </StackPanel>
+                    <ui:CoverArt CornerRadius="11" Source="{Binding CoverImage}" Visibility="{Binding HasCover, Converter={StaticResource BoolToVisible}}" />
+                    <Border Width="34" Height="34" CornerRadius="17" Margin="12" Background="#B3000000"
+                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                            Visibility="{Binding Favorite, Converter={StaticResource BoolToVisible}}">
+                        <ui:Icon Data="{StaticResource Icon.Star}" Width="16" Height="16"
+                                 Foreground="{StaticResource Brush.Pad.Y}" Fill="{StaticResource Brush.Pad.Y}" />
+                    </Border>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <!-- Selecionado: borda branca grossa, visível de longe -->
+                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                    <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource Brush.Text.Primary}" />
+                    <Setter TargetName="Frame" Property="BorderThickness" Value="4" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid ClipToBounds="True">
+        <!-- Fundo: arte do jogo selecionado, desfocada -->
+        <Image Source="{Binding Selected.CoverImage}" Stretch="UniformToFill" Opacity="0.32" RenderTransformOrigin="0.5,0.5">
+            <Image.RenderTransform>
+                <ScaleTransform ScaleX="1.25" ScaleY="1.25" />
+            </Image.RenderTransform>
+            <Image.Effect>
+                <BlurEffect Radius="90" KernelType="Gaussian" RenderingBias="Performance" />
+            </Image.Effect>
+        </Image>
+        <!-- Vídeo de prévia (local), por cima da arte desfocada; some quando não há vídeo -->
+        <MediaElement x:Name="Video" LoadedBehavior="Manual" UnloadedBehavior="Stop" Stretch="UniformToFill"
+                      Volume="0.35" Opacity="0" IsHitTestVisible="False" />
+        <Rectangle>
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#99000000" Offset="0" />
+                    <GradientStop Color="#33000000" Offset="0.45" />
+                    <GradientStop Color="#F2000000" Offset="1" />
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Rectangle Fill="{StaticResource Brush.TopGlow}" Height="420" VerticalAlignment="Top" />
+
+        <Grid Margin="{StaticResource Tv.Safe}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Topo: marca · abas de sistema · relógio -->
+            <DockPanel Grid.Row="0">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="/Assets/logo-mark.png" Width="44" Height="44" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <Image Source="/Assets/logo-wordmark.png" Height="30" Margin="16,0,0,0" VerticalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality" ToolTip="Retro Hub" />
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding Clock}" VerticalAlignment="Center"
+                           FontFamily="{StaticResource Font.Mono}" FontSize="24" Foreground="{StaticResource Brush.Text.Secondary}" />
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border Style="{StaticResource PadPill}">
+                        <TextBlock Text="LB" Style="{StaticResource Hint.Text}" Margin="0" FontFamily="{StaticResource Font.Mono}" />
+                    </Border>
+                    <ItemsControl ItemsSource="{Binding Tabs}" Margin="6,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:TvTab}">
+                                <Border x:Name="Tab" Height="44" Padding="22,0" Margin="4,0" CornerRadius="22" Background="Transparent">
+                                    <TextBlock x:Name="Label" Text="{Binding Label}" VerticalAlignment="Center"
+                                               FontSize="{StaticResource Tv.Font.Body}" FontWeight="Medium"
+                                               Foreground="{StaticResource Brush.Text.Tertiary}" />
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                        <Setter TargetName="Tab" Property="Background" Value="{StaticResource Brush.Text.Primary}" />
+                                        <Setter TargetName="Label" Property="Foreground" Value="{StaticResource Brush.Text.Inverse}" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Border Style="{StaticResource PadPill}" Margin="0">
+                        <TextBlock Text="RB" Style="{StaticResource Hint.Text}" Margin="0" FontFamily="{StaticResource Font.Mono}" />
+                    </Border>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Prateleira -->
+            <ListBox x:Name="Shelf" Grid.Row="1" VerticalAlignment="Center" Margin="0,40,0,0"
+                     ItemsSource="{Binding Games}" SelectedIndex="{Binding SelectedIndex}"
+                     ItemTemplate="{StaticResource ShelfCard}" ItemContainerStyle="{StaticResource ShelfItem}"
+                     Background="Transparent" BorderThickness="0" Focusable="False"
+                     ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                     ScrollViewer.CanContentScroll="False" SelectionChanged="Shelf_SelectionChanged"
+                     Visibility="{Binding HasGames, Converter={StaticResource BoolToVisible}}">
+                <ListBox.Template>
+                    <ControlTemplate TargetType="ListBox">
+                        <ScrollViewer x:Name="ShelfScroll" Focusable="False" Padding="0"
+                                      HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                            <!-- Margem dentro da área rolável: o card que cresce não é recortado -->
+                            <ItemsPresenter Margin="48,64,48,40" />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </ListBox.Template>
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+            </ListBox>
+
+            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="{Binding HasGames, Converter={StaticResource BoolToCollapsed}}">
+                <TextBlock Text="Nenhum jogo aqui" FontSize="{StaticResource Tv.Font.Title}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <TextBlock Text="Adicione pastas de ROMs no modo desktop e escaneie." Margin="0,12,0,0"
+                           FontSize="{StaticResource Tv.Font.Body}" Foreground="{StaticResource Brush.Text.Secondary}" HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Detalhes do selecionado -->
+            <StackPanel Grid.Row="2" Margin="24,0,0,36" Visibility="{Binding HasGames, Converter={StaticResource BoolToVisible}}">
+                <TextBlock Text="{Binding Selected.Title}" FontSize="{StaticResource Tv.Font.Title}" FontWeight="SemiBold"
+                           TextTrimming="CharacterEllipsis" />
+                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                    <Border Style="{StaticResource Badge}" Padding="10,3">
+                        <TextBlock Text="{Binding Selected.SystemName}" Style="{StaticResource Badge.Text}" FontSize="15" />
+                    </Border>
+                    <TextBlock Margin="18,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource Font.Mono}"
+                               FontSize="{StaticResource Tv.Font.Small}" Foreground="{StaticResource Brush.Text.Secondary}">
+                        <Run Text="jogado ·" /> <Run Text="{Binding Selected.PlaytimeText, Mode=OneWay}" />
+                    </TextBlock>
+                </StackPanel>
+                <TextBlock Text="{Binding Message}" Margin="0,14,0,0" FontSize="{StaticResource Tv.Font.Small}"
+                           Foreground="{StaticResource Brush.Status.Error}" TextWrapping="Wrap"
+                           Visibility="{Binding Message, Converter={StaticResource NullToCollapsed}}" />
+            </StackPanel>
+
+            <!-- Dicas do controle -->
+            <DockPanel Grid.Row="3" Margin="24,0,0,0">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Border Style="{StaticResource PadPill}">
+                        <TextBlock Text="Back + Start" FontFamily="{StaticResource Font.Mono}" FontSize="14"
+                                   Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="segure para sair do jogo" Style="{StaticResource Hint.Text}" Margin="0" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.A}">
+                        <TextBlock Text="A" Style="{StaticResource PadGlyph.Text}" />
+                    </Border>
+                    <TextBlock Text="Jogar" Style="{StaticResource Hint.Text}" />
+                    <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.X}">
+                        <TextBlock Text="X" Style="{StaticResource PadGlyph.Text}" />
+                    </Border>
+                    <TextBlock Text="Continuar" Style="{StaticResource Hint.Text}" />
+                    <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.Y}">
+                        <TextBlock Text="Y" Style="{StaticResource PadGlyph.Text}" />
+                    </Border>
+                    <TextBlock Text="Favorito" Style="{StaticResource Hint.Text}" />
+                    <Border Style="{StaticResource PadPill}">
+                        <TextBlock Text="▼" FontSize="13" Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="Detalhes" Style="{StaticResource Hint.Text}" />
+                    <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.B}">
+                        <TextBlock Text="B" Style="{StaticResource PadGlyph.Text}" />
+                    </Border>
+                    <TextBlock Text="Sair do Modo TV" Style="{StaticResource Hint.Text}" />
+                </StackPanel>
+            </DockPanel>
+        </Grid>
+
+        <!-- ═══ Página do jogo (▼ na prateleira) ═══ -->
+        <Grid DataContext="{Binding Page}" Visibility="{Binding Converter={StaticResource NullToCollapsed}}" Background="{StaticResource Brush.Bg}">
+            <Image Source="{Binding HeroImage}" Stretch="UniformToFill" Opacity="0.35" RenderTransformOrigin="0.5,0.5">
+                <Image.RenderTransform>
+                    <ScaleTransform ScaleX="1.2" ScaleY="1.2" />
+                </Image.RenderTransform>
+                <Image.Effect>
+                    <BlurEffect Radius="70" KernelType="Gaussian" RenderingBias="Performance" />
+                </Image.Effect>
+            </Image>
+            <Rectangle>
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#E6000000" Offset="0" />
+                        <GradientStop Color="#99000000" Offset="1" />
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+
+            <Grid Margin="{StaticResource Tv.Safe}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Capa grande -->
+                <Border Width="{StaticResource Tv.Card.Width}" Height="{StaticResource Tv.Card.Height}" CornerRadius="14" VerticalAlignment="Center"
+                        Background="{StaticResource Brush.CoverPlaceholder}" BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1"
+                        RenderTransformOrigin="0.5,0.5" Margin="24,0,0,0">
+                    <Border.RenderTransform>
+                        <ScaleTransform ScaleX="1.25" ScaleY="1.25" />
+                    </Border.RenderTransform>
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="60" ShadowDepth="10" Opacity="0.7" Color="Black" />
+                    </Border.Effect>
+                    <Grid>
+                        <TextBlock Text="{Binding Item.Initials}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Font.Mono}" FontSize="56" Foreground="{StaticResource Brush.Border.Strong}" />
+                        <ui:CoverArt CornerRadius="13" Source="{Binding Item.CoverImage}" Visibility="{Binding Item.HasCover, Converter={StaticResource BoolToVisible}}" />
+                    </Grid>
+                </Border>
+
+                <!-- Informações (↑/↓ rola) -->
+                <ScrollViewer x:Name="PageScroll" Grid.Column="1" Margin="110,0,24,0" VerticalScrollBarVisibility="Hidden" Focusable="False"
+                              VerticalAlignment="Center">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource Badge}" Padding="10,3">
+                                <TextBlock Text="{Binding SystemName}" Style="{StaticResource Badge.Text}" FontSize="15" />
+                            </Border>
+                            <Border Width="34" Height="34" CornerRadius="17" Margin="14,0,0,0" Background="#B3000000"
+                                    Visibility="{Binding Item.Favorite, Converter={StaticResource BoolToVisible}}">
+                                <ui:Icon Data="{StaticResource Icon.Star}" Width="16" Height="16"
+                                         Foreground="{StaticResource Brush.Pad.Y}" Fill="{StaticResource Brush.Pad.Y}" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Title}" FontSize="52" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,16,0,0" />
+                        <TextBlock Text="{Binding InfoLine}" FontSize="{StaticResource Tv.Font.Body}" Foreground="{StaticResource Brush.Text.Secondary}"
+                                   TextWrapping="Wrap" Margin="0,14,0,0" />
+                        <TextBlock Text="{Binding PeopleLine}" FontSize="{StaticResource Tv.Font.Small}" Foreground="{StaticResource Brush.Text.Tertiary}"
+                                   TextWrapping="Wrap" Margin="0,6,0,0" />
+
+                        <!-- Números -->
+                        <StackPanel Orientation="Horizontal" Margin="0,32,0,0">
+                            <StackPanel Margin="0,0,56,0">
+                                <TextBlock Text="TEMPO JOGADO" Style="{StaticResource Text.Overline}" FontSize="13" />
+                                <TextBlock Text="{Binding PlaytimeText}" FontSize="34" FontWeight="SemiBold" Margin="0,6,0,0" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,56,0">
+                                <TextBlock Text="SESSÕES" Style="{StaticResource Text.Overline}" FontSize="13" />
+                                <TextBlock Text="{Binding SessionCount}" FontSize="34" FontWeight="SemiBold" Margin="0,6,0,0" />
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="ÚLTIMA VEZ" Style="{StaticResource Text.Overline}" FontSize="13" />
+                                <TextBlock Text="{Binding LastPlayedTile}" FontSize="34" FontWeight="SemiBold" Margin="0,6,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Sinopse -->
+                        <TextBlock Text="{Binding Description}" FontSize="{StaticResource Tv.Font.Small}" LineHeight="32" MaxWidth="980" HorizontalAlignment="Left"
+                                   Foreground="{StaticResource Brush.Text.Secondary}" TextWrapping="Wrap" Margin="0,32,0,0"
+                                   Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisible}}" />
+
+                        <!-- Imagens -->
+                        <StackPanel Orientation="Horizontal" Margin="0,32,0,0" Visibility="{Binding HasArt, Converter={StaticResource BoolToVisible}}">
+                            <Border CornerRadius="12" BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1" Margin="0,0,20,0" ClipToBounds="True"
+                                    Visibility="{Binding TitleImage, Converter={StaticResource NullToCollapsed}}">
+                                <Image Source="{Binding TitleImage}" Height="230" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                            </Border>
+                            <Border CornerRadius="12" BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1" ClipToBounds="True"
+                                    Visibility="{Binding SnapImage, Converter={StaticResource NullToCollapsed}}">
+                                <Image Source="{Binding SnapImage}" Height="230" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Saves -->
+                        <StackPanel Margin="0,32,0,0" Visibility="{Binding HasSaves, Converter={StaticResource BoolToVisible}}">
+                            <TextBlock Text="SAVES" Style="{StaticResource Text.Overline}" FontSize="13" Margin="0,0,0,12" />
+                            <ItemsControl ItemsSource="{Binding Saves}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Width="220" Margin="0,0,20,16">
+                                            <Border Height="150" CornerRadius="10" Background="{StaticResource Brush.Surface}" ClipToBounds="True"
+                                                    BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
+                                                <Grid>
+                                                    <ui:Icon Data="{StaticResource Icon.Gamepad}" Width="26" Height="26" Foreground="{StaticResource Brush.Border.Strong}" />
+                                                    <Image Source="{Binding Thumbnail}" Stretch="UniformToFill" />
+                                                </Grid>
+                                            </Border>
+                                            <TextBlock Text="{Binding When}" FontFamily="{StaticResource Font.Mono}" FontSize="14"
+                                                       Foreground="{StaticResource Brush.Text.Tertiary}" Margin="2,8,0,0" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Dicas do controle -->
+                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="24,24,0,0">
+                    <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.A}">
+                        <TextBlock Text="A" Style="{StaticResource PadGlyph.Text}" />
+                    </Border>
+                    <TextBlock Text="Jogar" Style="{StaticResource Hint.Text}" />
+                    <StackPanel Orientation="Horizontal" Visibility="{Binding CanContinue, Converter={StaticResource BoolToVisible}}">
+                        <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.X}">
+                            <TextBlock Text="X" Style="{StaticResource PadGlyph.Text}" />
+                        </Border>
+                        <TextBlock Text="Continuar" Style="{StaticResource Hint.Text}" />
+                    </StackPanel>
+                    <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.Y}">
+                        <TextBlock Text="Y" Style="{StaticResource PadGlyph.Text}" />
+                    </Border>
+                    <TextBlock Text="Favorito" Style="{StaticResource Hint.Text}" />
+                    <Border Style="{StaticResource PadPill}">
+                        <TextBlock Text="LB  RB" FontFamily="{StaticResource Font.Mono}" FontSize="14" Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="Outro jogo" Style="{StaticResource Hint.Text}" />
+                    <Border Style="{StaticResource PadPill}">
+                        <TextBlock Text="▲▼" FontSize="13" Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="Rolar" Style="{StaticResource Hint.Text}" />
+                    <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.B}">
+                        <TextBlock Text="B" Style="{StaticResource PadGlyph.Text}" />
+                    </Border>
+                    <TextBlock Text="Voltar" Style="{StaticResource Hint.Text}" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- Jogo em execução -->
+        <Grid Background="#E6000000" Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisible}}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="Jogando" HorizontalAlignment="Center" FontSize="{StaticResource Tv.Font.Body}"
+                           Foreground="{StaticResource Brush.Text.Secondary}" />
+                <TextBlock Text="{Binding Selected.Title}" HorizontalAlignment="Center" Margin="0,8,0,0"
+                           FontSize="{StaticResource Tv.Font.Title}" FontWeight="SemiBold" />
+                <TextBlock HorizontalAlignment="Center" Margin="0,24,0,0" FontSize="{StaticResource Tv.Font.Small}"
+                           Foreground="{StaticResource Brush.Text.Tertiary}"
+                           Text="Segure Back + Start no controle para fechar o jogo e voltar." />
+            </StackPanel>
+        </Grid>
+
+        <Rectangle x:Name="Grain" IsHitTestVisible="False" />
+    </Grid>
+</Window>
