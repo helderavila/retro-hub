@@ -1,0 +1,87 @@
+# Publishes a release: push a tag like v1.8.0 and this builds the macOS disk images (Apple Silicon and Intel) and the
+# Windows installer, runs the tests on both systems and creates the GitHub release with all three attached.
+# The version comes from the tag (written into Directory.Build.props for the build), so there is nothing to bump by hand.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to release (e.g. v1.8.0); created on the selected branch if it does not exist
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Set version
+        run: sed -i '' "s:<Version>.*</Version>:<Version>${TAG#v}</Version>:" Directory.Build.props
+      - name: Test
+        run: dotnet test tests/RetroHub.Core.Tests -c Release --nologo
+      - name: Build Apple Silicon
+        run: installer/build-mac.sh arm64
+      - name: Build Intel
+        run: installer/build-mac.sh x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/*.dmg
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Set version
+        run: |
+          $props = 'Directory.Build.props'
+          (Get-Content $props) -replace '<Version>.*</Version>', "<Version>$($env:TAG.TrimStart('v'))</Version>" | Set-Content $props
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+      - name: Test
+        run: dotnet test tests/RetroHub.Core.Tests -c Release --nologo
+      - name: Build installer
+        run: powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/RetroHub-Setup-*.exe
+
+  release:
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          version=${TAG#v}
+          cat > notes.md <<NOTES
+          ### Downloads
+          - **Windows:** \`RetroHub-Setup-$version.exe\`
+          - **macOS Apple Silicon:** \`RetroHub-$version-macos-arm64.dmg\`
+          - **macOS Intel:** \`RetroHub-$version-macos-x64.dmg\`
+
+          The macOS app is not notarized, so macOS blocks it the first time: on macOS 15 or later open **System Settings › Privacy & Security** and click **Open Anyway**; on macOS 12–14 right-click the app › **Open**.
+          NOTES
+          gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "Retro Hub $version" --notes-file notes.md --generate-notes
