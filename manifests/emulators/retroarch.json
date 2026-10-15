@@ -14,6 +14,8 @@
     "sha256": null
   },
   "executable": "retroarch.exe",
+  // Loads .zip/.7z ROMs directly (it extracts them to a temporary folder when a core needs it).
+  "opensArchives": true,
   "extract": { "stripRoot": true },
   "postInstall": [
     { "action": "createDir", "path": "system" }
@@ -37,6 +39,16 @@
     { "systems": ["arcade"],            "core": "fbneo",            "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" }
   ],
   // RetroArch already recognizes Xbox controllers through its autoconfig profiles; we only ensure the XInput driver.
+  // Quiet launch: straight into the game, no on-screen notifications (video_font_enable off covers them all, including the
+  // load-content animation), no "press again to quit", no pause when the window loses focus.
+  "defaults": [
+    { "file": "retroarch.cfg", "format": "flat",
+        "settings": { "": {
+          "video_font_enable": "false", "menu_show_load_content_animation": "false",
+          "notification_show_autoconfig": "false", "notification_show_config_override_load": "false",
+          "notification_show_remap_load": "false", "notification_show_set_initial_disk": "false",
+          "confirm_quit": "false", "confirm_close": "false", "pause_nonactive": "false", "rgui_show_start_screen": "false" } } }
+  ],
   "controller": {
     "file": "retroarch.cfg",
     "format": "flat",
@@ -108,6 +120,12 @@
     // N64: the default renderer (GLideN64, OpenGL) draws a black screen on macOS while the game runs.
     // ParaLLEl-RDP on Vulkan (MoltenVK) works and is the most accurate; the override switches only this core to Vulkan.
     "defaults": [
+      { "file": "config/retroarch.cfg", "format": "flat",
+        "settings": { "": {
+          "video_font_enable": "false", "menu_show_load_content_animation": "false",
+          "notification_show_autoconfig": "false", "notification_show_config_override_load": "false",
+          "notification_show_remap_load": "false", "notification_show_set_initial_disk": "false",
+          "confirm_quit": "false", "confirm_close": "false", "pause_nonactive": "false", "rgui_show_start_screen": "false" } } },
       { "file": "config/Mupen64Plus-Next/Mupen64Plus-Next.opt", "format": "flat",
         "settings": { "": { "mupen64plus-rdp-plugin": "parallel", "mupen64plus-rsp-plugin": "parallel" } } },
       { "file": "config/Mupen64Plus-Next/Mupen64Plus-Next.cfg", "format": "flat",

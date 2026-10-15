@@ -1,0 +1,154 @@
+<Window x:Class="RetroHub.Mac.Views.UnpackDialog"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:RetroHub.Mac.Controls"
+        xmlns:vm="using:RetroHub.Mac.ViewModels"
+        xmlns:l="using:RetroHub.Mac.Helpers"
+        x:DataType="vm:UnpackViewModel"
+        SystemDecorations="None" CanResize="False" Background="Transparent" TransparencyLevelHint="Transparent"
+        Width="860" Height="640" WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        FontFamily="{StaticResource Font.Sans}" Foreground="{StaticResource Brush.Text.Primary}">
+
+    <Window.Styles>
+        <!-- Rows that cannot be extracted (arcade) read as disabled -->
+        <Style Selector="Grid.unpackRow.locked">
+            <Setter Property="Opacity" Value="0.45" />
+        </Style>
+    </Window.Styles>
+
+    <!-- Extract compressed games: list · games folder · what happens to the archive · progress -->
+    <Border Margin="20" Background="{StaticResource Brush.Surface}" CornerRadius="{StaticResource Radius.Lg}"
+            BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1" BoxShadow="0 8 40 0 #99000000">
+        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto">
+
+            <!-- Header -->
+            <DockPanel Margin="24,20,24,0">
+                <TextBlock DockPanel.Dock="Right" Text="{Binding SelectionText}" Theme="{StaticResource Text.Mono.Tertiary}" VerticalAlignment="Center" />
+                <TextBlock Text="{l:T 'Extract compressed games'}" Theme="{StaticResource Text.Title}" />
+            </DockPanel>
+            <TextBlock Grid.Row="1" Margin="24,8,24,14" Theme="{StaticResource Text.Secondary}"
+                       Text="{l:T 'Discs in .zip/.7z do not open in DuckStation, PCSX2, Dolphin or PPSSPP. Each game goes to its system folder; play time, favorites and covers stay.'}" />
+
+            <!-- List -->
+            <Border Grid.Row="2" Margin="24,0" Background="{StaticResource Brush.Bg}" CornerRadius="{StaticResource Radius.Md}"
+                    BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="1">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="14,0" Height="36" ColumnDefinitions="30,*,170,84,1.1*">
+                        <Button Theme="{StaticResource Button.Icon}" Command="{Binding SelectAllCommand}" ToolTip.Tip="{l:T 'Select all / none'}"
+                                Width="22" Height="22" HorizontalAlignment="Left">
+                            <ui:Icon Data="{StaticResource Icon.Check}" Width="12" Height="12" />
+                        </Button>
+                        <TextBlock Grid.Column="1" Text="{l:T FILE}" Theme="{StaticResource Text.Overline}" />
+                        <TextBlock Grid.Column="2" Text="{l:T SYSTEM}" Theme="{StaticResource Text.Overline}" />
+                        <TextBlock Grid.Column="3" Text="{l:T SIZE}" Theme="{StaticResource Text.Overline}" />
+                        <TextBlock Grid.Column="4" Text="{l:T DESTINATION}" Theme="{StaticResource Text.Overline}" />
+                    </Grid>
+                    <Border DockPanel.Dock="Top" Theme="{StaticResource Divider}" />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
+                            <StackPanel Margin="14,18" IsVisible="{Binding !HasRows}">
+                                <TextBlock Text="{l:T 'No compressed games in the library.'}" Theme="{StaticResource Text.Secondary}" />
+                                <TextBlock Text="{l:T 'Use Add files… to pick .zip or .7z games from any folder, such as Downloads.'}"
+                                           Theme="{StaticResource Text.Tertiary}" Margin="0,4,0,0" />
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding Rows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:UnpackRow">
+                                        <Grid Classes="unpackRow" Classes.locked="{Binding !CanExtract}" Margin="14,0" MinHeight="40"
+                                              ColumnDefinitions="30,*,170,84,1.1*" ToolTip.Tip="{Binding Game.Path}" Background="Transparent">
+                                            <CheckBox IsChecked="{Binding IsChecked}" IsEnabled="{Binding CanExtract}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding FileName}" Theme="{StaticResource Text.Mono}"
+                                                       Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                                            <Border Grid.Column="2" Theme="{StaticResource Badge}" IsVisible="{Binding !NeedsSystem}">
+                                                <TextBlock Text="{Binding SystemShort}" Theme="{StaticResource Badge.Text}" />
+                                            </Border>
+                                            <!-- Picked file the scanner could not place: detect from the disc, or choose -->
+                                            <ComboBox Grid.Column="2" IsVisible="{Binding NeedsSystem}" ItemsSource="{Binding Systems}"
+                                                      SelectedItem="{Binding SelectedSystem}" Height="28" MinHeight="0" Padding="8,0"
+                                                      Margin="0,0,12,0" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                                      FontSize="{StaticResource Font.Size.Sm}" Background="{StaticResource Brush.Surface}"
+                                                      BorderBrush="{StaticResource Brush.Border}" CornerRadius="{StaticResource Radius.Sm}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:SystemChoice">
+                                                        <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                            <TextBlock Grid.Column="3" Text="{Binding SizeText}" Theme="{StaticResource Text.Mono.Tertiary}" />
+                                            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Ellipse Theme="{StaticResource StatusDot}" Margin="0,0,8,0"
+                                                         Fill="{Binding ResultKind, Converter={StaticResource StatusBrush}}"
+                                                         IsVisible="{Binding ResultKind, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                                <TextBlock Text="{Binding Note}" FontSize="{StaticResource Font.Size.Sm}" Foreground="{StaticResource Brush.Text.Secondary}"
+                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                                           IsVisible="{Binding ResultKind, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
+                                                <TextBlock Text="{Binding Result}" FontSize="{StaticResource Font.Size.Sm}" Foreground="{StaticResource Brush.Text.Secondary}"
+                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding Result}"
+                                                           IsVisible="{Binding ResultKind, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                            </StackPanel>
+                                            <Border Grid.ColumnSpan="5" Theme="{StaticResource Divider}" VerticalAlignment="Bottom" Margin="-14,0" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <!-- Games folder and the archive -->
+            <StackPanel Grid.Row="3" Margin="24,16,24,0" IsEnabled="{Binding !IsWorking}">
+                <DockPanel>
+                    <TextBlock Text="{l:T 'GAMES FOLDER'}" Theme="{StaticResource Text.Overline}" Width="150" />
+                    <Button DockPanel.Dock="Right" Theme="{StaticResource Button.Secondary.Small}" Content="{l:T 'Change…'}" Command="{Binding ChangeFolderCommand}" />
+                    <TextBlock Text="{Binding GamesRoot}" Theme="{StaticResource Text.Mono}" Foreground="{StaticResource Brush.Text.Primary}"
+                               TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                </DockPanel>
+                <DockPanel Margin="0,10,0,0">
+                    <TextBlock Text="{l:T AFTERWARDS}" Theme="{StaticResource Text.Overline}" Width="150" />
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton GroupName="Archive" IsChecked="{Binding !KeepArchive}" Content="{l:T 'Move the archive to the Trash'}" Margin="0,0,24,0" />
+                        <RadioButton GroupName="Archive" IsChecked="{Binding KeepArchive}" Content="{l:T 'Keep the archive'}" />
+                    </StackPanel>
+                </DockPanel>
+            </StackPanel>
+
+            <!-- Progress -->
+            <Border Grid.Row="4" Margin="24,16,24,0" IsVisible="{Binding ShowProgress}" Background="{StaticResource Brush.Bg}"
+                    CornerRadius="{StaticResource Radius.Md}" BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="1">
+                <StackPanel>
+                    <DockPanel Margin="14,10,14,8">
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding Fraction, StringFormat={}{0:P0}}" Theme="{StaticResource Text.Mono}" />
+                        <TextBlock Text="{Binding Stage}" FontSize="{StaticResource Font.Size.Sm}" Foreground="{StaticResource Brush.Text.Secondary}"
+                                   TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                    <ProgressBar Minimum="0" Maximum="1" Value="{Binding Fraction, Mode=OneWay}" Margin="14,0" />
+                    <TextBox x:Name="LogBox" Theme="{StaticResource TextBox.Log}" Text="{Binding Log, Mode=OneWay}" Height="84" Padding="14,8" />
+                </StackPanel>
+            </Border>
+
+            <!-- Buttons -->
+            <DockPanel Grid.Row="5" Margin="24,18,24,20">
+                <Button DockPanel.Dock="Left" Theme="{StaticResource Button.Secondary}" Command="{Binding AddFilesCommand}"
+                        IsEnabled="{Binding !IsWorking}" ToolTip.Tip="{l:T 'Pick .zip or .7z games from any folder'}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Icon Data="{StaticResource Icon.Plus}" Width="14" Height="14" Margin="0,0,8,0" />
+                        <TextBlock Text="{l:T 'Add files…'}" />
+                    </StackPanel>
+                </Button>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Theme="{StaticResource Button.Secondary}" Content="{l:T Cancel}" Command="{Binding CancelCommand}" Margin="0,0,8,0"
+                            IsVisible="{Binding !IsDone}" />
+                    <Button Theme="{StaticResource Button.Secondary}" Content="{l:T Close}" Command="{Binding CloseCommand}" Margin="0,0,8,0"
+                            IsVisible="{Binding IsDone}" />
+                    <Button Theme="{StaticResource Button.Primary}" Command="{Binding ExtractCommand}" IsEnabled="{Binding CanStart}" IsDefault="True">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Icon Data="{StaticResource Icon.Download}" Width="14" Height="14" Margin="0,0,8,0" />
+                            <TextBlock Text="{Binding ExtractLabel}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </Grid>
+    </Border>
+</Window>

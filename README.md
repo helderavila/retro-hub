@@ -27,6 +27,7 @@
 
 - **One-click emulators.** Downloads portable builds from official sources, checks the SHA-256 when the source publishes one, extracts and configures them. Dependencies (Visual C++) come through winget.
 - **Recognizes your games.** Scans your ROM folders and works out the system from the extension, the file header (ISO 9660, CHD, GameCube/Wii, Sega…) or the folder name. Files referenced by `.cue`/`.gdi`/`.m3u` do not show up as duplicates.
+- **Extracts compressed games.** Games kept as `.zip`/`.7z` are extracted into the games folder (one subfolder per system) from **Library › Extract…** or the right-click menu, keeping play time, favorites and covers. Discs are checked by default (their emulators cannot open archives); arcade sets stay `.zip`.
 - **A game-store style library.** Sidebar grouped by system and favorites, a home with recently played games, all games with sorting and filters, and a page for every game.
 - **Covers and info, automatically.** Box art, title screens and in-game shots from the open libretro archive; year, genre, developer and synopsis from libretro-database. Everything is editable.
 - **Xbox controller set up for you.** Players 1 and 2 are mapped in each emulator the first time a game opens in it, without undoing changes you make later.

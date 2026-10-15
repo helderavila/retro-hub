@@ -30,6 +30,7 @@ public sealed class HubServices : IDisposable
     public required SaveStateService Saves { get; init; }
     public required BackupService Backup { get; init; }
     public required CustomEmulators CustomEmulators { get; init; }
+    public required GameUnpacker Unpacker { get; init; }
 
     /// <param name="gamepads">Connected controllers for the controller mapping; null = the platform default (XInput on Windows).</param>
     public static HubServices Create(string appBaseDirectory, Func<IReadOnlyList<IGamepadDevice>>? gamepads = null)
@@ -50,6 +51,7 @@ public sealed class HubServices : IDisposable
         http.DefaultRequestHeaders.UserAgent.ParseAdd("RetroHub/0.1");
 
         var dependencies = new DependencyInstaller();
+        var scanner = new RomScanner(manifests);
         var controllers = gamepads is null ? new ControllerConfigurator(db) : new ControllerConfigurator(db) { Devices = gamepads };
         return new HubServices
         {
@@ -59,7 +61,7 @@ public sealed class HubServices : IDisposable
             Http = http,
             Dependencies = dependencies,
             Installer = new EmulatorInstaller(paths, http, new DownloadSourceResolver(http), dependencies, manifests, db),
-            Scanner = new RomScanner(manifests),
+            Scanner = scanner,
             Bios = new BiosVerifier(manifests, paths, db),
             Launcher = new GameLauncher(manifests, db, controllers),
             Controllers = controllers,
@@ -68,6 +70,7 @@ public sealed class HubServices : IDisposable
             Saves = new SaveStateService(manifests, db),
             Backup = new BackupService(paths, manifests, db),
             CustomEmulators = new CustomEmulators(paths, manifests, db),
+            Unpacker = new GameUnpacker(manifests, db, scanner),
         };
     }
 

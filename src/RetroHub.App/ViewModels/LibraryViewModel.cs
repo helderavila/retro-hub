@@ -16,7 +16,8 @@ using RetroHub.App.Views;
 namespace RetroHub.App.ViewModels;
 
 /// <param name="CollectionId">Set when the chip is a collection instead of a system.</param>
-public sealed record SystemChip(string? Id, string Label, int Count, long? CollectionId = null);
+/// <param name="Compressed">The "Compressed" chip: games kept as .zip/.7z.</param>
+public sealed record SystemChip(string? Id, string Label, int Count, long? CollectionId = null, bool Compressed = false);
 
 /// <summary>Sort option for "All games": <see cref="Key"/> is stable (used by the logic), <see cref="Label"/> is translated.</summary>
 public sealed record SortOption(string Key, string Label)
@@ -183,7 +184,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
             _games.Add(new GameItemViewModel(game, system, _services.Paths, this));
         }
 
-        RebuildFilters(selected, SelectedSystem?.CollectionId);
+        RebuildFilters(selected, SelectedSystem?.CollectionId, SelectedSystem?.Compressed == true);
 
         var totalSeconds = _games.Sum(g => g.Game.PlaySeconds);
         Summary = _games.Count == 0
@@ -209,17 +210,23 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
     private Dictionary<long, HashSet<long>> _collectionMembers = [];
 
     /// <summary>Chips: All · systems · collections (only the ones that have games).</summary>
-    internal void RebuildFilters(string? selectedSystem = null, long? selectedCollection = null)
+    internal void RebuildFilters(string? selectedSystem = null, long? selectedCollection = null, bool selectedCompressed = false)
     {
         _collectionMembers = _services.Database.GetCollectionMembers();
         SystemFilters.Clear();
         SystemFilters.Add(new SystemChip(null, L.T("All"), _games.Count));
         foreach (var group in _games.GroupBy(g => g.SystemId).OrderBy(g => g.First().SystemShort))
             SystemFilters.Add(new SystemChip(group.Key, group.First().SystemShort, group.Count()));
+        if (CompressedCount > 0)
+            SystemFilters.Add(new SystemChip(null, L.T("Compressed"), CompressedCount, Compressed: true));
         foreach (var collection in _services.Database.GetCollections().Where(c => c.Count > 0))
             SystemFilters.Add(new SystemChip(null, L.T(collection.Name), collection.Count, collection.Id));
-        SelectedSystem = SystemFilters.FirstOrDefault(c => c.CollectionId is { } id ? id == selectedCollection : c.Id == selectedSystem && selectedCollection is null)
+        SelectedSystem = (selectedCompressed ? SystemFilters.FirstOrDefault(c => c.Compressed) : null)
+                         ?? SystemFilters.FirstOrDefault(c => !c.Compressed && (c.CollectionId is { } id ? id == selectedCollection : c.Id == selectedSystem && selectedCollection is null))
                          ?? SystemFilters[0];
+        OnPropertyChanged(nameof(CompressedCount));
+        OnPropertyChanged(nameof(ExtractableCount));
+        OnPropertyChanged(nameof(HasCompressed));
     }
 
     public IReadOnlyDictionary<long, HashSet<long>> CollectionMembers => _collectionMembers;
@@ -229,6 +236,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         && (string.IsNullOrWhiteSpace(SearchText) || g.Title.Contains(SearchText.Trim(), StringComparison.OrdinalIgnoreCase))
         && (!FavoritesOnly || g.Favorite)
         && (SelectedSystem?.Id is null || g.SystemId == SelectedSystem.Id)
+        && (SelectedSystem?.Compressed != true || g.IsCompressed)
         && (SelectedSystem?.CollectionId is not { } cid || (_collectionMembers.TryGetValue(cid, out var members) && members.Contains(g.Game.Id)));
 
     partial void OnSearchTextChanged(string value)
@@ -512,26 +520,55 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
     [RelayCommand]
     private void GoToFolders() => _navigate("folders");
 
+    // ── Compressed games (.zip/.7z) ─────────────────────────────────────────
+
+    public int CompressedCount => _games.Count(g => g.IsCompressed);
+
+    /// <summary>Compressed games that can be extracted (arcade sets stay .zip): the "Extract…" button count.</summary>
+    public int ExtractableCount => _games.Count(g => g.IsCompressed && _services.Unpacker.Advice(g.SystemId) != Core.Library.UnpackAdvice.KeepCompressed);
+    public bool HasCompressed => ExtractableCount > 0;
+
+    /// <summary>"Extract…": every compressed game, the recommended ones checked.</summary>
+    [RelayCommand]
+    private void ExtractGames() => Extract(null);
+
+    /// <summary>Right-click › Extract and the game page: just this game checked.</summary>
+    internal void ExtractGame(GameItemViewModel item) => Extract(item.Game.Id);
+
+    private void Extract(long? only)
+    {
+        if (!UnpackDialog.Show(_services, _games.Select(g => g.Game).ToList(), only))
+            return;
+        var openId = Page?.Item.Game.Id;
+        Load();
+        // The open page follows its game to the extracted file.
+        if (openId is { } id && _games.FirstOrDefault(g => g.Game.Id == id) is { } item)
+            OpenPage(item);
+        _ = FetchCoversAsync();
+    }
+
     [RelayCommand]
     private void DismissNotice() => Notice = null;
 
     /// <summary>Opens at the most recent save the emulator can load by itself; without a save, opens normally.</summary>
-    internal Task ContinueAsync(GameItemViewModel item, CancellationToken ct = default)
+    internal Task ContinueAsync(GameItemViewModel item, CancellationToken ct = default, bool curtain = true)
     {
         var latest = _services.Saves.Find(item.Game).FirstOrDefault(s => s.CanLoadDirectly);
-        return PlayAsync(item, ct, latest);
+        return PlayAsync(item, ct, latest, curtain);
     }
 
-    internal async Task PlayAsync(GameItemViewModel item, CancellationToken ct = default, RetroHub.Core.Saves.SaveState? state = null)
+    /// <param name="curtain">Covers the screen with the game's art until the emulator's window is up (TV mode has its own).</param>
+    internal async Task PlayAsync(GameItemViewModel item, CancellationToken ct = default, RetroHub.Core.Saves.SaveState? state = null, bool curtain = true)
     {
         if (item.IsRunning)
             return;
 
         Notice = null;
         item.IsRunning = true;
+        var loading = curtain ? LaunchCurtain.Show(item) : null;
         try
         {
-            await _services.Launcher.LaunchAsync(item.Game, ct, state);
+            await _services.Launcher.LaunchAsync(item.Game, ct, state, started: process => loading?.Watch(process));
             if (_services.Database.GetGame(item.Game.Id) is { } fresh)
                 item.Update(fresh);
         }
@@ -545,6 +582,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         }
         finally
         {
+            loading?.Dismiss(); // the game ended or never started
             item.IsRunning = false;
         }
     }

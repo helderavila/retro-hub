@@ -21,6 +21,16 @@
   "launch": [
     { "systems": ["gamecube", "wii"], "args": "-b -e \"{rom}\"" }
   ],
+  // Quiet launch: -b hides the main window and skips the updater; no usage-statistics question (not covered by -b),
+  // OSD messages or stop confirmation; the game renders in its own full-screen window.
+  "defaults": [
+    { "file": "User/Config/Dolphin.ini", "format": "ini",
+      "settings": {
+        "Analytics": { "PermissionAsked": "True", "Enabled": "False" },
+        "AutoUpdate": { "UpdateTrack": "" },
+        "Interface": { "ConfirmStop": "False", "OnScreenDisplayMessages": "False", "PauseOnFocusLost": "False" },
+        "Display": { "Fullscreen": "True", "RenderToMain": "False" } } }
+  ],
   // GameCube 1 on the first XInput controller. The Wii Remote stays on the keyboard (map it in Controllers › Wii Remote 1).
   "controller": {
     "file": "User/Config/GCPadNew.ini",

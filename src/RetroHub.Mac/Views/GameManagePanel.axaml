@@ -3,6 +3,7 @@
              xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:RetroHub.Mac.ViewModels"
+             xmlns:ui="using:RetroHub.Mac.Controls"
              xmlns:l="using:RetroHub.Mac.Helpers"
              x:DataType="vm:GameDetailsViewModel">
     <StackPanel>
@@ -51,6 +52,14 @@
         </TextBlock>
         <TextBlock Text="{Binding OfficialNameText}" Margin="0,4,0,0" Theme="{StaticResource Text.Mono.Tertiary}"
                    TextWrapping="Wrap" IsVisible="{Binding OfficialName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <Button Theme="{StaticResource Button.Secondary.Small}" Command="{Binding ExtractCommand}" Margin="0,10,0,0"
+                IsVisible="{Binding IsCompressed}" HorizontalAlignment="Left"
+                ToolTip.Tip="{l:T 'Extracts the game into its system folder; play time and favorites stay'}">
+            <StackPanel Orientation="Horizontal">
+                <ui:Icon Data="{StaticResource Icon.Package}" Width="12" Height="12" Margin="0,0,6,0" />
+                <TextBlock Text="{l:T 'Extract to games folder…'}" />
+            </StackPanel>
+        </Button>
 
         <!-- Verification -->
         <Border Margin="0,16,0,0" Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}"

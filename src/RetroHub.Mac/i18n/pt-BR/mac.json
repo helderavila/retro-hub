@@ -44,5 +44,6 @@
   "Players 1 and 2 · SDL controller": "Jogadores 1 e 2 · controle SDL",
   "MFi autoconfig (all cores)": "Autoconfig MFi (todos os cores)",
   "PlayStation 2 emulator. On Apple Silicon it runs through Rosetta 2.": "Emulador de PlayStation 2. No Apple Silicon roda pelo Rosetta 2.",
-  "Put the pack in home/.config/ppsspp/PSP/TEXTURES/<game ID> (PPSSPP folder).": "Coloque o pacote em home/.config/ppsspp/PSP/TEXTURES/<ID do jogo> (pasta do PPSSPP)."
+  "Put the pack in home/.config/ppsspp/PSP/TEXTURES/<game ID> (PPSSPP folder).": "Coloque o pacote em home/.config/ppsspp/PSP/TEXTURES/<ID do jogo> (pasta do PPSSPP).",
+  "Move the archive to the Trash": "Mover o arquivo compactado para o Lixo"
 }

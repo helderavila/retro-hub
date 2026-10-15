@@ -19,7 +19,18 @@
   "dependencies": ["vcredist-x64"],
   "biosDir": "bios",
   "launch": [
-    { "systems": ["ps2"], "args": "-batch -fullscreen -- \"{rom}\"" }
+    { "systems": ["ps2"], "args": "-nogui -fullscreen -- \"{rom}\"" }
+  ],
+  // Quiet launch: -nogui skips the main window; SettingsVersion = 1 avoids the "reset settings?" prompt and the wizard;
+  // no OSD messages (OsdMessagesPos 0 = none), update check or shutdown confirmation.
+  "defaults": [
+    { "file": "inis/PCSX2.ini", "format": "ini",
+      "settings": {
+        "UI": { "SettingsVersion": "1", "SetupWizardIncomplete": "false", "ConfirmShutdown": "false", "StartFullscreen": "true",
+                "RenderToSeparateWindow": "true", "HideMainWindowWhenRunning": "true", "PauseOnFocusLoss": "false" },
+        "EmuCore/GS": { "OsdMessagesPos": "0", "OsdShowIndicators": "false" },
+        "Achievements": { "Notifications": "false", "LeaderboardNotifications": "false" },
+        "AutoUpdater": { "CheckAtStartup": "false" } } }
   ],
   // Controller on Pad 1 via SDL: Xbox, DualShock/DualSense and most USB controllers.
   "controller": {
@@ -56,7 +67,7 @@
   // Save states: sstates/SLUS-20946 (CRC).01.p2s (the .p2s is a zip with Screenshot.png inside).
   "saves": {
     "states": [ { "dir": "sstates", "pattern": "{serial} (*).*.p2s", "slot": "\\.(\\d+)\\.p2s$" } ],
-    "loadStateArgs": "-batch -fullscreen -statefile \"{state}\" -- \"{rom}\"",
+    "loadStateArgs": "-nogui -fullscreen -statefile \"{state}\" -- \"{rom}\"",
     "backup": ["memcards", "sstates"]
   },
   "preserve": ["inis/PCSX2.ini", "portable.ini"],

@@ -17,7 +17,16 @@
   "postInstall": [],
   "dependencies": [],
   "launch": [
-    { "systems": ["psp"], "args": "\"{rom}\" --fullscreen" }
+    { "systems": ["psp"], "args": "--fullscreen --escape-exit --pause-menu-exit \"{rom}\"" }
+  ],
+  // Quiet launch: no notifications (NotificationPos -1 = none), version check or "you have not saved" question;
+  // --escape-exit makes Esc close the game, like the other emulators.
+  "defaults": [
+    { "file": "memstick/PSP/SYSTEM/ppsspp.ini", "format": "ini",
+      "settings": {
+        "General": { "FirstRun": "False", "NotificationPos": "-1", "CheckForNewVersion": "False",
+                     "AskForExitConfirmationAfterSeconds": "0", "PauseOnLostFocus": "False" },
+        "Graphics": { "FullScreen": "True" } } }
   ],
   // Save states: memstick/PSP/PPSSPP_STATE/ULUS10041_1.00_0.ppst. PPSSPP cannot load a state from the command line:
   // they show up in the list, and the game opens normally (load it from the emulator menu).
@@ -55,13 +64,20 @@
     ],
     "environment": { "HOME": "{emuDir}/home" },
     "dataDir": "home/.config/ppsspp",
+    "defaults": [
+      { "file": "PSP/SYSTEM/ppsspp.ini", "format": "ini",
+        "settings": {
+          "General": { "FirstRun": "False", "NotificationPos": "-1", "CheckForNewVersion": "False",
+                       "AskForExitConfirmationAfterSeconds": "0", "PauseOnLostFocus": "False" },
+          "Graphics": { "FullScreen": "True" } } }
+    ],
     "launch": [
-      { "systems": ["psp"], "args": "--fullscreen \"{rom}\"" }
+      { "systems": ["psp"], "args": "--fullscreen --escape-exit --pause-menu-exit \"{rom}\"" }
     ],
     // Since 1.20, --state=FILE opens the game right at a save state.
     "saves": {
       "states": [ { "dir": "PSP/PPSSPP_STATE", "pattern": "{serialNoDash}_*.ppst", "slot": "_(\\d+)\\.ppst$" } ],
-      "loadStateArgs": "--fullscreen --state=\"{state}\" \"{rom}\"",
+      "loadStateArgs": "--fullscreen --escape-exit --pause-menu-exit --state=\"{state}\" \"{rom}\"",
       "backup": ["PSP/SAVEDATA", "PSP/PPSSPP_STATE"]
     },
     "graphics": {

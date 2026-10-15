@@ -499,6 +499,8 @@ public partial class GameDetailsViewModel : ObservableObject
     }
 
     [RelayCommand] private void OpenFolder() => _owner.OpenFileFolder(Item);
+    [RelayCommand] private Task Extract() => _owner.ExtractGame(Item);
+    public bool IsCompressed => Item.IsCompressed;
     [RelayCommand] private Task Remove() => _owner.RemoveFromLibrary(Item);
     [RelayCommand] private Task Delete() => _owner.DeleteFiles(Item);
     [RelayCommand] private void ToggleFavorite() => _owner.ToggleFavorite(Item);

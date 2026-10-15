@@ -303,6 +303,36 @@ public sealed class LibraryDatabase
         }
         return removed;
     }
+    /// <summary>
+    /// Points a game at another file (e.g. the extracted copy of a .zip), keeping its id: play time, sessions, favorites,
+    /// collections and cover stay. <paramref name="excludeOldPath"/> stops scans from bringing the old file back.
+    /// </summary>
+    public void ReplaceGameFile(long gameId, ScannedRom rom, bool excludeOldPath)
+    {
+        using var c = Open();
+        using var tx = c.BeginTransaction();
+        if (excludeOldPath)
+            Execute(c, """
+                INSERT OR IGNORE INTO excluded_paths (path, added_at)
+                SELECT path, $now FROM games WHERE id = $id;
+                """, tx, ("$id", gameId), ("$now", DateTimeOffset.UtcNow.ToUnixTimeSeconds()));
+        Execute(c, """
+            UPDATE games SET path = $path, size_bytes = $size, serial = COALESCE($serial, serial),
+                             crc32 = $crc, fingerprint = $fp
+            WHERE id = $id;
+            """, tx,
+            ("$path", rom.Path), ("$size", rom.SizeBytes), ("$serial", rom.Serial), ("$crc", rom.Crc32), ("$fp", rom.Fingerprint), ("$id", gameId));
+        tx.Commit();
+    }
+
+    /// <summary>Scans skip this file from now on (e.g. a .zip whose game was extracted next to it).</summary>
+    public void ExcludePath(string path)
+    {
+        using var c = Open();
+        Execute(c, "INSERT OR IGNORE INTO excluded_paths (path, added_at) VALUES ($path, $now);", null,
+            ("$path", Path.GetFullPath(path)), ("$now", DateTimeOffset.UtcNow.ToUnixTimeSeconds()));
+    }
+
     /// <summary>Removes the game from the library and remembers the path so scanning does not bring it back.</summary>
     public void ExcludeGame(long gameId)
     {

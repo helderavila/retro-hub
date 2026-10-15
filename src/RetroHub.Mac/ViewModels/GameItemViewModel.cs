@@ -22,6 +22,8 @@ public partial class GameItemViewModel : ObservableObject
     public string FilePath => Game.Path;
     public string Initials { get; }
     public string PlaytimeText => Shell.FormatPlaytime(Game.PlaySeconds);
+    /// <summary>Kept as .zip/.7z (can be extracted into the games folder).</summary>
+    public bool IsCompressed => Core.Library.GameUnpacker.IsCompressed(Game.Path);
 
     [ObservableProperty] private bool _favorite;
     [ObservableProperty] private bool _isRunning;
@@ -119,4 +121,7 @@ public partial class GameItemViewModel : ObservableObject
 
     [RelayCommand]
     private void OpenFileFolder() => _owner.OpenFileFolder(this);
+
+    [RelayCommand]
+    private Task Extract() => _owner.ExtractGame(this);
 }

@@ -20,7 +20,18 @@
   "dependencies": ["vcredist-x64"],
   "biosDir": "bios",
   "launch": [
-    { "systems": ["ps1"], "args": "-batch -fullscreen \"{rom}\"" }
+    { "systems": ["ps1"], "args": "-nogui -fullscreen -- \"{rom}\"" }
+  ],
+  // Quiet launch: -nogui skips the main window and game list (-batch still shows them); no OSD, wizard, update check or
+  // power-off confirmation.
+  "defaults": [
+    { "file": "settings.ini", "format": "ini",
+      "settings": {
+        "Main": { "SetupWizardIncomplete": "false", "ConfirmPowerOff": "false", "StartFullscreen": "true",
+                  "RenderToSeparateWindow": "true", "HideMainWindowWhenRunning": "true", "PauseOnFocusLoss": "false" },
+        "Display": { "ShowOSDMessages": "false", "ShowStatusIndicators": "false" },
+        "Cheevos": { "Notifications": "false", "LeaderboardNotifications": "false" },
+        "AutoUpdater": { "CheckAtStartup": "false" } } }
   ],
   "controller": {
     "file": "settings.ini",
@@ -55,7 +66,7 @@
   // Save states: savestates/SLUS-00067_1.sav (and _resume.sav on exit).
   "saves": {
     "states": [ { "dir": "savestates", "pattern": "{serial}_*.sav", "slot": "_(\\d+)\\.sav$" } ],
-    "loadStateArgs": "-batch -fullscreen -statefile \"{state}\" \"{rom}\"",
+    "loadStateArgs": "-nogui -fullscreen -statefile \"{state}\" -- \"{rom}\"",
     "backup": ["memcards", "savestates"]
   },
   "preserve": ["settings.ini", "portable.txt"],

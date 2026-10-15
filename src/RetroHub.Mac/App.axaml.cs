@@ -68,6 +68,9 @@ public partial class App : Application
                 {
                     if (tab == "game" && vm.Library.AllGames.Count > 0) vm.Library.OpenPage(vm.Library.AllGames[0]);
                     else if (tab == "tv") vm.IsTvOpen = true;
+                    else if (tab == "play" && vm.Library.AllGames.Count > 0)
+                        DispatcherTimer.RunOnce(() => _ = vm.Library.PlayAsync(vm.Library.AllGames[0]), TimeSpan.FromSeconds(3));
+                    else if (tab == "extract") Dispatcher.UIThread.Post(() => vm.Library.ExtractGamesCommand.Execute(null), DispatcherPriority.Background);
                     else vm.Navigate(tab);
                 },
                 () => vm.Library.ScanCommand.Execute(null), () => desktop.Shutdown());

@@ -27,6 +27,7 @@
 
 - **Instala emuladores com um clique.** Baixa as versões portáteis das fontes oficiais, confere o SHA-256 quando a fonte publica, extrai e deixa configurado. Dependências (Visual C++) vêm pelo winget.
 - **Reconhece seus jogos sozinho.** Escaneia as pastas de ROMs e descobre o sistema pela extensão, pelo cabeçalho do arquivo (ISO 9660, CHD, GameCube/Wii, Sega…) ou pelo nome da pasta. Arquivos citados por `.cue`/`.gdi`/`.m3u` não viram jogos repetidos.
+- **Extrai jogos compactados.** Jogos guardados em `.zip`/`.7z` são extraídos para a pasta de jogos (uma subpasta por sistema) em **Biblioteca › Extrair…** ou no menu do botão direito, mantendo tempo jogado, favoritos e capas. Discos vêm marcados (os emuladores deles não abrem arquivos compactados); jogos de arcade ficam em `.zip`.
 - **Biblioteca no estilo das lojas de jogos.** Lista lateral por sistema e favoritos, início com jogados recentemente, todos os jogos com ordenação e filtros, e uma página para cada jogo.
 - **Capas e informações automáticas.** Capas, tela de título e imagens do jogo vêm do acervo aberto do libretro; ano, gênero, desenvolvedora e sinopse vêm do libretro-database. Dá para editar à mão.
 - **Controle Xbox configurado sozinho.** Jogadores 1 e 2 são mapeados em cada emulador na primeira vez que um jogo abre nele, sem desfazer o que você mudar depois.

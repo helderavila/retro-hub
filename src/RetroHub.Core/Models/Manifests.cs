@@ -97,6 +97,9 @@ public sealed class EmulatorManifest
     /// <summary>Controller mapping written to the emulator config file.</summary>
     public ControllerConfig? Controller { get; set; }
 
+    /// <summary>Opens games inside .zip/.7z by itself (RetroArch), so extracting them is optional.</summary>
+    public bool OpensArchives { get; set; }
+
     /// <summary>Settings the emulator needs to work well (e.g. a renderer that draws on this system), written on install and before games.</summary>
     public List<ConfigDefaults> Defaults { get; set; } = [];
 

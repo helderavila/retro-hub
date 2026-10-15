@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RetroHub.App.Input;
@@ -188,9 +188,9 @@ public partial class TvViewModel : ObservableObject
         try
         {
             if (resume)
-                await _library.ContinueAsync(game, _gameCts.Token);
+                await _library.ContinueAsync(game, _gameCts.Token, curtain: false);
             else
-                await _library.PlayAsync(game, _gameCts.Token);
+                await _library.PlayAsync(game, _gameCts.Token, curtain: false);
             if (_library.Notice is { Kind: "error" } error)
                 Message = error.Message;
         }

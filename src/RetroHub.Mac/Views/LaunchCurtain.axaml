@@ -1,0 +1,70 @@
+<!-- Shown from "Play" until the emulator's window is up: hides the emulator's own windows and transitions. -->
+<Window x:Class="RetroHub.Mac.Views.LaunchCurtain"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:RetroHub.Mac.Controls"
+        xmlns:vm="using:RetroHub.Mac.ViewModels"
+        xmlns:l="using:RetroHub.Mac.Helpers"
+        x:DataType="vm:GameItemViewModel"
+        SystemDecorations="None" CanResize="False" ShowInTaskbar="False" Topmost="True"
+        Background="{StaticResource Brush.Bg}" Foreground="{StaticResource Brush.Text.Primary}"
+        FontFamily="{StaticResource Font.Sans}" Cursor="None">
+
+    <Window.Styles>
+        <!-- Soft pulse on the status dot while the emulator starts -->
+        <Style Selector="Ellipse.pulse">
+            <Style.Animations>
+                <Animation Duration="0:0:1.2" IterationCount="Infinite" PlaybackDirection="Alternate" Easing="SineEaseInOut">
+                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.25" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1" /></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </Window.Styles>
+
+    <Panel x:Name="Root" Opacity="0">
+        <Panel.Transitions>
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut" />
+            </Transitions>
+        </Panel.Transitions>
+
+        <!-- The game's art, blurred, as in TV mode -->
+        <Image Source="{Binding CoverImage}" Stretch="UniformToFill" Opacity="0.28" RenderTransformOrigin="50%,50%" RenderTransform="scale(1.25)">
+            <Image.Effect>
+                <BlurEffect Radius="90" />
+            </Image.Effect>
+        </Image>
+        <Rectangle>
+            <Rectangle.Fill>
+                <RadialGradientBrush Center="50%,45%" GradientOrigin="50%,45%" RadiusX="70%" RadiusY="70%">
+                    <GradientStop Color="#33000000" Offset="0" />
+                    <GradientStop Color="#F2000000" Offset="1" />
+                </RadialGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Border Width="208" Height="278" CornerRadius="14" HorizontalAlignment="Center"
+                    Background="{StaticResource Brush.CoverPlaceholder}" BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1"
+                    BoxShadow="0 10 60 0 #B3000000">
+                <Panel>
+                    <TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               FontFamily="{StaticResource Font.Mono}" FontSize="44" Foreground="{StaticResource Brush.Border.Strong}"
+                               IsVisible="{Binding !HasCover}" />
+                    <ui:CoverArt CornerRadius="13" Source="{Binding CoverImage}" IsVisible="{Binding HasCover}" />
+                </Panel>
+            </Border>
+            <TextBlock Text="{Binding Title}" FontSize="34" FontWeight="SemiBold" HorizontalAlignment="Center"
+                       TextAlignment="Center" TextWrapping="Wrap" MaxWidth="900" Margin="0,32,0,0" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
+                <Ellipse Classes="pulse" Theme="{StaticResource StatusDot}" Fill="{StaticResource Brush.Text.Primary}" Margin="0,0,10,0" />
+                <TextBlock Theme="{StaticResource Text.Mono}" FontSize="{StaticResource Font.Size.Md}">
+                    <Run Text="{Binding SystemName}" /><Run Text=" · " Foreground="{StaticResource Brush.Text.Tertiary}" /><Run Text="{l:T 'starting…'}" />
+                </TextBlock>
+            </StackPanel>
+        </StackPanel>
+
+        <l:GrainLayer MaxAlpha="{StaticResource Grain.MaxAlpha}" />
+    </Panel>
+</Window>

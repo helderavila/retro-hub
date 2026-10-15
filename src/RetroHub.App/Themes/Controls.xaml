@@ -20,6 +20,7 @@
     <conv:EqualsConverter x:Key="Equals" />
     <conv:RatioToStarConverter x:Key="RatioToStar" />
     <conv:TranslateConverter x:Key="Translate" />
+    <conv:NotConverter x:Key="Not" />
 
     <!-- ═══ Focus ═════════════════════════════════════════════════════════ -->
     <Style x:Key="FocusRing">

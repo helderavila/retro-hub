@@ -2,6 +2,7 @@
 <UserControl x:Class="RetroHub.App.Views.GameManagePanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:RetroHub.App.Controls"
              xmlns:l="clr-namespace:RetroHub.App.Helpers">
     <StackPanel>
         <!-- Collections -->
@@ -50,6 +51,14 @@
         </TextBlock>
         <TextBlock Text="{Binding OfficialNameText}" Margin="0,4,0,0" Style="{StaticResource Text.Mono.Tertiary}"
                    TextWrapping="Wrap" Visibility="{Binding OfficialName, Converter={StaticResource NullToCollapsed}}" />
+        <Button Style="{StaticResource Button.Secondary.Small}" Command="{Binding ExtractCommand}" Margin="0,10,0,0" HorizontalAlignment="Left"
+                Visibility="{Binding IsCompressed, Converter={StaticResource BoolToVisible}}"
+                ToolTip="{l:T 'Extracts the game into its system folder; play time and favorites stay'}">
+            <StackPanel Orientation="Horizontal">
+                <ui:Icon Data="{StaticResource Icon.Package}" Width="12" Height="12" Margin="0,0,6,0" />
+                <TextBlock Text="{l:T 'Extract to games folder…'}" />
+            </StackPanel>
+        </Button>
 
         <!-- Verification -->
         <Border Margin="0,16,0,0" Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}"

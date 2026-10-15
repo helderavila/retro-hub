@@ -30,6 +30,9 @@
                         <MenuItem Header="{l:T 'Show in Finder'}" Command="{Binding OpenFileFolderCommand}">
                             <MenuItem.Icon><ui:Icon Data="{StaticResource Icon.Folder}" Width="14" Height="14" /></MenuItem.Icon>
                         </MenuItem>
+                        <MenuItem Header="{l:T 'Extract to games folder…'}" Command="{Binding ExtractCommand}" IsVisible="{Binding IsCompressed}">
+                            <MenuItem.Icon><ui:Icon Data="{StaticResource Icon.Package}" Width="14" Height="14" /></MenuItem.Icon>
+                        </MenuItem>
                         <Separator />
                         <MenuItem Header="{l:T 'Remove from library'}" Command="{Binding RemoveFromLibraryCommand}">
                             <MenuItem.Icon><ui:Icon Data="{StaticResource Icon.X}" Width="14" Height="14" /></MenuItem.Icon>
@@ -258,6 +261,9 @@
                                                 <MenuItem Header="{l:T 'Show in Finder'}" Command="{Binding OpenFileFolderCommand}">
                                                     <MenuItem.Icon><ui:Icon Data="{StaticResource Icon.Folder}" Width="14" Height="14" /></MenuItem.Icon>
                                                 </MenuItem>
+                                                <MenuItem Header="{l:T 'Extract to games folder…'}" Command="{Binding ExtractCommand}" IsVisible="{Binding IsCompressed}">
+                                                    <MenuItem.Icon><ui:Icon Data="{StaticResource Icon.Package}" Width="14" Height="14" /></MenuItem.Icon>
+                                                </MenuItem>
                                                 <Separator />
                                                 <MenuItem Header="{l:T 'Remove from library'}" Command="{Binding RemoveFromLibraryCommand}">
                                                     <MenuItem.Icon><ui:Icon Data="{StaticResource Icon.X}" Width="14" Height="14" /></MenuItem.Icon>
@@ -322,6 +328,15 @@
                             <!-- Header -->
                             <DockPanel Margin="0,0,20,0">
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Theme="{StaticResource Button.Secondary}" Command="{Binding ExtractGamesCommand}" Margin="0,0,8,0"
+                                            ToolTip.Tip="{l:T 'Extracts .zip/.7z games, from the library or any folder, into the games folder (discs need it to play)'}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:Icon Data="{StaticResource Icon.Package}" Width="14" Height="14" Margin="0,0,8,0" />
+                                            <TextBlock Text="{l:T 'Extract…'}" />
+                                            <TextBlock Text="{Binding ExtractableCount}" Margin="8,0,0,0" Opacity="0.55" IsVisible="{Binding HasCompressed}"
+                                                       FontFamily="{StaticResource Font.Mono}" FontSize="{StaticResource Font.Size.Xs}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
                                     <Button Theme="{StaticResource Button.Ghost}" Command="{Binding ResetLibraryCommand}" Margin="0,0,8,0"
                                             ToolTip.Tip="{l:T 'Clears the list and rescans everything from scratch (files are not deleted)'}">
                                         <StackPanel Orientation="Horizontal">

@@ -93,7 +93,8 @@ public sealed partial class GameLauncher(ManifestRepository manifests, LibraryDa
         Placeholder().Replace(template, m => values.TryGetValue(m.Groups[1].Value, out var v) ? v : m.Value);
 
     /// <summary>Starts the emulator and waits for it to close. Returns the session duration.</summary>
-    public async Task<TimeSpan> LaunchAsync(Game game, CancellationToken ct = default, Saves.SaveState? state = null)
+    /// <param name="started">Called with the emulator process right after it starts (e.g. to hide a loading screen once its window shows).</param>
+    public async Task<TimeSpan> LaunchAsync(Game game, CancellationToken ct = default, Saves.SaveState? state = null, Action<Process>? started = null)
     {
         if (!File.Exists(game.Path))
             throw new LaunchException(L.F("File not found: {0}", game.Path));
@@ -126,6 +127,7 @@ public sealed partial class GameLauncher(ManifestRepository manifests, LibraryDa
         var startedAt = DateTimeOffset.UtcNow;
         var stopwatch = Stopwatch.StartNew();
         using var process = Process.Start(psi) ?? throw new LaunchException(L.F("Failed to start {0}.", plan.Emulator.Name));
+        started?.Invoke(process);
         try
         {
             await process.WaitForExitAsync(ct);

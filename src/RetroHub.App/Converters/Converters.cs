@@ -71,3 +71,11 @@ public sealed class EqualsConverter : IValueConverter
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         value is true ? parameter : Binding.DoNothing;
 }
+
+/// <summary>true ↔ false (e.g. "move the archive away" checked = not KeepArchive).</summary>
+public sealed class NotConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not true;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not true;
+}

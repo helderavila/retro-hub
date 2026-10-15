@@ -114,7 +114,7 @@ public class MacManifestTests
         var overrideCfg = ra.Defaults.Single(d => d.File.EndsWith("Mupen64Plus-Next.cfg"));
         Assert.Equal("parallel", options.Settings[""]["mupen64plus-rdp-plugin"]);
         Assert.Equal("vulkan", overrideCfg.Settings[""]["video_driver"]);
-        Assert.Empty(ManifestTests.Load().GetEmulator("retroarch")!.Defaults); // Windows keeps GLideN64
+        Assert.DoesNotContain(ManifestTests.Load().GetEmulator("retroarch")!.Defaults, d => d.File.Contains("Mupen64Plus")); // Windows keeps GLideN64
     }
 
     [Fact]
@@ -137,5 +137,35 @@ public class MacManifestTests
         File.WriteAllText(opt, "mupen64plus-rdp-plugin = \"angrylion\"\n");
         Assert.False(defaults.EnsureApplied(ra, installed));
         Assert.Contains("angrylion", File.ReadAllText(opt));
+    }
+
+    public static TheoryData<string?> Platforms => new() { null, "macos" };
+
+    /// <summary>Straight into the game: every emulator writes its quiet-launch settings, and the Qt ones start without their main window.</summary>
+    [Theory]
+    [MemberData(nameof(Platforms))]
+    public void Every_emulator_launches_quietly(string? platform)
+    {
+        var repo = ManifestRepository.LoadFor(platform, Path.Combine(AppContext.BaseDirectory, "manifests"));
+        string Value(string id, string section, string key) =>
+            repo.GetEmulator(id)!.Defaults.Where(d => d.Settings.ContainsKey(section) && d.Settings[section].ContainsKey(key))
+                .Select(d => d.Settings[section][key]).Single();
+
+        Assert.Equal("false", Value("retroarch", "", "video_font_enable"));
+        Assert.Equal("false", Value("duckstation", "Display", "ShowOSDMessages"));
+        Assert.Equal("1", Value("pcsx2", "UI", "SettingsVersion"));
+        Assert.Equal("-1", Value("ppsspp", "General", "NotificationPos"));
+        Assert.Equal("True", Value("dolphin", "Analytics", "PermissionAsked"));
+        Assert.All(new[] { "duckstation", "pcsx2" }, id => Assert.StartsWith("-nogui ", repo.GetEmulator(id)!.Launch.Single().Args));
+        Assert.Contains("--escape-exit", repo.GetEmulator("ppsspp")!.Launch.Single().Args);
+    }
+
+    [Fact]
+    public void Mac_quiet_settings_land_in_the_mac_config_files()
+    {
+        var mac = Load();
+        Assert.Contains(mac.GetEmulator("retroarch")!.Defaults, d => d.File == "config/retroarch.cfg");
+        Assert.Contains(mac.GetEmulator("ppsspp")!.Defaults, d => d.File == Path.Combine("home/.config/ppsspp", "PSP/SYSTEM/ppsspp.ini"));
+        Assert.Contains(mac.GetEmulator("duckstation")!.Defaults, d => d.File == Path.Combine("home", "Library", "Application Support", "DuckStation", "settings.ini"));
     }
 }

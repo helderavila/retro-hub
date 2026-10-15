@@ -27,12 +27,8 @@ public partial class TvWindow : Window
         }
         else
         {
-            // Borderless window over the whole screen, menu bar and Dock hidden (like the borderless maximized window on Windows).
-            // Not macOS native full screen: that one leaves a borderless window small in a black Space, and takes Esc for itself.
-            Opened += (_, _) => CoverScreen();
-            Activated += (_, _) => Helpers.MacPresentation.SetKiosk(true);
-            Deactivated += (_, _) => Helpers.MacPresentation.SetKiosk(false);
-            Closed += (_, _) => Helpers.MacPresentation.SetKiosk(false);
+            // Borderless over the whole screen, like the borderless maximized window on Windows (see ScreenCover).
+            Helpers.ScreenCover.Apply(this);
         }
 
         _pad.Pressed += _vm.Handle;
@@ -91,16 +87,5 @@ public partial class TvWindow : Window
             WindowState = WindowState.Normal;
         Activate();
         Focus();
-    }
-
-    /// <summary>Fills the screen the window is on (the whole screen: menu bar and Dock get hidden while it is active).</summary>
-    private void CoverScreen()
-    {
-        if ((Screens.ScreenFromWindow(this) ?? Screens.Primary) is not { } screen)
-            return;
-        Helpers.MacPresentation.SetKiosk(true);
-        Position = screen.Bounds.Position;
-        Width = screen.Bounds.Width / screen.Scaling;
-        Height = screen.Bounds.Height / screen.Scaling;
     }
 }
