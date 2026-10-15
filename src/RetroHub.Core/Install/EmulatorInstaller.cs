@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using RetroHub.Core.Library;
+using RetroHub.Core.Localization;
 using RetroHub.Core.Manifests;
 using RetroHub.Core.Models;
 using RetroHub.Core.Util;
@@ -7,8 +8,8 @@ using RetroHub.Core.Util;
 namespace RetroHub.Core.Install;
 
 /// <summary>
-/// Pipeline: resolver versão → dependências (winget) → baixar → conferir SHA-256 →
-/// extrair em staging → copiar para emulators/{id} → pós-instalação (modo portátil) → cores → registrar.
+/// Pipeline: resolve version → dependencies (winget) → download → verify SHA-256 →
+/// extract to staging → copy to emulators/{id} → post-install (portable mode) → cores → register.
 /// </summary>
 public sealed class EmulatorInstaller(
     AppPaths paths,
@@ -23,18 +24,18 @@ public sealed class EmulatorInstaller(
         if (manifest.Source.Type == "local")
             return RegisterLocal(manifest, progress);
 
-        progress.Report(new InstallUpdate("Resolvendo versão", null, $"→ {manifest.Name}: consultando {DescribeSource(manifest.Source)}"));
+        progress.Report(new InstallUpdate(L.T("Resolving version"), null, L.F("→ {0}: querying {1}", manifest.Name, DescribeSource(manifest.Source))));
         var resolved = await resolver.ResolveAsync(manifest.Source, ct);
-        progress.Report(InstallUpdate.Line($"  versão {resolved.Version} · {resolved.FileName}"));
+        progress.Report(InstallUpdate.Line(L.F("  version {0} · {1}", resolved.Version, resolved.FileName)));
 
         var deps = manifest.Dependencies.Select(manifests.GetDependency).OfType<DependencyDefinition>().ToList();
         await dependencies.EnsureAsync(deps, progress, ct);
 
         var archive = Path.Combine(paths.Downloads, manifest.Id, resolved.FileName);
-        progress.Report(new InstallUpdate("Baixando", 0, $"↓ {resolved.Url}"));
+        progress.Report(new InstallUpdate(L.T("Downloading"), 0, $"↓ {resolved.Url}"));
         await DownloadAsync(resolved.Url, archive, progress, ct);
 
-        progress.Report(new InstallUpdate("Conferindo hash", null, null));
+        progress.Report(new InstallUpdate(L.T("Checking hash"), null, null));
         var actualSha = await FileHasher.Sha256Async(archive, ct);
         var verified = false;
         if (resolved.Sha256 is { } expected)
@@ -42,19 +43,19 @@ public sealed class EmulatorInstaller(
             if (!string.Equals(actualSha, expected, StringComparison.OrdinalIgnoreCase))
             {
                 File.Delete(archive);
-                throw new InvalidDataException($"SHA-256 não confere.\n  esperado {expected}\n  obtido   {actualSha}");
+                throw new InvalidDataException(L.F("SHA-256 mismatch.\n  expected {0}\n  got      {1}", expected, actualSha));
             }
             verified = true;
             progress.Report(InstallUpdate.Line($"✓ sha256 {actualSha}"));
         }
         else
         {
-            progress.Report(InstallUpdate.Line($"! a fonte não publica hash — registrado sha256 {actualSha}"));
+            progress.Report(InstallUpdate.Line(L.F("! the source does not publish a hash — recorded sha256 {0}", actualSha)));
         }
 
         var target = paths.EmulatorDir(manifest.Id);
         var staging = Path.Combine(paths.Staging, $"{manifest.Id}-{Guid.NewGuid():N}");
-        progress.Report(new InstallUpdate("Extraindo", null, $"→ extraindo para {target}"));
+        progress.Report(new InstallUpdate(L.T("Extracting"), null, L.F("→ extracting to {0}", target)));
         try
         {
             await Task.Run(() => ArchiveExtractor.Extract(archive, staging, manifest.Extract.StripRoot), ct);
@@ -65,13 +66,13 @@ public sealed class EmulatorInstaller(
             TryDeleteDirectory(staging);
         }
 
-        progress.Report(new InstallUpdate("Configurando", null, null));
+        progress.Report(new InstallUpdate(L.T("Configuring"), null, null));
         RunPostInstall(manifest, target, progress);
         if (manifest.BiosDir is not null)
             Directory.CreateDirectory(Path.Combine(target, manifest.BiosDir));
 
         var exe = FindExecutable(target, manifest.Executable)
-            ?? throw new FileNotFoundException($"Executável '{manifest.Executable}' não encontrado em {target}.");
+            ?? throw new FileNotFoundException(L.F("Executable '{0}' not found in {1}.", manifest.Executable, target));
 
         if (manifest.Cores is not null)
         {
@@ -91,23 +92,23 @@ public sealed class EmulatorInstaller(
         };
         db.SaveInstalledEmulator(record);
 
-        progress.Report(new InstallUpdate("Concluído", 1, $"✓ {manifest.Name} {resolved.Version} pronto"));
+        progress.Report(new InstallUpdate(L.T("Done"), 1, L.F("✓ {0} {1} ready", manifest.Name, resolved.Version)));
         return record;
     }
 
     /// <summary>
-    /// Emulador que já está no computador: só registra onde ele está. Nada é baixado, copiado ou alterado na pasta dele
-    /// (a configuração de controle e imagem, se o manifesto pedir, é gravada pela tela de Emuladores como nos outros).
+    /// Emulator already on the computer: only records where it is. Nothing is downloaded, copied or changed in its folder
+    /// (controller and graphics settings, if the manifest asks, are written by the Emulators screen like any other).
     /// </summary>
     private InstalledEmulator RegisterLocal(EmulatorManifest manifest, IProgress<InstallUpdate> progress)
     {
-        var path = manifest.Source.Path ?? throw new InvalidDataException($"{manifest.Name}: fonte local sem 'path'.");
+        var path = manifest.Source.Path ?? throw new InvalidDataException(L.F("{0}: local source without 'path'.", manifest.Name));
         string exe;
         if (File.Exists(path))
             exe = path;
         else
             exe = FindExecutable(path, manifest.Executable)
-                ?? throw new FileNotFoundException($"Executável '{manifest.Executable}' não encontrado em {path}.");
+                ?? throw new FileNotFoundException(L.F("Executable '{0}' not found in {1}.", manifest.Executable, path));
 
         var record = new InstalledEmulator
         {
@@ -120,20 +121,20 @@ public sealed class EmulatorInstaller(
             InstalledAt = DateTimeOffset.UtcNow,
         };
         db.SaveInstalledEmulator(record);
-        progress.Report(new InstallUpdate("Concluído", 1, $"✓ {manifest.Name} registrado: {exe}"));
+        progress.Report(new InstallUpdate(L.T("Done"), 1, L.F("✓ {0} registered: {1}", manifest.Name, exe)));
         return record;
     }
 
-    /// <summary>Versão mais nova disponível, se for diferente da instalada. Fontes "url" (versão fixada) só mudam com o manifesto.</summary>
+    /// <summary>Newest available version, if different from the installed one. "url" sources (pinned version) only change with the manifest.</summary>
     public async Task<string?> CheckUpdateAsync(EmulatorManifest manifest, InstalledEmulator installed, CancellationToken ct = default)
     {
         if (manifest.Source.Type == "local")
-            return null; // quem atualiza é o usuário, na pasta dele
+            return null; // the user updates it, in their own folder
         var latest = await resolver.ResolveAsync(manifest.Source, ct);
         return string.Equals(latest.Version, installed.Version, StringComparison.OrdinalIgnoreCase) ? null : latest.Version;
     }
 
-    /// <summary>Remove a instalação. Emulador "local" (pasta do usuário) só sai do registro: os arquivos dele ficam.</summary>
+    /// <summary>Removes the installation. A "local" emulator (user's folder) is only unregistered: its files stay.</summary>
     public void Uninstall(EmulatorManifest manifest)
     {
         if (manifest.Source.Type != "local")
@@ -154,7 +155,7 @@ public sealed class EmulatorInstaller(
         {
             ct.ThrowIfCancellationRequested();
             var core = cores[i];
-            progress.Report(new InstallUpdate($"Core {i + 1}/{cores.Count}: {core}", (double)i / cores.Count, null));
+            progress.Report(new InstallUpdate(L.F("Core {0}/{1}: {2}", i + 1, cores.Count, core), (double)i / cores.Count, null));
 
             var url = manifest.Cores.UrlTemplate.Replace("{core}", core);
             var zip = Path.Combine(paths.Downloads, manifest.Id, "cores", $"{core}.zip");
@@ -200,7 +201,7 @@ public sealed class EmulatorInstaller(
         }
 
         File.Move(partial, destination, overwrite: true);
-        progress?.Report(new InstallUpdate(null, 1, $"  {FormatSize(received)} baixados"));
+        progress?.Report(new InstallUpdate(null, 1, L.F("  {0} downloaded", FormatSize(received))));
     }
 
     private static void RunPostInstall(EmulatorManifest manifest, string target, IProgress<InstallUpdate> progress)
@@ -210,7 +211,7 @@ public sealed class EmulatorInstaller(
         {
             var path = Path.GetFullPath(Path.Combine(target, action.Path));
             if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException($"postInstall fora da pasta do emulador: {action.Path}");
+                throw new InvalidDataException(L.F("postInstall outside the emulator folder: {0}", action.Path));
 
             switch (action.Action)
             {
@@ -225,7 +226,7 @@ public sealed class EmulatorInstaller(
                     progress.Report(InstallUpdate.Line($"  + {action.Path}{Path.DirectorySeparatorChar}"));
                     break;
                 default:
-                    progress.Report(InstallUpdate.Line($"! ação desconhecida ignorada: {action.Action}"));
+                    progress.Report(InstallUpdate.Line(L.F("! unknown action ignored: {0}", action.Action)));
                     break;
             }
         }
@@ -245,7 +246,7 @@ public sealed class EmulatorInstaller(
 
         var name = Path.GetFileName(pattern);
         return Directory.EnumerateFiles(installDir, name, SearchOption.AllDirectories)
-            .OrderBy(p => p.Length) // prefere o mais raso
+            .OrderBy(p => p.Length) // prefer the shallowest
             .FirstOrDefault();
     }
 
@@ -254,7 +255,7 @@ public sealed class EmulatorInstaller(
         {
             "github" => $"github.com/{s.Repo}",
             "forgejo" => $"{new Uri(s.Api ?? "about:blank").Host}/{s.Repo}",
-            "local" => s.Path ?? "pasta local",
+            "local" => s.Path ?? L.T("local folder"),
             _ => new Uri(s.Url ?? "about:blank").Host,
         };
 

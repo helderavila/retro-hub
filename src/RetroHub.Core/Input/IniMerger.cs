@@ -3,7 +3,7 @@ using System.Text;
 namespace RetroHub.Core.Input;
 
 /// <summary>
-/// Altera só as chaves indicadas num .ini/.cfg, preservando o resto do arquivo (comentários, ordem, outras seções).
+/// Changes only the given keys in an .ini/.cfg, preserving the rest of the file (comments, order, other sections).
 /// </summary>
 public static class IniMerger
 {
@@ -23,7 +23,7 @@ public static class IniMerger
         var line = format switch
         {
             "flat" => $"{key} = \"{value}\"",  // retroarch.cfg
-            "qt" => $"{key}={value}",           // QSettings (emuladores Qt): sem espaços, como o próprio emulador grava
+            "qt" => $"{key}={value}",           // QSettings (Qt emulators): no spaces, as the emulator itself writes
             _ => $"{key} = {value}",
         };
 
@@ -63,7 +63,7 @@ public static class IniMerger
             }
         }
 
-        // Insere no fim da seção, antes das linhas em branco que a separam da próxima.
+        // Inserts at the end of the section, before the blank lines separating it from the next.
         var at = end;
         while (at > start && lines[at - 1].Trim().Length == 0)
             at--;

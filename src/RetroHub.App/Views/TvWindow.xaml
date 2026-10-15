@@ -1,10 +1,11 @@
-<Window x:Class="RetroHub.App.Views.TvWindow"
+﻿<Window x:Class="RetroHub.App.Views.TvWindow"
         Icon="/Assets/RetroHub.ico"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:RetroHub.App.Controls"
         xmlns:vm="clr-namespace:RetroHub.App.ViewModels"
-        Title="Retro Hub · Modo TV"
+        xmlns:l="clr-namespace:RetroHub.App.Helpers"
+        Title="{l:T 'Retro Hub · TV Mode'}"
         WindowStyle="None" ResizeMode="NoResize" WindowState="Maximized" ShowInTaskbar="True"
         Background="{StaticResource Brush.Bg}"
         Foreground="{StaticResource Brush.Text.Primary}"
@@ -13,7 +14,7 @@
         TextOptions.TextFormattingMode="Ideal">
 
     <Window.Resources>
-        <!-- Círculo com a letra do botão (A, B, Y…) -->
+        <!-- Circle with the button letter (A, B, Y…) -->
         <Style x:Key="PadGlyph" TargetType="Border">
             <Setter Property="Width" Value="32" />
             <Setter Property="Height" Value="32" />
@@ -43,7 +44,7 @@
             <Setter Property="Margin" Value="0,0,36,0" />
         </Style>
 
-        <!-- Item da prateleira: capa que cresce quando selecionada -->
+        <!-- Shelf item: cover that grows when selected -->
         <Style x:Key="ShelfItem" TargetType="ListBoxItem">
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Margin" Value="0,0,40,0" />
@@ -122,7 +123,7 @@
                 </Grid>
             </Border>
             <DataTemplate.Triggers>
-                <!-- Selecionado: borda branca grossa, visível de longe -->
+                <!-- Selected: thick white border, visible from afar -->
                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                     <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource Brush.Text.Primary}" />
                     <Setter TargetName="Frame" Property="BorderThickness" Value="4" />
@@ -132,7 +133,7 @@
     </Window.Resources>
 
     <Grid ClipToBounds="True">
-        <!-- Fundo: arte do jogo selecionado, desfocada -->
+        <!-- Background: blurred art of the selected game -->
         <Image Source="{Binding Selected.CoverImage}" Stretch="UniformToFill" Opacity="0.32" RenderTransformOrigin="0.5,0.5">
             <Image.RenderTransform>
                 <ScaleTransform ScaleX="1.25" ScaleY="1.25" />
@@ -141,7 +142,7 @@
                 <BlurEffect Radius="90" KernelType="Gaussian" RenderingBias="Performance" />
             </Image.Effect>
         </Image>
-        <!-- Vídeo de prévia (local), por cima da arte desfocada; some quando não há vídeo -->
+        <!-- Preview video (local), over the blurred art; hidden when there is no video -->
         <MediaElement x:Name="Video" LoadedBehavior="Manual" UnloadedBehavior="Stop" Stretch="UniformToFill"
                       Volume="0.35" Opacity="0" IsHitTestVisible="False" />
         <Rectangle>
@@ -163,7 +164,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Topo: marca · abas de sistema · relógio -->
+            <!-- Top: brand · system tabs · clock -->
             <DockPanel Grid.Row="0">
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
                     <Image Source="/Assets/logo-mark.png" Width="44" Height="44" RenderOptions.BitmapScalingMode="HighQuality" />
@@ -205,7 +206,7 @@
                 </StackPanel>
             </DockPanel>
 
-            <!-- Prateleira -->
+            <!-- Shelf -->
             <ListBox x:Name="Shelf" Grid.Row="1" VerticalAlignment="Center" Margin="0,40,0,0"
                      ItemsSource="{Binding Games}" SelectedIndex="{Binding SelectedIndex}"
                      ItemTemplate="{StaticResource ShelfCard}" ItemContainerStyle="{StaticResource ShelfItem}"
@@ -217,7 +218,7 @@
                     <ControlTemplate TargetType="ListBox">
                         <ScrollViewer x:Name="ShelfScroll" Focusable="False" Padding="0"
                                       HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
-                            <!-- Margem dentro da área rolável: o card que cresce não é recortado -->
+                            <!-- Margin inside the scrollable area so the growing card is not clipped -->
                             <ItemsPresenter Margin="48,64,48,40" />
                         </ScrollViewer>
                     </ControlTemplate>
@@ -231,12 +232,12 @@
 
             <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
                         Visibility="{Binding HasGames, Converter={StaticResource BoolToCollapsed}}">
-                <TextBlock Text="Nenhum jogo aqui" FontSize="{StaticResource Tv.Font.Title}" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                <TextBlock Text="Adicione pastas de ROMs no modo desktop e escaneie." Margin="0,12,0,0"
+                <TextBlock Text="{l:T 'No games here'}" FontSize="{StaticResource Tv.Font.Title}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <TextBlock Text="{l:T 'Add ROM folders in desktop mode and scan.'}" Margin="0,12,0,0"
                            FontSize="{StaticResource Tv.Font.Body}" Foreground="{StaticResource Brush.Text.Secondary}" HorizontalAlignment="Center" />
             </StackPanel>
 
-            <!-- Detalhes do selecionado -->
+            <!-- Selected game details -->
             <StackPanel Grid.Row="2" Margin="24,0,0,36" Visibility="{Binding HasGames, Converter={StaticResource BoolToVisible}}">
                 <TextBlock Text="{Binding Selected.Title}" FontSize="{StaticResource Tv.Font.Title}" FontWeight="SemiBold"
                            TextTrimming="CharacterEllipsis" />
@@ -246,7 +247,7 @@
                     </Border>
                     <TextBlock Margin="18,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource Font.Mono}"
                                FontSize="{StaticResource Tv.Font.Small}" Foreground="{StaticResource Brush.Text.Secondary}">
-                        <Run Text="jogado ·" /> <Run Text="{Binding Selected.PlaytimeText, Mode=OneWay}" />
+                        <Run Text="{l:T 'played ·'}" /> <Run Text="{Binding Selected.PlaytimeText, Mode=OneWay}" />
                     </TextBlock>
                 </StackPanel>
                 <TextBlock Text="{Binding Message}" Margin="0,14,0,0" FontSize="{StaticResource Tv.Font.Small}"
@@ -254,41 +255,41 @@
                            Visibility="{Binding Message, Converter={StaticResource NullToCollapsed}}" />
             </StackPanel>
 
-            <!-- Dicas do controle -->
+            <!-- Controller hints -->
             <DockPanel Grid.Row="3" Margin="24,0,0,0">
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Border Style="{StaticResource PadPill}">
                         <TextBlock Text="Back + Start" FontFamily="{StaticResource Font.Mono}" FontSize="14"
                                    Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
                     </Border>
-                    <TextBlock Text="segure para sair do jogo" Style="{StaticResource Hint.Text}" Margin="0" />
+                    <TextBlock Text="{l:T 'hold to quit the game'}" Style="{StaticResource Hint.Text}" Margin="0" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.A}">
                         <TextBlock Text="A" Style="{StaticResource PadGlyph.Text}" />
                     </Border>
-                    <TextBlock Text="Jogar" Style="{StaticResource Hint.Text}" />
+                    <TextBlock Text="{l:T Play}" Style="{StaticResource Hint.Text}" />
                     <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.X}">
                         <TextBlock Text="X" Style="{StaticResource PadGlyph.Text}" />
                     </Border>
-                    <TextBlock Text="Continuar" Style="{StaticResource Hint.Text}" />
+                    <TextBlock Text="{l:T Continue}" Style="{StaticResource Hint.Text}" />
                     <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.Y}">
                         <TextBlock Text="Y" Style="{StaticResource PadGlyph.Text}" />
                     </Border>
-                    <TextBlock Text="Favorito" Style="{StaticResource Hint.Text}" />
+                    <TextBlock Text="{l:T Favorite}" Style="{StaticResource Hint.Text}" />
                     <Border Style="{StaticResource PadPill}">
                         <TextBlock Text="▼" FontSize="13" Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
                     </Border>
-                    <TextBlock Text="Detalhes" Style="{StaticResource Hint.Text}" />
+                    <TextBlock Text="{l:T Details}" Style="{StaticResource Hint.Text}" />
                     <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.B}">
                         <TextBlock Text="B" Style="{StaticResource PadGlyph.Text}" />
                     </Border>
-                    <TextBlock Text="Sair do Modo TV" Style="{StaticResource Hint.Text}" />
+                    <TextBlock Text="{l:T 'Exit TV Mode'}" Style="{StaticResource Hint.Text}" />
                 </StackPanel>
             </DockPanel>
         </Grid>
 
-        <!-- ═══ Página do jogo (▼ na prateleira) ═══ -->
+        <!-- ═══ Game page (▼ on the shelf) ═══ -->
         <Grid DataContext="{Binding Page}" Visibility="{Binding Converter={StaticResource NullToCollapsed}}" Background="{StaticResource Brush.Bg}">
             <Image Source="{Binding HeroImage}" Stretch="UniformToFill" Opacity="0.35" RenderTransformOrigin="0.5,0.5">
                 <Image.RenderTransform>
@@ -317,7 +318,7 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Capa grande -->
+                <!-- Large cover -->
                 <Border Width="{StaticResource Tv.Card.Width}" Height="{StaticResource Tv.Card.Height}" CornerRadius="14" VerticalAlignment="Center"
                         Background="{StaticResource Brush.CoverPlaceholder}" BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1"
                         RenderTransformOrigin="0.5,0.5" Margin="24,0,0,0">
@@ -334,7 +335,7 @@
                     </Grid>
                 </Border>
 
-                <!-- Informações (↑/↓ rola) -->
+                <!-- Info (↑/↓ scrolls) -->
                 <ScrollViewer x:Name="PageScroll" Grid.Column="1" Margin="110,0,24,0" VerticalScrollBarVisibility="Hidden" Focusable="False"
                               VerticalAlignment="Center">
                     <StackPanel>
@@ -354,28 +355,28 @@
                         <TextBlock Text="{Binding PeopleLine}" FontSize="{StaticResource Tv.Font.Small}" Foreground="{StaticResource Brush.Text.Tertiary}"
                                    TextWrapping="Wrap" Margin="0,6,0,0" />
 
-                        <!-- Números -->
+                        <!-- Numbers -->
                         <StackPanel Orientation="Horizontal" Margin="0,32,0,0">
                             <StackPanel Margin="0,0,56,0">
-                                <TextBlock Text="TEMPO JOGADO" Style="{StaticResource Text.Overline}" FontSize="13" />
+                                <TextBlock Text="{l:T 'TIME PLAYED'}" Style="{StaticResource Text.Overline}" FontSize="13" />
                                 <TextBlock Text="{Binding PlaytimeText}" FontSize="34" FontWeight="SemiBold" Margin="0,6,0,0" />
                             </StackPanel>
                             <StackPanel Margin="0,0,56,0">
-                                <TextBlock Text="SESSÕES" Style="{StaticResource Text.Overline}" FontSize="13" />
+                                <TextBlock Text="{l:T SESSIONS}" Style="{StaticResource Text.Overline}" FontSize="13" />
                                 <TextBlock Text="{Binding SessionCount}" FontSize="34" FontWeight="SemiBold" Margin="0,6,0,0" />
                             </StackPanel>
                             <StackPanel>
-                                <TextBlock Text="ÚLTIMA VEZ" Style="{StaticResource Text.Overline}" FontSize="13" />
+                                <TextBlock Text="{l:T 'LAST PLAYED'}" Style="{StaticResource Text.Overline}" FontSize="13" />
                                 <TextBlock Text="{Binding LastPlayedTile}" FontSize="34" FontWeight="SemiBold" Margin="0,6,0,0" />
                             </StackPanel>
                         </StackPanel>
 
-                        <!-- Sinopse -->
+                        <!-- Synopsis -->
                         <TextBlock Text="{Binding Description}" FontSize="{StaticResource Tv.Font.Small}" LineHeight="32" MaxWidth="980" HorizontalAlignment="Left"
                                    Foreground="{StaticResource Brush.Text.Secondary}" TextWrapping="Wrap" Margin="0,32,0,0"
                                    Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisible}}" />
 
-                        <!-- Imagens -->
+                        <!-- Images -->
                         <StackPanel Orientation="Horizontal" Margin="0,32,0,0" Visibility="{Binding HasArt, Converter={StaticResource BoolToVisible}}">
                             <Border CornerRadius="12" BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1" Margin="0,0,20,0" ClipToBounds="True"
                                     Visibility="{Binding TitleImage, Converter={StaticResource NullToCollapsed}}">
@@ -416,48 +417,48 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- Dicas do controle -->
+                <!-- Controller hints -->
                 <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="24,24,0,0">
                     <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.A}">
                         <TextBlock Text="A" Style="{StaticResource PadGlyph.Text}" />
                     </Border>
-                    <TextBlock Text="Jogar" Style="{StaticResource Hint.Text}" />
+                    <TextBlock Text="{l:T Play}" Style="{StaticResource Hint.Text}" />
                     <StackPanel Orientation="Horizontal" Visibility="{Binding CanContinue, Converter={StaticResource BoolToVisible}}">
                         <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.X}">
                             <TextBlock Text="X" Style="{StaticResource PadGlyph.Text}" />
                         </Border>
-                        <TextBlock Text="Continuar" Style="{StaticResource Hint.Text}" />
+                        <TextBlock Text="{l:T Continue}" Style="{StaticResource Hint.Text}" />
                     </StackPanel>
                     <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.Y}">
                         <TextBlock Text="Y" Style="{StaticResource PadGlyph.Text}" />
                     </Border>
-                    <TextBlock Text="Favorito" Style="{StaticResource Hint.Text}" />
+                    <TextBlock Text="{l:T Favorite}" Style="{StaticResource Hint.Text}" />
                     <Border Style="{StaticResource PadPill}">
                         <TextBlock Text="LB  RB" FontFamily="{StaticResource Font.Mono}" FontSize="14" Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
                     </Border>
-                    <TextBlock Text="Outro jogo" Style="{StaticResource Hint.Text}" />
+                    <TextBlock Text="{l:T 'Switch game'}" Style="{StaticResource Hint.Text}" />
                     <Border Style="{StaticResource PadPill}">
                         <TextBlock Text="▲▼" FontSize="13" Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
                     </Border>
-                    <TextBlock Text="Rolar" Style="{StaticResource Hint.Text}" />
+                    <TextBlock Text="{l:T Scroll}" Style="{StaticResource Hint.Text}" />
                     <Border Style="{StaticResource PadGlyph}" Background="{StaticResource Brush.Pad.B}">
                         <TextBlock Text="B" Style="{StaticResource PadGlyph.Text}" />
                     </Border>
-                    <TextBlock Text="Voltar" Style="{StaticResource Hint.Text}" />
+                    <TextBlock Text="{l:T Back}" Style="{StaticResource Hint.Text}" />
                 </StackPanel>
             </Grid>
         </Grid>
 
-        <!-- Jogo em execução -->
+        <!-- Game running -->
         <Grid Background="#E6000000" Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisible}}">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="Jogando" HorizontalAlignment="Center" FontSize="{StaticResource Tv.Font.Body}"
+                <TextBlock Text="{l:T 'Now playing'}" HorizontalAlignment="Center" FontSize="{StaticResource Tv.Font.Body}"
                            Foreground="{StaticResource Brush.Text.Secondary}" />
                 <TextBlock Text="{Binding Selected.Title}" HorizontalAlignment="Center" Margin="0,8,0,0"
                            FontSize="{StaticResource Tv.Font.Title}" FontWeight="SemiBold" />
                 <TextBlock HorizontalAlignment="Center" Margin="0,24,0,0" FontSize="{StaticResource Tv.Font.Small}"
                            Foreground="{StaticResource Brush.Text.Tertiary}"
-                           Text="Segure Back + Start no controle para fechar o jogo e voltar." />
+                           Text="{l:T 'Hold Back + Start on the controller to close the game and return.'}" />
             </StackPanel>
         </Grid>
 

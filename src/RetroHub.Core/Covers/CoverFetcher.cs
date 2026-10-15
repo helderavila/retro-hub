@@ -11,9 +11,9 @@ namespace RetroHub.Core.Covers;
 public sealed record CoverFound(long GameId, string Path);
 
 /// <summary>
-/// Baixa capas de thumbnails.libretro.com (sem conta, sem chave).
-/// A lista de capas de cada sistema é baixada uma vez e guardada por 7 dias em covers\_index;
-/// só a imagem que casar com o jogo é baixada.
+/// Downloads covers from thumbnails.libretro.com (no account, no key).
+/// Each system's cover list is downloaded once and kept for 7 days in covers\_index;
+/// only the image matching the game is downloaded.
 /// </summary>
 public sealed partial class CoverFetcher(HttpClient http, AppPaths paths, ManifestRepository manifests, LibraryDatabase db)
 {
@@ -25,7 +25,7 @@ public sealed partial class CoverFetcher(HttpClient http, AppPaths paths, Manife
     [GeneratedRegex(@"href=""([^""?/][^""]*?\.png)""", RegexOptions.IgnoreCase)]
     private static partial Regex PngLink();
 
-    /// <summary>Busca capa para todos os jogos sem capa. Reporta cada capa encontrada assim que baixa.</summary>
+    /// <summary>Looks up covers for all games without one. Reports each cover as soon as it is downloaded.</summary>
     public async Task<(int Found, int Missing)> FetchMissingAsync(IEnumerable<Game> games, IProgress<CoverFound>? progress = null,
         CancellationToken ct = default)
     {
@@ -51,7 +51,7 @@ public sealed partial class CoverFetcher(HttpClient http, AppPaths paths, Manife
         return (found, missing);
     }
 
-    /// <summary>Baixa a capa de um jogo e grava no banco. Retorna o caminho, ou null se não houver capa.</summary>
+    /// <summary>Downloads a game's cover and stores it in the database. Returns the path, or null if there is no cover.</summary>
     public async Task<string?> FetchAsync(Game game, CancellationToken ct = default)
     {
         if (CoverResolver.Find(game, paths) is { } local)
@@ -74,7 +74,7 @@ public sealed partial class CoverFetcher(HttpClient http, AppPaths paths, Manife
             ? $"{BaseUrl}{Uri.EscapeDataString(folder)}/Named_Boxarts/{Uri.EscapeDataString(name)}.png"
             : null;
 
-    /// <summary>"Trocar capa…": capas do acervo cujo nome contém todas as palavras buscadas.</summary>
+    /// <summary>"Change cover…": catalog covers whose name contains all search words.</summary>
     public async Task<IReadOnlyList<string>> SearchAsync(string systemId, string query, CancellationToken ct = default)
     {
         var system = manifests.GetSystem(systemId);
@@ -93,7 +93,7 @@ public sealed partial class CoverFetcher(HttpClient http, AppPaths paths, Manife
             .ToList();
     }
 
-    /// <summary>Baixa a capa com este nome exato do acervo e grava no jogo.</summary>
+    /// <summary>Downloads the catalog cover with this exact name and assigns it to the game.</summary>
     public async Task<string?> DownloadAsync(Game game, string name, CancellationToken ct = default)
     {
         var system = manifests.GetSystem(game.SystemId);
@@ -123,8 +123,8 @@ public sealed partial class CoverFetcher(HttpClient http, AppPaths paths, Manife
     public const string Snapshots = "Named_Snaps";
 
     /// <summary>
-    /// Tela de título (<see cref="TitleScreens"/>) ou imagem do jogo rodando (<see cref="Snapshots"/>):
-    /// mesmo acervo e mesmo nome da capa. Fica em covers\{sistema}\_{pasta}; um .none marca "não existe" por 7 dias.
+    /// Title screen (<see cref="TitleScreens"/>) or in-game image (<see cref="Snapshots"/>):
+    /// same catalog and same name as the cover. Stored in covers\{system}\_{folder}; a .none marks "does not exist" for 7 days.
     /// </summary>
     public async Task<string?> FetchArtAsync(Game game, string folder, CancellationToken ct = default)
     {
@@ -167,7 +167,7 @@ public sealed partial class CoverFetcher(HttpClient http, AppPaths paths, Manife
         return destination;
     }
 
-    /// <summary>Nome no acervo quando a capa veio de lá (covers\{sistema}\{nome}.png); null para capa própria ou sem capa.</summary>
+    /// <summary>Catalog name when the cover came from it (covers\{system}\{name}.png); null for a custom cover or no cover.</summary>
     public string? CatalogName(Game game, string systemId)
     {
         if (game.CoverPath is not { } cover || cover == CoverResolver.NoCover)
@@ -179,7 +179,7 @@ public sealed partial class CoverFetcher(HttpClient http, AppPaths paths, Manife
         return name.StartsWith("custom-", StringComparison.OrdinalIgnoreCase) ? null : name;
     }
 
-    /// <summary>Usa uma imagem do computador como capa (copiada para a pasta de capas).</summary>
+    /// <summary>Uses an image from the computer as cover (copied to the covers folder).</summary>
     public string SetCustomCover(Game game, string imagePath)
     {
         var destination = Path.Combine(paths.Covers, game.SystemId, $"custom-{game.Id}{Path.GetExtension(imagePath).ToLowerInvariant()}");
@@ -190,7 +190,7 @@ public sealed partial class CoverFetcher(HttpClient http, AppPaths paths, Manife
         return destination;
     }
 
-    /// <summary>Sem capa — e a busca automática não coloca outra.</summary>
+    /// <summary>No cover, and automatic lookup will not add one.</summary>
     public void RemoveCover(Game game)
     {
         db.SetCover(game.Id, CoverResolver.NoCover);
@@ -221,11 +221,11 @@ public sealed partial class CoverFetcher(HttpClient http, AppPaths paths, Manife
             }
             catch (HttpRequestException) when (File.Exists(cache))
             {
-                names = await File.ReadAllLinesAsync(cache, ct); // offline: usa o cache vencido
+                names = await File.ReadAllLinesAsync(cache, ct); // offline: use the stale cache
             }
             catch (HttpRequestException)
             {
-                _indexes.TryRemove(system.Id, out _); // tenta de novo na próxima vez
+                _indexes.TryRemove(system.Id, out _); // try again next time
                 return null;
             }
         }

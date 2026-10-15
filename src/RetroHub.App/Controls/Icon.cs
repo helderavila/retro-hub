@@ -4,7 +4,7 @@ using System.Windows.Media;
 
 namespace RetroHub.App.Controls;
 
-/// <summary>Ícone de linha (grade 24×24, estilo Lucide). A cor vem de Foreground.</summary>
+/// <summary>Line icon (24×24 grid, Lucide style). The color comes from Foreground.</summary>
 public sealed class Icon : Control
 {
     public static readonly DependencyProperty DataProperty = DependencyProperty.Register(

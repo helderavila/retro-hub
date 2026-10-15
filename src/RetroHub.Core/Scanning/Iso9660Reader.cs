@@ -4,8 +4,8 @@ using System.Text;
 namespace RetroHub.Core.Scanning;
 
 /// <summary>
-/// Leitor mínimo de ISO 9660: lê o Primary Volume Descriptor e arquivos da raiz.
-/// Suporta setores de 2048 bytes (.iso) e 2352 bytes (.bin raw, Mode 1 e Mode 2/XA).
+/// Minimal ISO 9660 reader: reads the Primary Volume Descriptor and root files.
+/// Supports 2048-byte sectors (.iso) and 2352-byte sectors (raw .bin, Mode 1 and Mode 2/XA).
 /// </summary>
 internal sealed class Iso9660Reader
 {
@@ -41,7 +41,7 @@ internal sealed class Iso9660Reader
         return null;
     }
 
-    /// <summary>Nomes dos arquivos e pastas da raiz (sem o ";1").</summary>
+    /// <summary>Names of the root files and folders (without the ";1").</summary>
     public List<string> RootEntries()
     {
         var names = new List<string>();
@@ -64,7 +64,7 @@ internal sealed class Iso9660Reader
         return result;
     }
 
-    /// <summary>Percorre os registros do diretório raiz; o callback devolve true para parar.</summary>
+    /// <summary>Walks the root directory records; the callback returns true to stop.</summary>
     private void ForEachRootRecord(Func<byte[], int, string, bool> visit)
     {
         var sectors = (int)Math.Min((_rootSize + LogicalSector - 1) / LogicalSector, 32);
@@ -87,7 +87,7 @@ internal sealed class Iso9660Reader
                 if (semicolon >= 0)
                     recordName = recordName[..semicolon];
 
-                // Registros "." e ".." têm nome 0x00 / 0x01.
+                // "." and ".." records have names 0x00 / 0x01.
                 if (recordName.Length > 0 && recordName[0] > 1 && visit(sector, pos, recordName))
                     return;
 

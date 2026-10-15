@@ -1,0 +1,14 @@
+{
+  "Completed": "Zerados",
+  "Want to play": "Quero jogar",
+  "There is no official dump list for this system.": "Não há lista oficial de dumps para este sistema.",
+  "{0} files are compressed: the content cannot be compared directly with the official list (which is for .iso/.bin).": "Arquivos {0} são comprimidos: o conteúdo não pode ser comparado direto com a lista oficial (que é de .iso/.bin).",
+  "Matches the official dump: {0}": "Bate com o dump oficial: {0}",
+  "No file in the .zip matches the official list (modified, translated, hack or corrupted).": "Nenhum arquivo do .zip bate com a lista oficial (modificado, traduzido, hack ou corrompido).",
+  "File not found.": "Arquivo não encontrado.",
+  "Does not match the official list: the file may be modified (translation, hack), corrupted or from an uncatalogued dump.": "Não bate com a lista oficial: o arquivo pode ser modificado (tradução, hack), corrompido ou de um dump não catalogado.",
+  "{0} of {1} tracks match the official list; the others may be corrupted or from another version.": "{0} de {1} trilhas batem com a lista oficial — as demais podem estar corrompidas ou ser de outra versão.",
+  "Video DVD (VIDEO_TS), not a game disc": "DVD de vídeo (VIDEO_TS), não é um disco de jogo",
+  "Slot {0}": "Slot {0}",
+  "On exit": "Ao sair"
+}

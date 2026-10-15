@@ -3,24 +3,25 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="clr-namespace:RetroHub.App.Controls"
              xmlns:vm="clr-namespace:RetroHub.App.ViewModels"
-             xmlns:views="clr-namespace:RetroHub.App.Views">
+             xmlns:views="clr-namespace:RetroHub.App.Views"
+             xmlns:l="clr-namespace:RetroHub.App.Helpers">
 
-    <!-- Estrutura da biblioteca da Steam: lista de jogos à esquerda; à direita o início (recentes, favoritos,
-         todos os jogos) ou a página do jogo escolhido. -->
+    <!-- Steam-like library layout: game list on the left; on the right the home (recent, favorites,
+         all games) or the selected game's page. -->
     <UserControl.Resources>
-        <!-- Menu do botão direito (card e lista); o DataContext é o GameItemViewModel -->
+        <!-- Right-click menu (card and list); the DataContext is the GameItemViewModel -->
         <ContextMenu x:Key="GameMenu" x:Shared="False">
-            <MenuItem Header="Jogar" Tag="{StaticResource Icon.Play}" Command="{Binding PlayCommand}" />
-            <MenuItem Header="Página do jogo" Tag="{StaticResource Icon.Library}" Command="{Binding OpenPageCommand}" />
-            <MenuItem Header="Favorito" Tag="{StaticResource Icon.Star}" Command="{Binding ToggleFavoriteCommand}" />
-            <MenuItem Header="Abrir pasta do arquivo" Tag="{StaticResource Icon.Folder}" Command="{Binding OpenFileFolderCommand}" />
+            <MenuItem Header="{l:T 'Play'}" Tag="{StaticResource Icon.Play}" Command="{Binding PlayCommand}" />
+            <MenuItem Header="{l:T 'Game page'}" Tag="{StaticResource Icon.Library}" Command="{Binding OpenPageCommand}" />
+            <MenuItem Header="{l:T 'Favorite'}" Tag="{StaticResource Icon.Star}" Command="{Binding ToggleFavoriteCommand}" />
+            <MenuItem Header="{l:T 'Open file location'}" Tag="{StaticResource Icon.Folder}" Command="{Binding OpenFileFolderCommand}" />
             <Separator />
-            <MenuItem Header="Remover da biblioteca" Tag="{StaticResource Icon.X}" Command="{Binding RemoveFromLibraryCommand}" />
-            <MenuItem Header="Excluir arquivo (Lixeira)…" Tag="{StaticResource Icon.Trash}" Command="{Binding DeleteFilesCommand}"
+            <MenuItem Header="{l:T 'Remove from library'}" Tag="{StaticResource Icon.X}" Command="{Binding RemoveFromLibraryCommand}" />
+            <MenuItem Header="{l:T 'Delete file (Recycle Bin)…'}" Tag="{StaticResource Icon.Trash}" Command="{Binding DeleteFilesCommand}"
                       Style="{StaticResource MenuItem.Danger}" />
         </ContextMenu>
 
-        <!-- Card de jogo: capa 3:4, título, sistema em badge mono -->
+        <!-- Game card: 3:4 cover, title, system in a mono badge -->
         <DataTemplate x:Key="GameCard" DataType="{x:Type vm:GameItemViewModel}">
             <Grid x:Name="Card" Width="{StaticResource Card.Width}" Margin="0,0,20,24" Cursor="Hand"
                   Background="Transparent" ToolTip="{Binding FilePath}" ContextMenu="{StaticResource GameMenu}">
@@ -37,7 +38,7 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <!-- Capa / placeholder -->
+                        <!-- Cover / placeholder -->
                         <Border Grid.Row="0" CornerRadius="{StaticResource Radius.CoverTop}"
                                 Background="{StaticResource Brush.CoverPlaceholder}"
                                 BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="0,0,0,1">
@@ -48,22 +49,22 @@
                                 <ui:CoverArt CornerRadius="{StaticResource Radius.CoverTop}" Source="{Binding CoverImage}"
                                              Visibility="{Binding HasCover, Converter={StaticResource BoolToVisible}}" />
 
-                                <!-- Favorito fixo -->
+                                <!-- Pinned favorite -->
                                 <ui:Icon Data="{StaticResource Icon.Star}" Width="14" Height="14" Margin="0,12,12,0"
                                          HorizontalAlignment="Right" VerticalAlignment="Top"
                                          Foreground="{StaticResource Brush.Text.Primary}" Fill="{StaticResource Brush.Text.Primary}"
                                          Visibility="{Binding Favorite, Converter={StaticResource BoolToVisible}}" />
 
-                                <!-- Ações no hover -->
+                                <!-- Hover actions -->
                                 <Grid x:Name="Actions" Opacity="0">
                                     <Button Style="{StaticResource Button.Icon}" Command="{Binding ToggleFavoriteCommand}"
                                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,5,0"
-                                            Foreground="{StaticResource Brush.Text.Primary}" ToolTip="Favorito">
+                                            Foreground="{StaticResource Brush.Text.Primary}" ToolTip="{l:T 'Favorite'}">
                                         <ui:Icon Data="{StaticResource Icon.Star}" Width="14" Height="14" />
                                     </Button>
                                     <Button Command="{Binding PlayCommand}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                             Margin="0,0,12,12" Width="38" Height="38" Padding="0"
-                                            Style="{StaticResource Button.Primary}" ToolTip="Jogar">
+                                            Style="{StaticResource Button.Primary}" ToolTip="{l:T 'Play'}">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border CornerRadius="19" Background="{TemplateBinding Background}">
@@ -75,12 +76,12 @@
                                     </Button>
                                 </Grid>
 
-                                <!-- Em execução -->
+                                <!-- Running -->
                                 <Border CornerRadius="{StaticResource Radius.CoverTop}" Background="#B3000000"
                                         Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisible}}">
                                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
                                         <Ellipse Style="{StaticResource StatusDot}" Fill="{StaticResource Brush.Status.Ok}" />
-                                        <TextBlock Text="em execução" Margin="8,0,0,0" Style="{StaticResource Text.Mono}" />
+                                        <TextBlock Text="{l:T 'running'}" Margin="8,0,0,0" Style="{StaticResource Text.Mono}" />
                                     </StackPanel>
                                 </Border>
                             </Grid>
@@ -100,7 +101,7 @@
                     </Grid>
                 </Border>
 
-                <!-- Anel de hover -->
+                <!-- Hover ring -->
                 <Border x:Name="HoverRing" CornerRadius="{StaticResource Radius.Lg}" BorderThickness="1"
                         BorderBrush="{StaticResource Brush.Border.Strong}" Background="{StaticResource Brush.Overlay.Hover}"
                         Opacity="0" IsHitTestVisible="False" />
@@ -132,7 +133,7 @@
             </DataTemplate.Triggers>
         </DataTemplate>
 
-        <!-- Item da lista lateral: sem chip; selecionado = fundo claro -->
+        <!-- Sidebar list item: no chip; selected = light background -->
         <Style x:Key="Sidebar.Item" TargetType="ListBoxItem">
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
@@ -162,7 +163,7 @@
             </Setter>
         </Style>
 
-        <!-- Prateleira de uma linha (como "Jogos recentes" da Steam): o que não cabe fica para "Todos os jogos" -->
+        <!-- Single-row shelf (like Steam's "Recent games"): whatever does not fit is left for "All games" -->
         <Style x:Key="Shelf" TargetType="ItemsControl">
             <Setter Property="ItemTemplate" Value="{StaticResource GameCard}" />
             <Setter Property="ClipToBounds" Value="True" />
@@ -182,18 +183,18 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- ═══ Lista de jogos ═══ -->
+        <!-- ═══ Game list ═══ -->
         <Border Background="{StaticResource Brush.Bg.Subtle}" BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="0,0,1,0">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Top" Margin="12,14,12,10">
-                    <!-- Início -->
-                    <Button Command="{Binding CloseDetailsCommand}" Cursor="Hand" ToolTip="Início da biblioteca (Esc)">
+                    <!-- Home -->
+                    <Button Command="{Binding CloseDetailsCommand}" Cursor="Hand" ToolTip="{l:T 'Library home (Esc)'}">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="Box" Height="36" CornerRadius="{StaticResource Radius.Md}" Padding="10,0" Background="Transparent">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <ui:Icon Data="{StaticResource Icon.Library}" Width="15" Height="15" Foreground="{StaticResource Brush.Text.Primary}" />
-                                        <TextBlock Text="INÍCIO" Margin="10,0,0,0" FontWeight="{StaticResource Font.Weight.Semibold}"
+                                        <TextBlock Text="{l:T 'HOME'}" Margin="10,0,0,0" FontWeight="{StaticResource Font.Weight.Semibold}"
                                                    Foreground="{StaticResource Brush.Text.Primary}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Border>
@@ -208,20 +209,20 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-                    <TextBox Style="{StaticResource TextBox.Search}" Tag="Buscar jogos" Margin="0,10,0,0"
+                    <TextBox Style="{StaticResource TextBox.Search}" Tag="{l:T 'Search games'}" Margin="0,10,0,0"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
 
-                <!-- Rodapé: adicionar / escanear (como "Adicionar jogo" no canto da Steam) -->
+                <!-- Footer: add / scan (like Steam's "Add a game" in the corner) -->
                 <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="0,1,0,0" Padding="10,8">
                     <DockPanel>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource Button.Icon}" Command="{Binding ScanCommand}" ToolTip="Escanear pastas">
+                        <Button DockPanel.Dock="Right" Style="{StaticResource Button.Icon}" Command="{Binding ScanCommand}" ToolTip="{l:T 'Scan folders'}">
                             <ui:Icon Data="{StaticResource Icon.Refresh}" Width="15" Height="15" />
                         </Button>
                         <Button Style="{StaticResource Button.Ghost}" Command="{Binding AddGameCommand}" HorizontalAlignment="Left">
                             <StackPanel Orientation="Horizontal">
                                 <ui:Icon Data="{StaticResource Icon.Plus}" Width="14" Height="14" Margin="0,0,8,0" />
-                                <TextBlock Text="Adicionar jogo" />
+                                <TextBlock Text="{l:T 'Add game'}" />
                             </StackPanel>
                         </Button>
                     </DockPanel>
@@ -235,7 +236,7 @@
                     <ListBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:SidebarEntry}">
                             <Grid>
-                                <!-- Cabeçalho de grupo: clique recolhe/expande -->
+                                <!-- Group header: click collapses/expands -->
                                 <Button Visibility="{Binding IsHeader, Converter={StaticResource BoolToVisible}}" Cursor="Hand" Margin="0,10,0,2"
                                         Command="{Binding DataContext.ToggleGroupCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                         CommandParameter="{Binding}">
@@ -257,7 +258,7 @@
                                     </Button.Template>
                                 </Button>
 
-                                <!-- Jogo -->
+                                <!-- Game -->
                                 <Grid Visibility="{Binding IsHeader, Converter={StaticResource BoolToCollapsed}}">
                                 <DockPanel Height="34" Background="Transparent"
                                            DataContext="{Binding Item}" ContextMenu="{StaticResource GameMenu}" ToolTip="{Binding FilePath}">
@@ -270,7 +271,7 @@
                                                      Visibility="{Binding HasCover, Converter={StaticResource BoolToVisible}}" />
                                     </Border>
                                     <Ellipse DockPanel.Dock="Right" Style="{StaticResource StatusDot}" Fill="{StaticResource Brush.Status.Ok}" Margin="6,0,10,0"
-                                             Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisible}}" ToolTip="em execução" />
+                                             Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisible}}" ToolTip="{l:T 'running'}" />
                                     <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                                FontSize="{StaticResource Font.Size.Sm}"
                                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
@@ -283,9 +284,9 @@
             </DockPanel>
         </Border>
 
-        <!-- ═══ Direita: início ou página do jogo ═══ -->
+        <!-- ═══ Right: home or game page ═══ -->
         <DockPanel Grid.Column="1">
-            <!-- Avisos (valem para o início e para a página: ex. erro ao abrir o jogo) -->
+            <!-- Notices (apply to the home and the page: e.g. error opening the game) -->
             <StackPanel DockPanel.Dock="Top" Margin="32,0,32,0">
                 <Border Margin="0,14,0,0" Visibility="{Binding Notice, Converter={StaticResource NullToCollapsed}}"
                         Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}"
@@ -302,7 +303,7 @@
                 <StackPanel Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisible}}" Orientation="Horizontal" Margin="2,12,0,0">
                     <Ellipse Style="{StaticResource StatusDot}" Fill="{StaticResource Brush.Text.Primary}" />
                     <TextBlock Margin="10,0,0,0" Style="{StaticResource Text.Mono}">
-                        <Run Text="escaneando ·" /> <Run Text="{Binding ScanStatus, Mode=OneWay}" />
+                        <Run Text="{l:T 'scanning ·'}" /> <Run Text="{Binding ScanStatus, Mode=OneWay}" />
                     </TextBlock>
                 </StackPanel>
                 <StackPanel Visibility="{Binding CoverStatus, Converter={StaticResource NullToCollapsed}}" Orientation="Horizontal" Margin="2,10,0,0">
@@ -313,55 +314,55 @@
             </StackPanel>
 
             <Grid>
-                <!-- ── Início ── -->
+                <!-- ── Home ── -->
                 <Grid Visibility="{Binding Page, Converter={StaticResource NullToVisible}}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                                   Visibility="{Binding HasGames, Converter={StaticResource BoolToVisible}}">
                         <StackPanel Margin="32,24,12,40">
-                            <!-- Cabeçalho -->
+                            <!-- Header -->
                             <DockPanel Margin="0,0,20,0">
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button Style="{StaticResource Button.Ghost}" Command="{Binding ResetLibraryCommand}" Margin="0,0,8,0"
-                                            ToolTip="Zera a lista e escaneia tudo do zero (os arquivos não são apagados)">
+                                            ToolTip="{l:T 'Clears the list and rescans everything from scratch (files are not deleted)'}">
                                         <StackPanel Orientation="Horizontal">
                                             <ui:Icon Data="{StaticResource Icon.Trash}" Width="14" Height="14" Margin="0,0,8,0" />
-                                            <TextBlock Text="Recomeçar biblioteca" />
+                                            <TextBlock Text="{l:T 'Reset library'}" />
                                         </StackPanel>
                                     </Button>
                                     <Button Style="{StaticResource Button.Primary}" Command="{Binding ScanCommand}">
                                         <StackPanel Orientation="Horizontal">
                                             <ui:Icon Data="{StaticResource Icon.Refresh}" Width="14" Height="14" Margin="0,0,8,0" />
-                                            <TextBlock Text="Escanear pastas" />
+                                            <TextBlock Text="{l:T 'Scan folders'}" />
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
                                 <StackPanel>
-                                    <TextBlock Text="Início" Style="{StaticResource Text.Display}" />
+                                    <TextBlock Text="{l:T 'Home'}" Style="{StaticResource Text.Display}" />
                                     <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Secondary}" Margin="0,6,0,0" />
                                 </StackPanel>
                             </DockPanel>
 
-                            <!-- Jogados recentemente -->
+                            <!-- Recently played -->
                             <StackPanel Visibility="{Binding ShowRecent, Converter={StaticResource BoolToVisible}}" Margin="0,32,0,0">
-                                <TextBlock Text="JOGADOS RECENTEMENTE" Style="{StaticResource Text.Overline}" Margin="0,0,0,12" />
+                                <TextBlock Text="{l:T 'RECENTLY PLAYED'}" Style="{StaticResource Text.Overline}" Margin="0,0,0,12" />
                                 <ItemsControl ItemsSource="{Binding RecentGames}" Style="{StaticResource Shelf}" />
                             </StackPanel>
 
-                            <!-- Favoritos -->
+                            <!-- Favorites -->
                             <StackPanel Visibility="{Binding ShowFavorites, Converter={StaticResource BoolToVisible}}" Margin="0,12,0,0">
-                                <TextBlock Text="FAVORITOS" Style="{StaticResource Text.Overline}" Margin="0,0,0,12" />
+                                <TextBlock Text="{l:T 'FAVORITES'}" Style="{StaticResource Text.Overline}" Margin="0,0,0,12" />
                                 <ItemsControl ItemsSource="{Binding FavoriteGames}" Style="{StaticResource Shelf}" />
                             </StackPanel>
 
-                            <!-- Todos os jogos -->
+                            <!-- All games -->
                             <Border Height="1" Background="{StaticResource Brush.Border.Subtle}" Margin="0,12,20,20" />
                             <DockPanel Margin="0,0,20,0">
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="ORDENAR POR" Style="{StaticResource Text.Overline}" VerticalAlignment="Center" Margin="0,0,10,6" />
+                                    <TextBlock Text="{l:T 'SORT BY'}" Style="{StaticResource Text.Overline}" VerticalAlignment="Center" Margin="0,0,10,6" />
                                     <ListBox Style="{StaticResource Chips}" ItemsSource="{Binding SortModes}" SelectedItem="{Binding SortMode}" />
                                 </StackPanel>
                                 <TextBlock Style="{StaticResource Text.Overline}" VerticalAlignment="Center" Margin="0,0,0,6">
-                                    <Run Text="TODOS OS JOGOS" /> <Run Text="{Binding GameCount, Mode=OneWay, StringFormat=({0})}" />
+                                    <Run Text="{l:T 'ALL GAMES'}" /> <Run Text="{Binding GameCount, Mode=OneWay, StringFormat=({0})}" />
                                 </TextBlock>
                             </DockPanel>
                             <DockPanel Margin="0,8,20,16">
@@ -369,7 +370,7 @@
                                               IsChecked="{Binding FavoritesOnly}">
                                     <StackPanel Orientation="Horizontal">
                                         <ui:Icon Data="{StaticResource Icon.Star}" Width="12" Height="12" Margin="0,0,6,0" />
-                                        <TextBlock Text="Favoritos" />
+                                        <TextBlock Text="{l:T 'Favorites'}" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <ListBox Style="{StaticResource Chips}" ItemsSource="{Binding SystemFilters}" SelectedItem="{Binding SelectedSystem}">
@@ -394,7 +395,7 @@
                         </StackPanel>
                     </ScrollViewer>
 
-                    <!-- Estado vazio -->
+                    <!-- Empty state -->
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,80" MaxWidth="380"
                                 Visibility="{Binding HasGames, Converter={StaticResource BoolToCollapsed}}">
                         <Border Width="56" Height="56" CornerRadius="14" HorizontalAlignment="Center"
@@ -402,17 +403,17 @@
                             <ui:Icon Data="{StaticResource Icon.Gamepad}" Width="24" Height="24" StrokeThickness="1.6"
                                      Foreground="{StaticResource Brush.Text.Secondary}" />
                         </Border>
-                        <TextBlock Text="Nenhum jogo ainda" Style="{StaticResource Text.Title}" HorizontalAlignment="Center" Margin="0,20,0,0" />
+                        <TextBlock Text="{l:T 'No games yet'}" Style="{StaticResource Text.Title}" HorizontalAlignment="Center" Margin="0,20,0,0" />
                         <TextBlock Style="{StaticResource Text.Secondary}" TextAlignment="Center" Margin="0,8,0,0"
-                                   Text="Adicione as pastas onde ficam suas ROMs. O Retro Hub identifica sistema e jogo pelo conteúdo de cada arquivo." />
+                                   Text="{l:T 'Add the folders where your ROMs live. Retro Hub identifies the system and game from the contents of each file.'}" />
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0">
-                            <Button Style="{StaticResource Button.Secondary}" Content="Configurar pastas" Command="{Binding GoToFoldersCommand}" Margin="0,0,8,0" />
-                            <Button Style="{StaticResource Button.Primary}" Content="Escanear" Command="{Binding ScanCommand}" />
+                            <Button Style="{StaticResource Button.Secondary}" Content="{l:T 'Set up folders'}" Command="{Binding GoToFoldersCommand}" Margin="0,0,8,0" />
+                            <Button Style="{StaticResource Button.Primary}" Content="{l:T 'Scan'}" Command="{Binding ScanCommand}" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>
 
-                <!-- ── Página do jogo ── -->
+                <!-- ── Game page ── -->
                 <views:GamePageView DataContext="{Binding Page}" Visibility="{Binding Converter={StaticResource NullToCollapsed}}" />
             </Grid>
         </DockPanel>

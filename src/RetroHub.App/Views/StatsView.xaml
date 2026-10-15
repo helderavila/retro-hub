@@ -1,10 +1,11 @@
-<UserControl x:Class="RetroHub.App.Views.StatsView"
+﻿<UserControl x:Class="RetroHub.App.Views.StatsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ui="clr-namespace:RetroHub.App.Controls">
+             xmlns:ui="clr-namespace:RetroHub.App.Controls"
+             xmlns:l="clr-namespace:RetroHub.App.Helpers">
 
     <UserControl.Resources>
-        <!-- Barra horizontal: uma série, um tom neutro; o valor escrito ao lado (texto em token de texto, não na cor da barra) -->
+        <!-- Horizontal bar: one series, one neutral tone; the value written beside it (text token, not the bar color) -->
         <DataTemplate x:Key="HBar">
             <Grid Margin="0,0,0,10" Background="Transparent" ToolTip="{Binding Tooltip}">
                 <Grid.ColumnDefinitions>
@@ -14,7 +15,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{Binding Label}" FontSize="{StaticResource Font.Size.Sm}" Foreground="{StaticResource Brush.Text.Secondary}"
                            TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,12,0" />
-                <!-- A barra ocupa "proporção" do espaço; o resto fica vazio -->
+                <!-- The bar takes "ratio" of the space; the rest stays empty -->
                 <Grid Grid.Column="1" VerticalAlignment="Center">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="{Binding Ratio, Converter={StaticResource RatioToStar}}" />
@@ -34,53 +35,53 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="{StaticResource Page.Padding}">
-            <TextBlock Text="Estatísticas" Style="{StaticResource Text.Display}" />
-            <TextBlock Text="Contadas a partir do tempo em que cada emulador fica aberto pelo Retro Hub (sessões com menos de 10 s não contam)."
+            <TextBlock Text="{l:T Stats}" Style="{StaticResource Text.Display}" />
+            <TextBlock Text="{l:T 'Based on how long each emulator stays open through Retro Hub (sessions under 10 s do not count).'}"
                        Style="{StaticResource Text.Secondary}" Margin="0,6,0,0" MaxWidth="620" HorizontalAlignment="Left" />
 
-            <!-- Vazio -->
+            <!-- Empty -->
             <ContentControl Style="{StaticResource Surface}" Margin="0,32,0,0"
                             Visibility="{Binding HasData, Converter={StaticResource BoolToCollapsed}}">
                 <StackPanel Margin="24,28" HorizontalAlignment="Center">
                     <ui:Icon Data="{StaticResource Icon.Chart}" Width="24" Height="24" Foreground="{StaticResource Brush.Text.Tertiary}" />
-                    <TextBlock Text="Ainda não há tempo jogado" Style="{StaticResource Text.Title}" Margin="0,14,0,0" HorizontalAlignment="Center" />
-                    <TextBlock Text="Jogue algo pelo Retro Hub e volte aqui." Style="{StaticResource Text.Tertiary}" Margin="0,6,0,0" HorizontalAlignment="Center" />
+                    <TextBlock Text="{l:T 'No playtime yet'}" Style="{StaticResource Text.Title}" Margin="0,14,0,0" HorizontalAlignment="Center" />
+                    <TextBlock Text="{l:T 'Play something through Retro Hub and come back here.'}" Style="{StaticResource Text.Tertiary}" Margin="0,6,0,0" HorizontalAlignment="Center" />
                 </StackPanel>
             </ContentControl>
 
             <StackPanel Visibility="{Binding HasData, Converter={StaticResource BoolToVisible}}">
-                <!-- Totais -->
+                <!-- Totals -->
                 <UniformGrid Columns="4" Margin="0,32,-16,0">
                     <Border Style="{StaticResource Tile}">
                         <StackPanel>
-                            <TextBlock Text="TEMPO TOTAL" Style="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{l:T 'TOTAL TIME'}" Style="{StaticResource Text.Overline}" />
                             <TextBlock Text="{Binding TotalTime}" Style="{StaticResource Tile.Value}" />
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Tile}">
                         <StackPanel>
-                            <TextBlock Text="ÚLTIMOS 7 DIAS" Style="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{l:T 'LAST 7 DAYS'}" Style="{StaticResource Text.Overline}" />
                             <TextBlock Text="{Binding WeekTime}" Style="{StaticResource Tile.Value}" />
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Tile}">
                         <StackPanel>
-                            <TextBlock Text="JOGOS JOGADOS" Style="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{l:T 'GAMES PLAYED'}" Style="{StaticResource Text.Overline}" />
                             <TextBlock Text="{Binding GamesPlayed}" Style="{StaticResource Tile.Value}" />
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Tile}">
                         <StackPanel>
-                            <TextBlock Text="SESSÕES" Style="{StaticResource Text.Overline}" />
+                            <TextBlock Text="{l:T SESSIONS}" Style="{StaticResource Text.Overline}" />
                             <TextBlock Text="{Binding Sessions}" Style="{StaticResource Tile.Value}" />
                         </StackPanel>
                     </Border>
                 </UniformGrid>
 
-                <!-- Últimos 14 dias (colunas) -->
+                <!-- Last 14 days (columns) -->
                 <ContentControl Style="{StaticResource Surface}" Margin="0,24,0,0">
                     <StackPanel Margin="24,20,24,16">
-                        <TextBlock Text="Últimos 14 dias" Style="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" />
+                        <TextBlock Text="{l:T 'Last 14 days'}" Style="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" />
                         <ItemsControl ItemsSource="{Binding LastDays}" Margin="0,18,0,0">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -115,7 +116,7 @@
                     </StackPanel>
                 </ContentControl>
 
-                <!-- Por sistema · mais jogados -->
+                <!-- Per system · most played -->
                 <Grid Margin="0,24,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -124,13 +125,13 @@
                     </Grid.ColumnDefinitions>
                     <ContentControl Style="{StaticResource Surface}">
                         <StackPanel Margin="24,20,24,12">
-                            <TextBlock Text="Tempo por sistema" Style="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" Margin="0,0,0,16" />
+                            <TextBlock Text="{l:T 'Time per system'}" Style="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" Margin="0,0,0,16" />
                             <ItemsControl ItemsSource="{Binding BySystem}" ItemTemplate="{StaticResource HBar}" />
                         </StackPanel>
                     </ContentControl>
                     <ContentControl Grid.Column="2" Style="{StaticResource Surface}">
                         <StackPanel Margin="24,20,24,12">
-                            <TextBlock Text="Mais jogados" Style="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" Margin="0,0,0,16" />
+                            <TextBlock Text="{l:T 'Most played'}" Style="{StaticResource Text.Title}" FontSize="{StaticResource Font.Size.Md}" Margin="0,0,0,16" />
                             <ItemsControl ItemsSource="{Binding TopGames}" ItemTemplate="{StaticResource HBar}" />
                         </StackPanel>
                     </ContentControl>

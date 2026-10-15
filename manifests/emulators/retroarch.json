@@ -1,12 +1,12 @@
 {
   "id": "retroarch",
   "name": "RetroArch",
-  "description": "Frontend libretro — um core por sistema.",
+  "description": "libretro frontend — one core per system.",
   "homepage": "https://www.retroarch.com",
   "license": "GPL-3.0",
   "systems": ["nes", "snes", "n64", "gb", "gbc", "gba", "nds", "sms", "genesis", "segacd", "saturn", "dreamcast", "arcade"],
-  // O buildbot do libretro não publica hash: a instalação fica marcada como "sem hash".
-  // Para fixar, preencha "sha256" após conferir o arquivo manualmente.
+  // The libretro buildbot does not publish a hash: the install is marked as "no hash".
+  // To pin it, fill in "sha256" after checking the file manually.
   "source": {
     "type": "url",
     "version": "1.21.0",
@@ -36,16 +36,16 @@
     { "systems": ["dreamcast"],         "core": "flycast",          "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" },
     { "systems": ["arcade"],            "core": "fbneo",            "args": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\"" }
   ],
-  // RetroArch já reconhece controles Xbox pelos perfis de autoconfig; só garantimos o driver XInput.
+  // RetroArch already recognizes Xbox controllers through its autoconfig profiles; we only ensure the XInput driver.
   "controller": {
     "file": "retroarch.cfg",
     "format": "flat",
-    "description": "Autoconfig XInput (todos os cores)",
+    "description": "XInput autoconfig (all cores)",
     "settings": {
       "": { "input_joypad_driver": "xinput", "input_autodetect_enable": "true" }
     }
   },
-  // Save states: states/<nome da ROM>.state, .state1… (com miniatura .png ao lado). --entryslot carrega o slot ao abrir.
+  // Save states: states/<ROM name>.state, .state1… (with a .png thumbnail next to it). --entryslot loads the slot on start.
   "saves": {
     "states": [ { "dir": "states", "pattern": "{romName}.state*", "slot": "\\.state(\\d*)$" } ],
     "loadStateArgs": "-f -L \"{emuDir}\\cores\\{core}_libretro.dll\" \"{rom}\" --entryslot={slot}",
@@ -60,8 +60,8 @@
       "4:3": { "": { "video_aspect_ratio_auto": "false", "aspect_ratio_index": "0" } },
       "16:9": { "": { "video_aspect_ratio_auto": "false", "aspect_ratio_index": "1" } } } },
     "toggles": [
-      { "id": "crt", "label": "Filtro CRT (TV antiga)",
-        "hint": "Linhas de varredura e máscara de TV de tubo em todos os jogos do RetroArch (shader crt-aperture).",
+      { "id": "crt", "label": "CRT filter (old TV)",
+        "hint": "Scanlines and CRT TV mask in every RetroArch game (crt-aperture shader).",
         "on": { "": { "video_shader_enable": "true", "auto_shaders_enable": "true" } },
         "off": { "": { "video_shader_enable": "false" } },
         "file": { "path": "config/global.slangp", "content": "#reference \"../shaders/shaders_slang/crt/crt-aperture.slangp\"\n" } }

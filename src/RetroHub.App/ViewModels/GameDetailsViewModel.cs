@@ -6,12 +6,13 @@ using CommunityToolkit.Mvvm.Input;
 using RetroHub.App.Helpers;
 using RetroHub.App.Views;
 using RetroHub.Core;
+using RetroHub.Core.Localization;
 using RetroHub.Core.Metadata;
 using RetroHub.Core.Saves;
 
 namespace RetroHub.App.ViewModels;
 
-/// <summary>Um save state na lista do painel (com miniatura quando o emulador grava uma).</summary>
+/// <summary>A save state in the panel list (with a thumbnail when the emulator writes one).</summary>
 public sealed partial class SaveStateItem(SaveState state, Func<SaveState, Task> load) : ObservableObject
 {
     private System.Windows.Media.ImageSource? _thumbnail;
@@ -19,9 +20,11 @@ public sealed partial class SaveStateItem(SaveState state, Func<SaveState, Task>
 
     public SaveState State { get; } = state;
     public string Title => $"{State.Label} · {State.EmulatorName}";
-    public string When => State.Modified.ToString("dd/MM/yyyy HH:mm");
+    public string When => L.DateTime(State.Modified);
     public bool CanLoad => State.CanLoadDirectly;
-    public string LoadTooltip => CanLoad ? "Abrir o jogo já neste ponto" : "Este emulador não abre direto num save: o jogo abre e você carrega pelo menu dele";
+    public string LoadTooltip => CanLoad
+        ? L.T("Open the game right at this point")
+        : L.T("This emulator cannot open a save directly: the game opens and you load it from its menu");
 
     public System.Windows.Media.ImageSource? Thumbnail
     {
@@ -50,25 +53,27 @@ public sealed partial class SaveStateItem(SaveState state, Func<SaveState, Task>
     private Task Load() => load(State);
 }
 
-/// <summary>Chip de coleção no painel: ligado = o jogo está na coleção.</summary>
+/// <summary>Collection chip in the panel: on = the game is in the collection.</summary>
 public sealed partial class CollectionToggle(long id, string name, bool isMember, Action<long, bool> changed) : ObservableObject
 {
     public long Id { get; } = id;
-    public string Name { get; } = name;
+    /// <summary>Display name (seed collections are translated; user-created names pass through unchanged).</summary>
+    public string Name { get; } = L.T(name);
     [ObservableProperty] private bool _isMember = isMember;
     partial void OnIsMemberChanged(bool value) => changed(Id, value);
 }
 
-/// <param name="Id">null = o emulador padrão do sistema.</param>
-public sealed record EmulatorChoice(string? Id, string Label, bool Installed);
+/// <param name="Id">null = the system's default emulator.</param>
+/// <param name="Name">Emulator name (without the "not installed" suffix of <paramref name="Label"/>).</param>
+public sealed record EmulatorChoice(string? Id, string Label, bool Installed, string? Name = null);
 
-/// <summary>Linha da ficha técnica ("Gênero · Ação").</summary>
+/// <summary>Row of the fact sheet ("Genre · Action").</summary>
 public sealed record InfoRow(string Label, string Value);
 
-/// <summary>Uma sessão no histórico da página do jogo.</summary>
+/// <summary>A session in the game page history.</summary>
 public sealed record SessionRow(string When, string Duration);
 
-/// <summary>Painel lateral com tudo de um jogo: informações, arquivo, verificação, emulador, capa, atalho.</summary>
+/// <summary>Everything about one game: info, file, verification, emulator, cover, shortcut.</summary>
 public partial class GameDetailsViewModel : ObservableObject
 {
     private readonly HubServices _services;
@@ -85,7 +90,7 @@ public partial class GameDetailsViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(InfoLine), nameof(PeopleLine), nameof(Description), nameof(HasDescription),
-        nameof(OfficialName), nameof(VerifyKind), nameof(VerifyText), nameof(HasInfo), nameof(Facts))]
+        nameof(OfficialName), nameof(OfficialNameText), nameof(VerifyKind), nameof(VerifyText), nameof(HasInfo), nameof(Facts))]
     private GameMetadata? _meta;
 
     [ObservableProperty] private EmulatorChoice? _selectedEmulator;
@@ -104,9 +109,10 @@ public partial class GameDetailsViewModel : ObservableObject
         var system = services.Manifests.GetSystem(item.SystemId);
         var installed = services.Database.GetInstalledEmulators().Select(e => e.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var defaultName = system?.DefaultEmulator is { } d ? services.Manifests.GetEmulator(d)?.Name ?? d : "—";
-        EmulatorChoices.Add(new EmulatorChoice(null, $"Padrão ({defaultName})", true));
+        EmulatorChoices.Add(new EmulatorChoice(null, L.F("Default ({0})", defaultName), true));
         foreach (var emu in services.Manifests.EmulatorsForSystem(item.SystemId))
-            EmulatorChoices.Add(new EmulatorChoice(emu.Id, installed.Contains(emu.Id) ? emu.Name : $"{emu.Name} · não instalado", installed.Contains(emu.Id)));
+            EmulatorChoices.Add(new EmulatorChoice(emu.Id, installed.Contains(emu.Id) ? emu.Name : L.F("{0} · not installed", emu.Name),
+                installed.Contains(emu.Id), emu.Name));
         _selectedEmulator = EmulatorChoices.FirstOrDefault(c => c.Id == item.Game.EmulatorOverride) ?? EmulatorChoices[0];
 
         if (_meta is not { ManualInfo: true } and not { Name: not null })
@@ -145,23 +151,25 @@ public partial class GameDetailsViewModel : ObservableObject
     public string SystemName => Item.SystemName;
     public string FilePath => Item.FilePath;
     public string? Serial => Item.Game.Serial ?? Meta?.Serial;
-    public string SerialText => string.IsNullOrWhiteSpace(Serial) ? "" : $" · serial {Serial}";
+    public string SerialText => string.IsNullOrWhiteSpace(Serial) ? "" : " · " + L.F("serial {0}", Serial);
     public string SizeText => Item.Game.SizeBytes >= 1L << 30
         ? $"{Item.Game.SizeBytes / (double)(1L << 30):0.00} GB"
         : $"{Item.Game.SizeBytes / (double)(1L << 20):0.0} MB";
     public string PlaytimeText => Item.PlaytimeText;
-    public string LastPlayedText => Item.Game.LastPlayed is { } t ? $"última vez em {t.ToLocalTime():dd/MM/yyyy}" : "nunca jogado";
+    public string LastPlayedText => Item.Game.LastPlayed is { } t ? L.F("last played {0}", L.Date(t)) : L.T("never played");
 
     public bool HasInfo => Meta?.HasInfo == true;
     public string? OfficialName => Meta?.Name;
+    /// <summary>"official name · {name}" (null when there is no official name).</summary>
+    public string? OfficialNameText => OfficialName is { } name ? L.F("official name · {0}", name) : null;
     public string? Description => Meta?.Description;
     public bool HasDescription => !string.IsNullOrWhiteSpace(Meta?.Description);
 
-    /// <summary>"1995 · RPG · 1 jogador"</summary>
+    /// <summary>"1995 · RPG · 1 player"</summary>
     public string InfoLine => string.Join("  ·  ", new[]
     {
         Meta?.Year, Meta?.Genre,
-        Meta?.Players is { } p ? (p == "1" ? "1 jogador" : $"até {p} jogadores") : null,
+        Meta?.Players is { } p ? (p == "1" ? L.T("1 player") : L.F("up to {0} players", p)) : null,
     }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
     public string PeopleLine => (Meta?.Developer, Meta?.Publisher) switch
@@ -176,11 +184,15 @@ public partial class GameDetailsViewModel : ObservableObject
 
     public string VerifyText => Meta?.VerifyStatus switch
     {
-        "ok" => $"Verificado · {Meta.VerifyDetail?.Replace("Bate com o dump oficial: ", "")}",
-        "unknown" => Meta.VerifyDetail ?? "Não bate com a lista oficial",
-        "unsupported" => Meta.VerifyDetail ?? "Verificação indisponível",
-        _ => "Ainda não verificado",
+        "ok" => L.F("Verified · {0}", DumpName(Meta.VerifyDetail)),
+        "unknown" => Meta.VerifyDetail ?? L.T("Does not match the official list"),
+        "unsupported" => Meta.VerifyDetail ?? L.T("Verification unavailable"),
+        _ => L.T("Not verified yet"),
     };
+
+    /// <summary>The detail is "&lt;prefix&gt;: &lt;dump name&gt;" (prefix in whatever language it was saved in): keep only the dump name.</summary>
+    private static string? DumpName(string? detail) =>
+        detail is not null && detail.IndexOf(": ", StringComparison.Ordinal) is >= 0 and var i ? detail[(i + 2)..] : detail;
 
     private async Task LoadInfoAsync()
     {
@@ -198,7 +210,7 @@ public partial class GameDetailsViewModel : ObservableObject
                 _services.Database.SetMetadata(Item.Game.Id, Item.Game.MetadataJson);
             }
         }
-        catch (HttpRequestException) { /* sem internet: painel mostra o que tem */ }
+        catch (HttpRequestException) { /* offline: the panel shows what it has */ }
         finally
         {
             IsLoadingInfo = false;
@@ -211,7 +223,7 @@ public partial class GameDetailsViewModel : ObservableObject
         Item.Game.EmulatorOverride = value.Id;
         _services.Database.SetEmulatorOverride(Item.Game.Id, value.Id);
         if (!value.Installed)
-            Notice = Notice.Warn($"{value.Label.Split(" · ")[0]} não está instalado — instale em Emuladores para jogar com ele.");
+            Notice = Notice.Warn(L.F("{0} is not installed — install it in Emulators to play with it.", value.Name ?? value.Label));
         else
             Notice = null;
     }
@@ -251,13 +263,17 @@ public partial class GameDetailsViewModel : ObservableObject
         RefreshHistory();
     }
 
-    // ── Página do jogo ──────────────────────────────────────────────────────
+    // ── Game page ───────────────────────────────────────────────────────────
 
     public ObservableCollection<SessionRow> RecentSessions { get; } = [];
-    /// <summary>Tempo jogado por mês nos últimos 12 meses.</summary>
+    /// <summary>Play time per month over the last 12 months.</summary>
     public ObservableCollection<StatBar> Months { get; } = [];
     [ObservableProperty] private string _sessionCount = "0";
-    [ObservableProperty] private string _averageText = "—";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AverageLine))]
+    private string _averageText = "—";
+    /// <summary>"average 1h 05m" next to the session count.</summary>
+    public string AverageLine => L.F("average {0}", AverageText);
     [ObservableProperty] private string _firstPlayedText = "";
     [ObservableProperty] private bool _hasSessions;
 
@@ -269,19 +285,20 @@ public partial class GameDetailsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HeroImage), nameof(HasArt))]
     private System.Windows.Media.ImageSource? _snapImage;
 
-    /// <summary>Fundo do topo da página: o jogo rodando, a tela de título ou a capa.</summary>
+    /// <summary>Background of the page header: the game running, the title screen or the cover.</summary>
     public System.Windows.Media.ImageSource? HeroImage => SnapImage ?? TitleImage ?? Item.CoverImage;
     public bool HasArt => SnapImage is not null || TitleImage is not null;
-    public string AddedText => $"na biblioteca desde {Item.Game.AddedAt.ToLocalTime():dd/MM/yyyy}";
+    public string AddedText => L.F("in library since {0}", L.Date(Item.Game.AddedAt));
 
-    /// <summary>Ficha técnica: só as linhas que têm valor.</summary>
+    /// <summary>Fact sheet: only the rows that have a value.</summary>
     public IReadOnlyList<InfoRow> Facts => new (string Label, string? Value)[]
     {
-        ("Ano", Meta?.Year), ("Gênero", Meta?.Genre), ("Desenvolvedora", Meta?.Developer), ("Distribuidora", Meta?.Publisher),
-        ("Jogadores", Meta?.Players), ("Região", Meta?.Region), ("Sistema", SystemName), ("Serial", Serial), ("Nome oficial", Meta?.Name),
+        (L.T("Year"), Meta?.Year), (L.T("Genre"), Meta?.Genre), (L.T("Developer"), Meta?.Developer), (L.T("Publisher"), Meta?.Publisher),
+        (L.T("Players"), Meta?.Players), (L.T("Region"), Meta?.Region), (L.T("System"), SystemName), (L.T("Serial"), Serial),
+        (L.T("Official name"), Meta?.Name),
     }.Where(r => !string.IsNullOrWhiteSpace(r.Value)).Select(r => new InfoRow(r.Label, r.Value!)).ToList();
 
-    /// <summary>Chamado ao abrir a página: histórico e imagens (o painel lateral não precisa delas).</summary>
+    /// <summary>Called when the page opens: history and images (the side panel does not need them).</summary>
     public void LoadPage()
     {
         RefreshHistory();
@@ -294,13 +311,13 @@ public partial class GameDetailsViewModel : ObservableObject
         HasSessions = sessions.Count > 0;
         SessionCount = sessions.Count.ToString();
         AverageText = sessions.Count == 0 ? "—" : Shell.FormatPlaytime(sessions.Sum(s => s.Seconds) / sessions.Count);
-        FirstPlayedText = sessions.Count == 0 ? "" : $" · jogado pela primeira vez em {sessions[0].StartedAt.ToLocalTime():dd/MM/yyyy}";
+        FirstPlayedText = sessions.Count == 0 ? "" : " · " + L.F("first played {0}", L.Date(sessions[0].StartedAt));
 
         RecentSessions.Clear();
         foreach (var s in sessions.AsEnumerable().Reverse().Take(8))
-            RecentSessions.Add(new SessionRow(s.StartedAt.ToLocalTime().ToString("dd/MM/yyyy · HH:mm"), Shell.FormatPlaytime(s.Seconds)));
+            RecentSessions.Add(new SessionRow($"{L.Date(s.StartedAt)} · {s.StartedAt.ToLocalTime().ToString("t", L.Culture)}", Shell.FormatPlaytime(s.Seconds)));
 
-        var culture = new System.Globalization.CultureInfo("pt-BR");
+        var culture = L.Culture;
         var thisMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
         var perMonth = sessions.GroupBy(s => { var d = s.StartedAt.ToLocalTime(); return new DateTime(d.Year, d.Month, 1); })
             .ToDictionary(g => g.Key, g => g.Sum(s => s.Seconds));
@@ -312,7 +329,7 @@ public partial class GameDetailsViewModel : ObservableObject
             var seconds = perMonth.GetValueOrDefault(month);
             var text = seconds == 0 ? "—" : Shell.FormatPlaytime(seconds);
             Months.Add(new StatBar(month.ToString("MMM", culture).TrimEnd('.'), text, max == 0 ? 0 : (double)seconds / max,
-                $"{month.ToString("MMMM 'de' yyyy", culture)} · {text}"));
+                $"{month.ToString("Y", culture)} · {text}"));
         }
 
         OnPropertyChanged(nameof(PlaytimeText));
@@ -320,7 +337,7 @@ public partial class GameDetailsViewModel : ObservableObject
         OnPropertyChanged(nameof(LastPlayedTile));
     }
 
-    public string LastPlayedTile => Item.LastPlayedText is { Length: > 0 } t ? t : "nunca";
+    public string LastPlayedTile => Item.LastPlayedText is { Length: > 0 } t ? t : L.T("never");
 
     private async Task LoadArtAsync()
     {
@@ -335,7 +352,7 @@ public partial class GameDetailsViewModel : ObservableObject
                 if (await _services.Covers.FetchArtAsync(Item.Game, folder) is { } path && LoadImage(path) is { } image)
                     set(image);
             }
-            catch (Exception ex) when (ex is HttpRequestException or IOException or TaskCanceledException) { /* sem imagem: a página usa a capa */ }
+            catch (Exception ex) when (ex is HttpRequestException or IOException or TaskCanceledException) { /* no image: the page uses the cover */ }
         }
     }
 
@@ -355,7 +372,7 @@ public partial class GameDetailsViewModel : ObservableObject
         catch (Exception) { return null; }
     }
 
-    // Edição das informações (o que a base aberta não tem ou tem errado).
+    // Editing the info (what the open database is missing or has wrong).
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private string _editYear = "";
     [ObservableProperty] private string _editGenre = "";
@@ -388,29 +405,30 @@ public partial class GameDetailsViewModel : ObservableObject
         Item.Game.MetadataJson = Meta.ToJson();
         _services.Database.SetMetadata(Item.Game.Id, Item.Game.MetadataJson);
         IsEditing = false;
-        Notice = Notice.Ok("Informações salvas. A busca automática não muda mais este jogo.");
+        Notice = Notice.Ok(L.T("Info saved. Automatic lookup will no longer change this game."));
     }
 
     [RelayCommand] private void CancelEdit() => IsEditing = false;
 
-    /// <summary>Abre uma busca sobre o jogo no navegador (só o nome do jogo vai na busca).</summary>
+    /// <summary>Opens a web search about the game in the browser (only the game name goes into the search).</summary>
     [RelayCommand]
     private void OpenWeb(string site)
     {
         var query = Uri.EscapeDataString(site switch
         {
             "youtube" => $"{Title} {SystemName} gameplay",
-            "guide" => $"{Title} {SystemName} detonado guia",
+            "guide" => $"{Title} {SystemName} {L.T("walkthrough guide")}",
             _ => Title,
         });
+        var wikipedia = L.Language == L.Portuguese ? "pt" : "en";
         var url = site switch
         {
             "youtube" => $"https://www.youtube.com/results?search_query={query}",
-            "wikipedia" => $"https://pt.wikipedia.org/w/index.php?search={query}",
+            "wikipedia" => $"https://{wikipedia}.wikipedia.org/w/index.php?search={query}",
             _ => $"https://www.google.com/search?q={query}",
         };
         try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }); }
-        catch (Exception ex) { Notice = Notice.Error($"Não foi possível abrir o navegador: {ex.Message}"); }
+        catch (Exception ex) { Notice = Notice.Error(L.F("Could not open the browser: {0}", ex.Message)); }
     }
 
     [RelayCommand] private void OpenPage() => _owner.OpenPage(Item);
@@ -435,7 +453,7 @@ public partial class GameDetailsViewModel : ObservableObject
         catch (OperationCanceledException) { }
         catch (Exception ex) when (ex is HttpRequestException or IOException)
         {
-            Notice = Notice.Error($"Não foi possível verificar: {ex.Message}");
+            Notice = Notice.Error(L.F("Could not verify: {0}", ex.Message));
         }
         finally
         {
@@ -470,7 +488,7 @@ public partial class GameDetailsViewModel : ObservableObject
         }
         catch (Exception ex) when (ex is HttpRequestException or IOException)
         {
-            Notice = Notice.Error($"Não foi possível trocar a capa: {ex.Message}");
+            Notice = Notice.Error(L.F("Could not change the cover: {0}", ex.Message));
         }
     }
 
@@ -480,11 +498,11 @@ public partial class GameDetailsViewModel : ObservableObject
         try
         {
             var path = Shortcuts.CreateForGame(Item.Game.Id, Item.Title, null);
-            Notice = Notice.Ok($"Atalho criado na área de trabalho: {Path.GetFileName(path)}");
+            Notice = Notice.Ok(L.F("Shortcut created on the desktop: {0}", Path.GetFileName(path)));
         }
         catch (Exception ex)
         {
-            Notice = Notice.Error($"Não foi possível criar o atalho: {ex.Message}");
+            Notice = Notice.Error(L.F("Could not create the shortcut: {0}", ex.Message));
         }
     }
 

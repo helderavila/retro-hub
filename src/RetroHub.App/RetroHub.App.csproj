@@ -25,6 +25,11 @@
     <Content Include="..\..\manifests\**\*.json" Link="manifests\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- Translations: i18n\{language}\*.json ("English": "Translation"), copied next to the .exe -->
+  <ItemGroup>
+    <Content Include="i18n\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- Coloque Inter/Geist e JetBrains Mono (.ttf) em Fonts/ — ver Fonts/README.md -->
   <ItemGroup>
     <Resource Include="Fonts\*.ttf" />

@@ -2,25 +2,26 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using RetroHub.Core.Library;
+using RetroHub.Core.Localization;
 using RetroHub.Core.Models;
 
 namespace RetroHub.Core.Input;
 
 /// <summary>
-/// Grava o mapeamento de controle do manifesto na configuração do emulador.
-/// Automático: uma vez por emulador (e de novo se o manifesto ou o controle mudar) — se o usuário remapear no emulador, não é desfeito.
-/// Forçado: botão "Configurar controle".
-/// Placeholders resolvidos na hora: {guid0}/{port0} (jogador 1) e {guid1}/{port1} (jogador 2) — identificador SDL do controle XInput
-/// conectado em cada slot. Chaves que dependem de um jogador sem controle são puladas.
+/// Writes the manifest's controller mapping into the emulator configuration.
+/// Automatic: once per emulator (and again if the manifest or the controller changes) — if the user remaps in the emulator, it is not undone.
+/// Forced: "Configure controller" button.
+/// Placeholders resolved on the fly: {guid0}/{port0} (player 1) and {guid1}/{port1} (player 2) — SDL identifier of the XInput controller
+/// connected to each slot. Keys that depend on a player without a controller are skipped.
 /// </summary>
 public sealed class ControllerConfigurator(LibraryDatabase db)
 {
     private const string SettingPrefix = "controller_configured:";
 
-    /// <summary>Lê os controles conectados. Substituível nos testes.</summary>
+    /// <summary>Reads the connected controllers. Replaceable in tests.</summary>
     public Func<IReadOnlyList<XInputDeviceInfo>> Devices { get; init; } = XInputDevices.List;
 
-    /// <summary>Aplica se ainda não foi aplicado com esta versão do mapeamento. Retorna true se gravou.</summary>
+    /// <summary>Applies if not yet applied with this mapping version. Returns true if it wrote.</summary>
     public bool EnsureConfigured(EmulatorManifest manifest, InstalledEmulator installed)
     {
         if (manifest.Controller is not { } config || Resolve(config) is not { } settings)
@@ -33,8 +34,8 @@ public sealed class ControllerConfigurator(LibraryDatabase db)
     }
 
     /// <summary>
-    /// Grava o mapeamento (sobrescrevendo só as chaves do mapeamento). Retorna o arquivo alterado,
-    /// ou null se não há mapeamento — ou se ele depende de um controle e nenhum está conectado.
+    /// Writes the mapping (overwriting only the mapping keys). Returns the changed file,
+    /// or null if there is no mapping — or if it depends on a controller and none is connected.
     /// </summary>
     public string? Apply(EmulatorManifest manifest, InstalledEmulator installed)
     {
@@ -43,7 +44,7 @@ public sealed class ControllerConfigurator(LibraryDatabase db)
         return Write(manifest, installed, config, settings);
     }
 
-    /// <summary>true se o mapeamento deste emulador precisa de um controle conectado (ex.: emuladores que guardam o identificador SDL do controle).</summary>
+    /// <summary>true if this emulator's mapping needs a connected controller (e.g. emulators that store the controller's SDL identifier).</summary>
     public static bool NeedsConnectedController(ControllerConfig config) =>
         config.Settings.Values.SelectMany(s => s.Values).Any(v => v.Contains("{guid"));
 
@@ -53,14 +54,14 @@ public sealed class ControllerConfigurator(LibraryDatabase db)
         var root = Path.GetFullPath(installed.InstallDir) + Path.DirectorySeparatorChar;
         var path = Path.GetFullPath(Path.Combine(installed.InstallDir, config.File));
         if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException($"{manifest.Id}: arquivo de controle fora da pasta do emulador ({config.File}).");
+            throw new InvalidDataException(L.F("{0}: controller file outside the emulator folder ({1}).", manifest.Id, config.File));
 
         IniMerger.Merge(path, config.Format, settings);
         db.SetSetting(SettingPrefix + manifest.Id, Fingerprint(settings));
         return path;
     }
 
-    /// <summary>Troca os placeholders pelos controles conectados; null se o jogador 1 é necessário e não há controle.</summary>
+    /// <summary>Replaces the placeholders with the connected controllers; null if player 1 is needed and there is no controller.</summary>
     internal Dictionary<string, Dictionary<string, string>>? Resolve(ControllerConfig config)
     {
         if (!NeedsConnectedController(config))
@@ -74,7 +75,7 @@ public sealed class ControllerConfigurator(LibraryDatabase db)
         for (var player = 0; player < Math.Min(devices.Count, 2); player++)
         {
             var guid = devices[player].SdlGuid;
-            // Dois controles idênticos têm o mesmo GUID: o SDL diferencia pela "porta" (ordem entre iguais).
+            // Two identical controllers share the same GUID: SDL tells them apart by "port" (order among equals).
             var port = devices.Take(player).Count(d => d.SdlGuid == guid);
             values[$"{{guid{player}}}"] = guid;
             values[$"{{port{player}}}"] = port.ToString();
@@ -88,7 +89,7 @@ public sealed class ControllerConfigurator(LibraryDatabase db)
             {
                 var playerToken = PlayerOf(key) ?? PlayerOf(value);
                 if (playerToken is { } p && p >= devices.Count)
-                    continue; // jogador sem controle: deixa como está
+                    continue; // player without a controller: leave as is
                 var text = value;
                 foreach (var (token, replacement) in values)
                     text = text.Replace(token, replacement);
@@ -99,7 +100,7 @@ public sealed class ControllerConfigurator(LibraryDatabase db)
         return resolved;
     }
 
-    /// <summary>Jogador a que uma chave/valor se refere: "player_1_…" ou "{guid1}" → 1.</summary>
+    /// <summary>Player a key/value refers to: "player_1_…" or "{guid1}" → 1.</summary>
     private static int? PlayerOf(string text)
     {
         var m = System.Text.RegularExpressions.Regex.Match(text, @"player_(\d)_|\{(?:guid|port)(\d)\}");

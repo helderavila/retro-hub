@@ -1,26 +1,27 @@
 using System.IO.Compression;
+using RetroHub.Core.Localization;
 using RetroHub.Core.Manifests;
 using RetroHub.Core.Models;
 using RetroHub.Core.Util;
 
 namespace RetroHub.Core.Scanning;
 
-/// <param name="Fingerprint">Identifica o conteúdo: cópias do mesmo jogo em pastas diferentes têm o mesmo valor.</param>
+/// <param name="Fingerprint">Identifies the content: copies of the same game in different folders have the same value.</param>
 public sealed record ScannedRom(string Path, string SystemId, string Title, string? Serial, string? Crc32, long SizeBytes, string? Fingerprint = null);
 
 public sealed record ScanProgress(int FilesSeen, int Identified, string? Current);
 
-/// <summary>Arquivo que parece ROM mas não é jogo (ex.: DVD de vídeo bônus).</summary>
+/// <summary>File that looks like a ROM but is not a game (e.g. a bonus video DVD).</summary>
 public sealed record RejectedFile(string Path, string Reason);
 
 public sealed record ScanReport(IReadOnlyList<ScannedRom> Roms, IReadOnlyList<string> Unidentified, IReadOnlyList<RejectedFile> Rejected);
 
 /// <summary>
-/// Identificação em camadas:
-///   1. extensão única de um sistema (.sfc → snes);
-///   2. conteúdo do arquivo (cabeçalho de disco, extensão dentro do .zip);
-///   3. nome da pasta ("ps2/", "PlayStation 2/").
-/// Arquivos referenciados por .cue/.gdi/.m3u não viram jogos separados.
+/// Layered identification:
+///   1. extension unique to one system (.sfc → snes);
+///   2. file content (disc header, extension inside the .zip);
+///   3. folder name ("ps2/", "PlayStation 2/").
+/// Files referenced by .cue/.gdi/.m3u do not become separate games.
 /// </summary>
 public sealed class RomScanner(ManifestRepository manifests)
 {
@@ -79,10 +80,10 @@ public sealed class RomScanner(ManifestRepository manifests)
         return new ScanReport(roms, unidentified, rejected);
     }
 
-    /// <summary>Identifica um único arquivo. <paramref name="root"/> limita a busca por nomes de pasta.</summary>
+    /// <summary>Identifies a single file. <paramref name="root"/> limits the folder name lookup.</summary>
     public ScannedRom? Identify(string path, string? root = null) => Identify(path, root, out _);
 
-    /// <param name="rejectReason">Preenchido quando o arquivo foi reconhecido como algo que não é jogo.</param>
+    /// <param name="rejectReason">Set when the file was recognized as something that is not a game.</param>
     public ScannedRom? Identify(string path, string? root, out string? rejectReason)
     {
         rejectReason = null;
@@ -109,7 +110,7 @@ public sealed class RomScanner(ManifestRepository manifests)
                 var disc = DiscInspector.Inspect(path);
                 if (disc.IsVideoDisc)
                 {
-                    rejectReason = "DVD de vídeo (VIDEO_TS), não é um disco de jogo";
+                    rejectReason = L.T("Video DVD (VIDEO_TS), not a game disc");
                     return null;
                 }
                 serial = disc.Serial;
@@ -123,7 +124,7 @@ public sealed class RomScanner(ManifestRepository manifests)
         if (systemId is null)
             return null;
 
-        // ID de título de 16 dígitos entre colchetes no nome do arquivo ("Jogo [0100ABCD12345000][v0].ext") vira o serial.
+        // A 16-digit title ID in brackets in the file name ("Game [0100ABCD12345000][v0].ext") becomes the serial.
         if (serial is null && System.Text.RegularExpressions.Regex.Match(Path.GetFileName(path), @"\[(0100[0-9A-Fa-f]{12})\]") is { Success: true } tid)
             serial = tid.Groups[1].Value.ToUpperInvariant();
 
@@ -135,7 +136,7 @@ public sealed class RomScanner(ManifestRepository manifests)
         return new ScannedRom(Path.GetFullPath(path), systemId, TitleCleaner.Clean(path), serial, crc, size, Fingerprint(path, ext, crc, size));
     }
 
-    /// <summary>Cartuchos: CRC32 completo. Discos: amostras do arquivo (para .cue/.gdi, da primeira trilha).</summary>
+    /// <summary>Cartridges: full CRC32. Discs: file samples (for .cue/.gdi, of the first track).</summary>
     private static string? Fingerprint(string path, string ext, string? crc, long size)
     {
         if (crc is not null)
@@ -146,7 +147,7 @@ public sealed class RomScanner(ManifestRepository manifests)
             if (ext is ".cue" or ".gdi")
                 return SheetParser.References(path).FirstOrDefault(File.Exists) is { } track ? FileHasher.SampleFingerprint(track) : null;
             if (ext == ".m3u")
-                return null; // playlist: os discos dela já são identificados individualmente
+                return null; // playlist: its discs are already identified individually
             return FileHasher.SampleFingerprint(path);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -158,7 +159,7 @@ public sealed class RomScanner(ManifestRepository manifests)
     private bool IsCandidateExtension(string ext) =>
         ArchiveExtensions.Contains(ext) || manifests.SystemsForExtension(ext).Count > 0;
 
-    /// <summary>Olha as extensões dentro do .zip; se apontarem para um único sistema, é ele.</summary>
+    /// <summary>Looks at the extensions inside the .zip; if they point to a single system, that is it.</summary>
     private string? IdentifyZipContents(string path)
     {
         try

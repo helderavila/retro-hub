@@ -8,9 +8,9 @@ namespace RetroHub.Core.Bios;
 public enum BiosStatus
 {
     Ok,
-    /// <summary>Hash certo, nome diferente — será copiado com o nome esperado.</summary>
+    /// <summary>Correct hash, different name — will be copied with the expected name.</summary>
     Misnamed,
-    /// <summary>Arquivo com o nome certo, mas o hash não bate (dump ruim ou região errada).</summary>
+    /// <summary>File with the right name, but the hash does not match (bad dump or wrong region).</summary>
     HashMismatch,
     Missing,
 }
@@ -38,13 +38,13 @@ public sealed record SystemBiosReport(SystemDefinition System, IReadOnlyList<Bio
         _ => true,
     };
 
-    /// <summary>Roda sem dump graças à BIOS emulada do emulador.</summary>
+    /// <summary>Runs without a dump thanks to the emulator's built-in (HLE) BIOS.</summary>
     public bool UsesHle => System.BiosHle is not null && !Checks.Any(c => c.IsUsable);
 }
 
 /// <summary>
-/// Confere BIOS por MD5. Nunca baixa nada: só procura na pasta de BIOS do Retro Hub,
-/// numa pasta extra configurada e nas pastas de BIOS dos emuladores instalados.
+/// Verifies BIOS files by MD5. Never downloads anything: only searches Retro Hub's BIOS folder,
+/// a configured extra folder and the BIOS folders of installed emulators.
 /// </summary>
 public sealed class BiosVerifier(ManifestRepository manifests, AppPaths paths, LibraryDatabase db)
 {
@@ -114,20 +114,20 @@ public sealed class BiosVerifier(ManifestRepository manifests, AppPaths paths, L
             : new BiosCheck(req, BiosStatus.Ok, match.Path);
     }
 
-    // ── Importação ──────────────────────────────────────────────────────────
+    // ── Import ──────────────────────────────────────────────────────────
 
     private sealed record Candidate(string Name, long Size, string Source, Func<byte[]> Read);
 
     /// <summary>
-    /// Procura BIOS conhecidas em pastas, arquivos soltos e .zip (pelo MD5, não pelo nome),
-    /// copia para a pasta de BIOS do Retro Hub com o nome esperado e depois para os emuladores instalados.
-    /// Só lê arquivos cujo tamanho bate com o de alguma BIOS — apontar para um disco inteiro continua rápido.
+    /// Looks for known BIOS files in folders, loose files and .zip (by MD5, not by name),
+    /// copies them to Retro Hub's BIOS folder with the expected name and then to the installed emulators.
+    /// Only reads files whose size matches some BIOS — pointing at a whole drive stays fast.
     /// </summary>
     public async Task<BiosImportReport> ImportAsync(IEnumerable<string> sources, IProgress<string>? progress = null, CancellationToken ct = default)
     {
         var requirements = manifests.Systems.SelectMany(s => s.Bios.Select(r => (System: s, Req: r))).ToList();
         var sizes = requirements.Select(r => r.Req.Size).OfType<long>().ToHashSet();
-        // Arquivos sem tamanho nem hash fixos (ex.: arquivos de chaves de texto) são reconhecidos pelo nome exato.
+        // Files without a fixed size or hash (e.g. text key files) are recognized by exact name.
         var names = requirements.Where(r => r.Req.Md5.Count == 0 && r.Req.Size is null && !Glob.HasWildcards(r.Req.File))
             .Select(r => r.Req.File).ToHashSet(StringComparer.OrdinalIgnoreCase);
         Directory.CreateDirectory(paths.Bios);
@@ -162,7 +162,7 @@ public sealed class BiosVerifier(ManifestRepository manifests, AppPaths paths, L
                     continue;
                 }
                 if (!written.Add(destination))
-                    continue; // outra cópia da mesma BIOS já entrou nesta importação
+                    continue; // another copy of the same BIOS was already imported in this run
 
                 File.WriteAllBytes(destination, data);
                 imported.Add(new BiosImportItem(hit.System.ShortName, destName, candidate.Source));
@@ -239,7 +239,7 @@ public sealed class BiosVerifier(ManifestRepository manifests, AppPaths paths, L
     private static string FileMd5(string path) =>
         Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
 
-    /// <summary>Copia as BIOS válidas para a pasta de BIOS de cada emulador instalado, com o nome esperado.</summary>
+    /// <summary>Copies valid BIOS files to each installed emulator's BIOS folder, with the expected name.</summary>
     public int SyncToEmulators(IEnumerable<SystemBiosReport> reports)
     {
         var reportList = reports.ToList();

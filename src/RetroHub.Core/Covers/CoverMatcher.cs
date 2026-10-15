@@ -4,16 +4,16 @@ using RetroHub.Core.Scanning;
 namespace RetroHub.Core.Covers;
 
 /// <summary>
-/// Escolhe, numa lista de nomes No-Intro/Redump ("Chrono Trigger (USA)"), a capa que corresponde a um jogo.
-/// Ordem: nome do arquivo idêntico → mesmo título (sem tags, artigo, pontuação e acentos) →
-/// título contido no outro ("Zelda - A Link to the Past" ⊂ "Legend of Zelda, The - A Link to the Past").
-/// Desempata pela região do arquivo, depois EUA/Mundo/Brasil/Europa/Japão, e prefere versões finais.
+/// Picks, from a list of No-Intro/Redump names ("Chrono Trigger (USA)"), the cover that matches a game.
+/// Order: identical file name → same title (without tags, article, punctuation and accents) →
+/// title contained in the other ("Zelda - A Link to the Past" ⊂ "Legend of Zelda, The - A Link to the Past").
+/// Ties are broken by the file's region, then USA/World/Brazil/Europe/Japan, preferring final releases.
 /// </summary>
 public static partial class CoverMatcher
 {
     private static readonly string[] RegionPreference = ["USA", "World", "Brazil", "Europe", "Japan"];
 
-    /// <summary>Na busca aproximada, o título menor precisa cobrir ao menos esta fração do maior.</summary>
+    /// <summary>In approximate matching, the shorter title must cover at least this fraction of the longer one.</summary>
     private const double MinContainmentRatio = 0.6;
     private const int MinContainmentLength = 8;
 
@@ -32,25 +32,25 @@ public static partial class CoverMatcher
         {
             var list = names.Distinct().ToList();
             ByKey = list.GroupBy(Key).Where(g => g.Key.Length > 0).ToDictionary(g => g.Key, g => g.ToList());
-            // Sem diferenciar maiúsculas na busca, mas devolvendo sempre a grafia do servidor (que diferencia).
+            // Case-insensitive lookup, but always returning the server spelling (which is case-sensitive).
             Exact = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var name in list)
                 Exact.TryAdd(name, name);
         }
     }
 
-    /// <summary>Chave de comparação: "Legend of Zelda, The - A Link..." e "The Legend of Zelda: A Link..." viram a mesma.</summary>
+    /// <summary>Comparison key: "Legend of Zelda, The - A Link..." and "The Legend of Zelda: A Link..." become the same.</summary>
     public static string Key(string name)
     {
         var clean = TitleCleaner.Clean(name + ".x").ToLowerInvariant();
         if (clean.StartsWith("the ")) clean = clean[4..];
         clean = clean.Replace("&", "and");
-        // "Pokémon" == "Pokemon": FormD separa o acento (marca combinante), que não é letra e cai no filtro.
+        // "Pokémon" == "Pokemon": FormD splits off the accent (combining mark), which is not a letter and gets filtered out.
         return new string(clean.Normalize(System.Text.NormalizationForm.FormD).Where(char.IsLetterOrDigit).ToArray());
     }
 
-    /// <param name="romFileStem">Nome do arquivo sem extensão — se já estiver no padrão No-Intro, casa direto.</param>
-    /// <param name="title">Título limpo do jogo na biblioteca.</param>
+    /// <param name="romFileStem">File name without extension; if it already follows No-Intro naming, it matches directly.</param>
+    /// <param name="title">Clean game title in the library.</param>
     public static string? BestMatch(Index index, string romFileStem, string title)
     {
         if (index.Exact.TryGetValue(Sanitize(romFileStem), out var exact))
@@ -74,8 +74,8 @@ public static partial class CoverMatcher
     }
 
     /// <summary>
-    /// Um título contém o outro e cobre a maior parte dele. Só aceita se houver um único jogo assim —
-    /// "Super Mario" bate em Bros., Bros. 3 e World, e capa errada é pior que nenhuma.
+    /// One title contains the other and covers most of it. Only accepted if there is a single such game:
+    /// "Super Mario" hits Bros., Bros. 3 and World, and a wrong cover is worse than none.
     /// </summary>
     private static List<string>? Approximate(Index index, string key)
     {
@@ -100,6 +100,6 @@ public static partial class CoverMatcher
         return RegionPreference.Length;
     }
 
-    /// <summary>Regra do libretro-thumbnails: &amp;*/:`&lt;&gt;?\| viram "_".</summary>
+    /// <summary>libretro-thumbnails rule: &amp;*/:`&lt;&gt;?\| become "_".</summary>
     public static string Sanitize(string name) => Regex.Replace(name, @"[&*/:`<>?\\|]", "_");
 }

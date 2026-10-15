@@ -5,7 +5,7 @@ using System.Windows.Media;
 
 namespace RetroHub.App.Converters;
 
-/// <summary>"ok" | "warn" | "error" | "busy" | "idle" → brush de status definido nos tokens.</summary>
+/// <summary>"ok" | "warn" | "error" | "busy" | "idle" → status brush defined in the tokens.</summary>
 public sealed class StatusBrushConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -38,7 +38,7 @@ public sealed class BoolToVisibilityConverter : IValueConverter
 
 public sealed class NullToVisibilityConverter : IValueConverter
 {
-    /// <summary>true = visível só quando o valor é nulo/vazio.</summary>
+    /// <summary>true = visible only when the value is null/empty.</summary>
     public bool Invert { get; set; }
 
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
@@ -48,7 +48,7 @@ public sealed class NullToVisibilityConverter : IValueConverter
         throw new NotSupportedException();
 }
 
-/// <summary>Proporção 0–1 → largura de coluna em estrelas. Com parâmetro "rest", devolve o que sobra (1 − proporção).</summary>
+/// <summary>Ratio 0–1 → star column width. With the "rest" parameter, returns what is left (1 − ratio).</summary>
 public sealed class RatioToStarConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -62,7 +62,7 @@ public sealed class RatioToStarConverter : IValueConverter
         throw new NotSupportedException();
 }
 
-/// <summary>Liga um RadioButton a uma string: marcado quando value == parameter; ao marcar, devolve o parameter.</summary>
+/// <summary>Binds a RadioButton to a string: checked when value == parameter; checking it returns the parameter.</summary>
 public sealed class EqualsConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>

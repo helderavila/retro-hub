@@ -1,11 +1,11 @@
 {
   "id": "dolphin",
   "name": "Dolphin",
-  "description": "Emulador de GameCube e Wii.",
+  "description": "GameCube and Wii emulator.",
   "homepage": "https://dolphin-emu.org",
   "license": "GPL-2.0-or-later",
   "systems": ["gamecube", "wii"],
-  // O Dolphin distribui pelo próprio site (não pelo GitHub). Versão fixada; atualize ao sair uma nova release.
+  // Dolphin is distributed from its own site (not GitHub). Pinned version; update when a new release comes out.
   "source": {
     "type": "url",
     "version": "2506",
@@ -21,11 +21,11 @@
   "launch": [
     { "systems": ["gamecube", "wii"], "args": "-b -e \"{rom}\"" }
   ],
-  // GameCube 1 no primeiro controle XInput. O Wii Remote continua no teclado (mapeie em Controles › Wii Remote 1).
+  // GameCube 1 on the first XInput controller. The Wii Remote stays on the keyboard (map it in Controllers › Wii Remote 1).
   "controller": {
     "file": "User/Config/GCPadNew.ini",
     "format": "ini",
-    "description": "Jogadores 1 e 2 · controle Xbox",
+    "description": "Players 1 and 2 · Xbox controller",
     "settings": {
       "GCPad2": {
         "Device": "XInput/1/Gamepad",
@@ -51,7 +51,7 @@
       }
     }
   },
-  // Save states: User/StateSaves/GALE01.s01 (ID do disco).
+  // Save states: User/StateSaves/GALE01.s01 (disc ID).
   "saves": {
     "states": [ { "dir": "User/StateSaves", "pattern": "{serial}.s*", "slot": "\\.s(\\d+)$" } ],
     "loadStateArgs": "-b -s \"{state}\" -e \"{rom}\"",
@@ -62,20 +62,20 @@
     "file": "User/Config/GFX.ini",
     "presets": { "values": {
       "Original": { "Settings": { "InternalResolution": "1", "MSAA": "1" }, "Enhancements": { "MaxAnisotropy": "0" } },
-      "Melhorado": { "Settings": { "InternalResolution": "3", "MSAA": "1" }, "Enhancements": { "MaxAnisotropy": "4" } },
-      "Máximo": { "Settings": { "InternalResolution": "6", "MSAA": "4" }, "Enhancements": { "MaxAnisotropy": "4" } } } },
+      "Enhanced": { "Settings": { "InternalResolution": "3", "MSAA": "1" }, "Enhancements": { "MaxAnisotropy": "4" } },
+      "Maximum": { "Settings": { "InternalResolution": "6", "MSAA": "4" }, "Enhancements": { "MaxAnisotropy": "4" } } } },
     "resolution": { "values": { "1x": { "Settings": { "InternalResolution": "1" } }, "2x": { "Settings": { "InternalResolution": "2" } }, "3x": { "Settings": { "InternalResolution": "3" } }, "4x": { "Settings": { "InternalResolution": "4" } }, "6x": { "Settings": { "InternalResolution": "6" } }, "8x": { "Settings": { "InternalResolution": "8" } } } },
     "aspect": { "values": {
       "Auto": { "Settings": { "AspectRatio": "0" } },
       "4:3": { "Settings": { "AspectRatio": "2" } },
       "16:9": { "Settings": { "AspectRatio": "1" } } } },
     "toggles": [
-      { "id": "widescreen", "label": "Widescreen de verdade",
-        "hint": "Hack de widescreen do Dolphin (amplia o campo de visão em 16:9).",
+      { "id": "widescreen", "label": "True widescreen",
+        "hint": "Dolphin's widescreen hack (widens the field of view to 16:9).",
         "on": { "Settings": { "wideScreenHack": "True", "AspectRatio": "1" } },
         "off": { "Settings": { "wideScreenHack": "False", "AspectRatio": "0" } } },
-      { "id": "hdtextures", "label": "Texturas HD",
-        "hint": "Coloque o pacote em User\\Load\\Textures\\<ID do jogo> (pasta do Dolphin).",
+      { "id": "hdtextures", "label": "HD textures",
+        "hint": "Put the pack in User\\Load\\Textures\\<game ID> (Dolphin folder).",
         "on": { "Settings": { "HiresTextures": "True" } },
         "off": { "Settings": { "HiresTextures": "False" } } }
     ]

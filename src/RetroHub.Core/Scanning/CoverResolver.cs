@@ -3,22 +3,22 @@ using RetroHub.Core.Models;
 namespace RetroHub.Core.Scanning;
 
 /// <summary>
-/// Capas locais enquanto o scraper (ScreenScraper/IGDB) não existe:
-///   1. imagem com o mesmo nome da ROM ao lado dela;
-///   2. covers/{sistema}/{título}.png|jpg na pasta de dados.
+/// Local covers while the scraper (ScreenScraper/IGDB) does not exist:
+///   1. image with the same name as the ROM next to it;
+///   2. covers/{system}/{title}.png|jpg in the data folder.
 /// </summary>
 public static class CoverResolver
 {
     private static readonly string[] ImageExtensions = [".png", ".jpg", ".jpeg", ".webp"];
 
-    /// <summary>Valor gravado em cover_path quando o usuário escolheu "sem capa" — a busca automática respeita.</summary>
+    /// <summary>Value stored in cover_path when the user chose "no cover"; automatic lookup respects it.</summary>
     public const string NoCover = "none";
 
     public static bool UserRemovedCover(Game game) => game.CoverPath == NoCover;
 
     private static readonly string[] VideoExtensions = [".mp4", ".m4v", ".wmv", ".avi"];
 
-    /// <summary>Vídeo de prévia (Modo TV): ao lado da ROM com o mesmo nome, ou data\videos\{sistema}\{título}.mp4.</summary>
+    /// <summary>Preview video (TV Mode): next to the ROM with the same name, or data\videos\{system}\{title}.mp4.</summary>
     public static string? FindVideo(Game game, AppPaths paths)
     {
         var dir = Path.GetDirectoryName(game.Path);

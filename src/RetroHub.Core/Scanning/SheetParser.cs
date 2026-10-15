@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace RetroHub.Core.Scanning;
 
-/// <summary>Lê .cue, .gdi e .m3u e devolve os caminhos (absolutos) que eles referenciam.</summary>
+/// <summary>Reads .cue, .gdi and .m3u files and returns the (absolute) paths they reference.</summary>
 public static partial class SheetParser
 {
     private const long MaxSheetSize = 1 << 20;
@@ -15,7 +15,7 @@ public static partial class SheetParser
 
     public static bool IsSheet(string extension) => extension is ".cue" or ".gdi" or ".m3u";
 
-    /// <summary>Todos os arquivos que formam o jogo: o próprio arquivo + trilhas/discos referenciados (recursivo: .m3u → .cue → .bin).</summary>
+    /// <summary>All files that make up the game: the file itself + referenced tracks/discs (recursive: .m3u → .cue → .bin).</summary>
     public static IReadOnlyList<string> FilesOfGame(string path)
     {
         var files = new List<string>();

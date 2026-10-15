@@ -6,7 +6,7 @@ public partial class ConfirmDialog : Window
 {
     private ConfirmDialog() => InitializeComponent();
 
-    /// <summary>Pergunta antes de algo destrutivo. Retorna true se o usuário confirmou.</summary>
+    /// <summary>Asks before something destructive. Returns true if the user confirmed (texts come already translated).</summary>
     public static bool Ask(string title, string message, string confirmLabel, string? detail = null)
     {
         var dialog = new ConfirmDialog

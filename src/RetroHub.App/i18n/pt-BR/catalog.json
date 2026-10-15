@@ -1,0 +1,52 @@
+{
+  "Original": "Original",
+  "Enhanced": "Melhorado",
+  "Maximum": "Máximo",
+
+  "Various": "Vários",
+  "mGBA uses an emulated BIOS when gba_bios.bin is missing": "mGBA usa BIOS emulada quando gba_bios.bin não existe",
+  "GBA BIOS (optional — mGBA has HLE)": "BIOS do GBA (opcional — o mGBA tem HLE)",
+  "melonDS DS ships with free built-in BIOS and firmware": "melonDS DS traz BIOS e firmware livres embutidos",
+  "Sega CD (USA)": "Sega CD (EUA)",
+  "Mega-CD (Europe)": "Mega-CD (Europa)",
+  "Mega-CD (Japan)": "Mega-CD (Japão)",
+  "Saturn (Japan)": "Saturn (Japão)",
+  "Saturn (USA/Europe)": "Saturn (EUA/Europa)",
+  "Flycast uses an emulated BIOS when dc_boot.bin is missing": "Flycast usa BIOS emulada quando dc_boot.bin não existe",
+  "Boot ROM (optional — Flycast has HLE)": "Boot ROM (opcional — o Flycast tem HLE)",
+  "PS1 BIOS v3.0 (USA)": "PS1 BIOS v3.0 (EUA)",
+  "PS1 BIOS v3.0 (Japan)": "PS1 BIOS v3.0 (Japão)",
+  "PS1 BIOS v3.0 (Europe)": "PS1 BIOS v3.0 (Europa)",
+  "PS1 BIOS v2.2 (USA)": "PS1 BIOS v2.2 (EUA)",
+  "Any PS2 BIOS (4 MiB dump from your console)": "Qualquer BIOS de PS2 (dump de 4 MiB do seu console)",
+
+  "C++ runtime required by PCSX2, Dolphin and DuckStation.": "Runtime C++ exigido por PCSX2, Dolphin e DuckStation.",
+
+  "GameCube and Wii emulator.": "Emulador de GameCube e Wii.",
+  "PlayStation emulator focused on accuracy and performance.": "Emulador de PlayStation focado em precisão e desempenho.",
+  "PlayStation 2 emulator.": "Emulador de PlayStation 2.",
+  "PlayStation Portable emulator.": "Emulador de PlayStation Portable.",
+  "libretro frontend — one core per system.": "Frontend libretro — um core por sistema.",
+
+  "Players 1 and 2 · Xbox controller": "Jogadores 1 e 2 · controle Xbox",
+  "Players 1 and 2 · analog DualShock · rumble": "Jogadores 1 e 2 · DualShock analógico · vibração",
+  "Players 1 and 2 · DualShock 2 · rumble": "Jogadores 1 e 2 · DualShock 2 · vibração",
+  "XInput autoconfig (all cores)": "Autoconfig XInput (todos os cores)",
+
+  "True widescreen": "Widescreen de verdade",
+  "HD textures": "Texturas HD",
+  "CRT filter (old TV)": "Filtro CRT (TV antiga)",
+  "Dolphin's widescreen hack (widens the field of view to 16:9).": "Hack de widescreen do Dolphin (amplia o campo de visão em 16:9).",
+  "Put the pack in User\\Load\\Textures\\<game ID> (Dolphin folder).": "Coloque o pacote em User\\Load\\Textures\\<ID do jogo> (pasta do Dolphin).",
+  "Renders in 16:9 (works well in most 3D games; some show objects disappearing at the edges).": "Renderiza em 16:9 (funciona bem na maioria dos jogos 3D; alguns mostram objetos sumindo nas bordas).",
+  "Put the pack in textures\\<serial> (DuckStation folder).": "Coloque o pacote em textures\\<serial> (pasta da DuckStation).",
+  "Patches that widen the field of view to 16:9 (in games that have a patch).": "Patches que ampliam o campo de visão para 16:9 (nos jogos que têm patch).",
+  "Put the pack in textures\\<serial>\\replacements (PCSX2 folder).": "Coloque o pacote em textures\\<serial>\\replacements (pasta do PCSX2).",
+  "Put the pack in memstick\\PSP\\TEXTURES\\<game ID> (PPSSPP folder).": "Coloque o pacote em memstick\\PSP\\TEXTURES\\<ID do jogo> (pasta do PPSSPP).",
+  "Scanlines and CRT TV mask in every RetroArch game (crt-aperture shader).": "Linhas de varredura e máscara de TV de tubo em todos os jogos do RetroArch (shader crt-aperture).",
+
+  "Nintendo Switch emulator (yuzu successor).": "Emulador de Nintendo Switch (sucessor do yuzu).",
+  "Players 1 and 2 · Pro Controller (Xbox controller)": "Jogadores 1 e 2 · Pro Controller (controle Xbox)",
+  "Console keys (dumped from your Switch with Lockpick_RCM)": "Chaves do console (dump do seu Switch com Lockpick_RCM)",
+  "Title keys (optional)": "Chaves de título (opcional)"
+}

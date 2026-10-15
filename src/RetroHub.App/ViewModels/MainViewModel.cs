@@ -1,7 +1,8 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Threading;
 using RetroHub.Core;
 using RetroHub.Core.Input;
+using RetroHub.Core.Localization;
 
 namespace RetroHub.App.ViewModels;
 
@@ -13,26 +14,26 @@ public partial class MainViewModel : ObservableObject
     public FoldersViewModel Folders { get; }
     public StatsViewModel Stats { get; }
 
-    /// <summary>Versão do executável (Directory.Build.props), ex.: "v1.0.0".</summary>
+    /// <summary>Executable version (Directory.Build.props), e.g. "v1.0.0".</summary>
     public string Version => "v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "?");
 
-    /// <summary>Chave da página atual; os RadioButtons da sidebar se ligam a ela.</summary>
+    /// <summary>Key of the current page; the nav RadioButtons bind to it.</summary>
     [ObservableProperty]
     private string _currentKey = "library";
 
     [ObservableProperty]
     private ObservableObject _currentPage;
 
-    /// <summary>Controles Xbox conectados (XInput), atualizado a cada 2s.</summary>
+    /// <summary>Connected Xbox controllers (XInput), refreshed every 2s.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ControllerText), nameof(ControllerKind))]
     private int _controllersConnected;
 
     public string ControllerText => ControllersConnected switch
     {
-        0 => "Nenhum controle",
-        1 => "Controle Xbox conectado",
-        var n => $"{n} controles Xbox",
+        0 => L.T("No controller"),
+        1 => L.T("Xbox controller connected"),
+        var n => L.F("{0} Xbox controllers", n),
     };
 
     public string ControllerKind => ControllersConnected > 0 ? "ok" : "idle";
@@ -52,12 +53,12 @@ public partial class MainViewModel : ObservableObject
         _currentPage = Library;
         Library.OnActivated();
 
-        // Backup diário dos saves, em segundo plano (não atrasa a abertura).
+        // Daily save backup, in the background (does not delay startup).
         if (services.Backup.IsDue)
             _ = Task.Run(async () =>
             {
                 try { await services.Backup.CreateAsync(); }
-                catch (Exception) { /* tenta de novo amanhã; o botão manual mostra o erro */ }
+                catch (Exception) { /* retries tomorrow; the manual button shows the error */ }
             });
 
         ControllersConnected = XInput.ConnectedSlots().Count;
@@ -70,7 +71,7 @@ public partial class MainViewModel : ObservableObject
 
     public const string StartInTvSetting = "start_tv";
 
-    /// <summary>Ligado ao item "Modo TV" da barra lateral. A janela (MainWindow) abre/fecha o Modo TV.</summary>
+    /// <summary>Bound to the "TV Mode" button. The window (MainWindow) opens/closes TV mode.</summary>
     [ObservableProperty] private bool _isTvOpen;
 
     public event Action<bool>? TvModeChanged;
@@ -79,7 +80,7 @@ public partial class MainViewModel : ObservableObject
 
     public TvViewModel CreateTv()
     {
-        Library.Load(); // pega jogos/capas atualizados
+        Library.Load(); // picks up updated games/covers
         return new TvViewModel(Library, _services);
     }
 

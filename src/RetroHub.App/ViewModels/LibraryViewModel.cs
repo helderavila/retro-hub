@@ -9,15 +9,22 @@ using RetroHub.Core;
 using RetroHub.Core.Covers;
 using RetroHub.Core.Launch;
 using RetroHub.Core.Library;
+using RetroHub.Core.Localization;
 using RetroHub.Core.Scanning;
 using RetroHub.App.Views;
 
 namespace RetroHub.App.ViewModels;
 
-/// <param name="CollectionId">Preenchido quando o chip é uma coleção em vez de um sistema.</param>
+/// <param name="CollectionId">Set when the chip is a collection instead of a system.</param>
 public sealed record SystemChip(string? Id, string Label, int Count, long? CollectionId = null);
 
-/// <summary>Linha da lista lateral (como a da Steam): cabeçalho de grupo recolhível ou um jogo.</summary>
+/// <summary>Sort option for "All games": <see cref="Key"/> is stable (used by the logic), <see cref="Label"/> is translated.</summary>
+public sealed record SortOption(string Key, string Label)
+{
+    public override string ToString() => Label;
+}
+
+/// <summary>Row of the sidebar list (like Steam's): a collapsible group header or a game.</summary>
 public sealed class SidebarEntry(string groupKey, string? header, int count, GameItemViewModel? item, bool collapsed = false)
 {
     public string GroupKey { get; } = groupKey;
@@ -49,20 +56,20 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
     private bool _coversCheckedThisSession;
     private bool _coversRequestedAgain;
 
-    /// <summary>"Jogados recentemente" no início da biblioteca (some durante a busca).</summary>
+    /// <summary>"Recently played" on the library home (hidden while searching).</summary>
     public ObservableCollection<GameItemViewModel> RecentGames { get; } = [];
     public ObservableCollection<GameItemViewModel> FavoriteGames { get; } = [];
 
     public bool ShowRecent => RecentGames.Count > 0 && string.IsNullOrWhiteSpace(SearchText);
     public bool ShowFavorites => FavoriteGames.Count > 0 && string.IsNullOrWhiteSpace(SearchText);
 
-    // ── Lista lateral ───────────────────────────────────────────────────────
+    // ── Sidebar list ────────────────────────────────────────────────────────
 
     public ObservableCollection<SidebarEntry> Sidebar { get; } = [];
     private readonly HashSet<string> _collapsedGroups = [];
     private bool _syncingSelection;
 
-    /// <summary>Jogo marcado na lista lateral; escolher um abre a página dele.</summary>
+    /// <summary>Game selected in the sidebar; picking one opens its page.</summary>
     [ObservableProperty] private SidebarEntry? _selectedEntry;
 
     partial void OnSelectedEntryChanged(SidebarEntry? value)
@@ -71,7 +78,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
             OpenPage(item);
     }
 
-    /// <summary>Favoritos primeiro, depois um grupo por sistema; a busca filtra a lista também.</summary>
+    /// <summary>Favorites first, then one group per system; the search filters the list too.</summary>
     internal void RebuildSidebar()
     {
         var query = SearchText.Trim();
@@ -80,9 +87,9 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
 
         var groups = new List<(string Key, string Title, List<GameItemViewModel> Games)>();
         if (visible.Where(g => g.Favorite).ToList() is { Count: > 0 } favorites)
-            groups.Add(("*", "FAVORITOS", favorites));
+            groups.Add(("*", L.T("FAVORITES"), favorites));
         foreach (var system in visible.GroupBy(g => g.SystemName).OrderBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase))
-            groups.Add((system.Key, system.Key.ToUpper(new System.Globalization.CultureInfo("pt-BR")), system.ToList()));
+            groups.Add((system.Key, system.Key.ToUpper(L.Culture), system.ToList()));
 
         _syncingSelection = true;
         Sidebar.Clear();
@@ -106,22 +113,29 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         RebuildSidebar();
     }
 
-    // ── Ordenação de "Todos os jogos" ───────────────────────────────────────
+    // ── Sorting of "All games" ──────────────────────────────────────────────
 
-    public IReadOnlyList<string> SortModes { get; } = ["Nome", "Jogados recentemente", "Tempo de jogo", "Adicionados recentemente"];
-    [ObservableProperty] private string _sortMode = "Nome";
+    public IReadOnlyList<SortOption> SortModes { get; } =
+    [
+        new("name", L.T("Name")),
+        new("recent", L.T("Recently played")),
+        new("playtime", L.T("Play time")),
+        new("added", L.T("Recently added")),
+    ];
 
-    partial void OnSortModeChanged(string value) => ApplySort();
+    [ObservableProperty] private SortOption _sortMode = null!;
+
+    partial void OnSortModeChanged(SortOption value) => ApplySort();
 
     private void ApplySort()
     {
         if (GamesView is not ListCollectionView view)
             return;
-        Comparison<GameItemViewModel> compare = SortMode switch
+        Comparison<GameItemViewModel> compare = SortMode?.Key switch
         {
-            "Jogados recentemente" => (a, b) => Nullable.Compare(b.Game.LastPlayed, a.Game.LastPlayed),
-            "Tempo de jogo" => (a, b) => b.Game.PlaySeconds.CompareTo(a.Game.PlaySeconds),
-            "Adicionados recentemente" => (a, b) => b.Game.AddedAt.CompareTo(a.Game.AddedAt),
+            "recent" => (a, b) => Nullable.Compare(b.Game.LastPlayed, a.Game.LastPlayed),
+            "playtime" => (a, b) => b.Game.PlaySeconds.CompareTo(a.Game.PlaySeconds),
+            "added" => (a, b) => b.Game.AddedAt.CompareTo(a.Game.AddedAt),
             _ => (_, _) => 0,
         };
         view.CustomSort = Comparer<object>.Create((x, y) =>
@@ -132,7 +146,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         });
     }
 
-    /// <summary>Todos os jogos carregados (o Modo TV filtra e ordena por conta própria).</summary>
+    /// <summary>All loaded games (TV mode filters and sorts on its own).</summary>
     public IReadOnlyList<GameItemViewModel> AllGames => _games;
 
     public bool HasGames => _games.Count > 0;
@@ -142,6 +156,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
     {
         _services = services;
         _navigate = navigate;
+        _sortMode = SortModes[0];
         GamesView = CollectionViewSource.GetDefaultView(_games);
         GamesView.Filter = Matches;
         ApplySort();
@@ -150,7 +165,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
     public void OnActivated()
     {
         Load();
-        // Na primeira abertura, completa capas de jogos adicionados antes desta função existir (ou sem internet).
+        // On first open, fill in covers for games added before this feature existed (or while offline).
         if (!_coversCheckedThisSession)
         {
             _coversCheckedThisSession = true;
@@ -172,8 +187,8 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
 
         var totalSeconds = _games.Sum(g => g.Game.PlaySeconds);
         Summary = _games.Count == 0
-            ? "Seus jogos aparecem aqui depois do primeiro escaneamento."
-            : $"{_games.Count} jogos · {SystemFilters.Count - 1} sistemas · {Shell.FormatPlaytime(totalSeconds)} jogados";
+            ? L.T("Your games show up here after the first scan.")
+            : L.F("{0} games · {1} systems · {2} played", _games.Count, SystemFilters.Count - 1, Shell.FormatPlaytime(totalSeconds));
 
         RecentGames.Clear();
         foreach (var recent in _games.Where(g => g.Game.LastPlayed is not null).OrderByDescending(g => g.Game.LastPlayed).Take(8))
@@ -181,7 +196,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         OnPropertyChanged(nameof(ShowRecent));
         RefreshFavorites();
 
-        // A página aberta continua apontando para o jogo certo depois de recarregar.
+        // The open page keeps pointing at the right game after reloading.
         if (Page is not null && _games.FirstOrDefault(g => g.Game.Id == Page.Item.Game.Id) is null)
             Page = null;
         RebuildSidebar();
@@ -193,16 +208,16 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
 
     private Dictionary<long, HashSet<long>> _collectionMembers = [];
 
-    /// <summary>Chips: Todos · sistemas · coleções (só as que têm jogos).</summary>
+    /// <summary>Chips: All · systems · collections (only the ones that have games).</summary>
     internal void RebuildFilters(string? selectedSystem = null, long? selectedCollection = null)
     {
         _collectionMembers = _services.Database.GetCollectionMembers();
         SystemFilters.Clear();
-        SystemFilters.Add(new SystemChip(null, "Todos", _games.Count));
+        SystemFilters.Add(new SystemChip(null, L.T("All"), _games.Count));
         foreach (var group in _games.GroupBy(g => g.SystemId).OrderBy(g => g.First().SystemShort))
             SystemFilters.Add(new SystemChip(group.Key, group.First().SystemShort, group.Count()));
         foreach (var collection in _services.Database.GetCollections().Where(c => c.Count > 0))
-            SystemFilters.Add(new SystemChip(null, collection.Name, collection.Count, collection.Id));
+            SystemFilters.Add(new SystemChip(null, L.T(collection.Name), collection.Count, collection.Id));
         SelectedSystem = SystemFilters.FirstOrDefault(c => c.CollectionId is { } id ? id == selectedCollection : c.Id == selectedSystem && selectedCollection is null)
                          ?? SystemFilters[0];
     }
@@ -240,15 +255,15 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         var folders = _services.Database.GetRomFolders();
         if (folders.Count == 0)
         {
-            Notice = Notice.Warn("Nenhuma pasta de ROMs configurada. Adicione uma em Pastas.");
+            Notice = Notice.Warn(L.T("No ROM folders set up. Add one in Folders."));
             return;
         }
 
         IsScanning = true;
         Notice = null;
-        ScanStatus = "preparando…";
+        ScanStatus = L.T("preparing…");
         var progress = new Progress<ScanProgress>(p =>
-            ScanStatus = $"{p.FilesSeen} arquivos · {p.Identified} jogos identificados");
+            ScanStatus = L.F("{0} files · {1} games identified", p.FilesSeen, p.Identified));
 
         try
         {
@@ -258,34 +273,37 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
             var gone = _services.Database.RemoveMissingGames(folders);
             Load();
 
-            var message = $"{result.Added} jogos novos, {result.Updated} já conhecidos.";
+            var message = L.F("{0} new games, {1} already known.", result.Added, result.Updated);
             if (gone.Count > 0)
-                message += $" {gone.Count} removido(s) porque o arquivo não existe mais.";
+                message += " " + L.F("{0} removed because the file no longer exists.", gone.Count);
             var excluded = _services.Database.ExcludedCount();
             if (excluded > 0)
-                message += $" {excluded} removido(s) por você continuam fora (Recomeçar biblioteca traz de volta).";
+                message += " " + L.F("{0} removed by you stay out (Reset library brings them back).", excluded);
             if (result.Moved > 0)
-                message += $" {result.Moved} mudaram de pasta (tempo jogado mantido).";
+                message += " " + L.F("{0} moved to another folder (play time kept).", result.Moved);
             if (result.Duplicates.Count > 0)
                 message += " " + DescribeDuplicates(result.Duplicates);
             if (report.Rejected.Count > 0)
             {
                 var names = string.Join(", ", report.Rejected.Take(3).Select(r => Path.GetFileName(r.Path)));
-                message += $" {report.Rejected.Count} arquivo(s) ignorado(s) por não serem jogo — {report.Rejected[0].Reason}: {names}" +
-                           (removed > 0 ? $" ({removed} removido(s) da biblioteca)." : ".");
+                message += " " + (removed > 0
+                    ? L.F("{0} file(s) skipped because they are not games — {1}: {2} ({3} removed from the library).",
+                        report.Rejected.Count, report.Rejected[0].Reason, names, removed)
+                    : L.F("{0} file(s) skipped because they are not games — {1}: {2}.",
+                        report.Rejected.Count, report.Rejected[0].Reason, names));
             }
 
             Notice = report.Unidentified.Count == 0 && report.Rejected.Count == 0 && result.Duplicates.Count == 0
                 ? Notice.Ok(message)
                 : report.Unidentified.Count == 0
                     ? Notice.Warn(message)
-                    : Notice.Warn($"{message} {report.Unidentified.Count} arquivos não identificados — " +
-                                  "coloque-os numa pasta com o nome do sistema (ex.: ps2\\, gamecube\\).");
+                    : Notice.Warn(message + " " + L.F("{0} files not identified — put them in a folder named after the system (e.g. ps2\\, gamecube\\).",
+                        report.Unidentified.Count));
             _ = FetchCoversAsync();
         }
         catch (Exception ex)
         {
-            Notice = Notice.Error($"Falha ao escanear: {ex.Message}");
+            Notice = Notice.Error(L.F("Scan failed: {0}", ex.Message));
         }
         finally
         {
@@ -293,15 +311,15 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         }
     }
 
-    /// <summary>Zera a biblioteca (inclusive jogos removidos manualmente) e escaneia tudo de novo.</summary>
+    /// <summary>Clears the library (including games removed by hand) and scans everything again.</summary>
     [RelayCommand]
     private async Task ResetLibraryAsync()
     {
         if (!ConfirmDialog.Ask(
-                "Recomeçar a biblioteca?",
-                "Todos os jogos saem da lista e as pastas são escaneadas do zero. Jogos que você removeu voltam a aparecer.",
-                "Recomeçar e escanear",
-                "Perde-se: favoritos e tempo jogado.\nFicam: pastas de ROMs, emuladores, BIOS, capas baixadas e configurações.\nNenhum arquivo do disco é apagado."))
+                L.T("Reset the library?"),
+                L.T("All games leave the list and the folders are scanned from scratch. Games you removed come back."),
+                L.T("Reset and scan"),
+                L.T("Lost: favorites and play time.\nKept: ROM folders, emulators, BIOS, downloaded covers and settings.\nNo files on disk are deleted.")))
             return;
 
         _services.Database.ClearLibrary();
@@ -309,7 +327,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         await ScanAsync();
     }
 
-    /// <summary>Página do jogo aberta à direita da lista — null = início da biblioteca.</summary>
+    /// <summary>Game page open to the right of the list — null = library home.</summary>
     [ObservableProperty] private GameDetailsViewModel? _page;
 
     internal void OpenPage(GameItemViewModel item)
@@ -321,7 +339,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         _syncingSelection = false;
     }
 
-    /// <summary>Volta ao início da biblioteca ("Início", Esc, e ações que tiram o jogo da lista).</summary>
+    /// <summary>Back to the library home ("Home", Esc, and actions that take the game off the list).</summary>
     [RelayCommand]
     internal void CloseDetails()
     {
@@ -336,10 +354,10 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         CloseDetails();
         _services.Database.ExcludeGame(item.Game.Id);
         Load();
-        Notice = Notice.Ok($"\"{item.Title}\" saiu da biblioteca e não volta nos próximos escaneamentos. O arquivo continua no disco.");
+        Notice = Notice.Ok(L.F("\"{0}\" was removed from the library and will not come back on future scans. The file stays on disk.", item.Title));
     }
 
-    /// <summary>Manda os arquivos do jogo para a Lixeira (recuperável) e tira da biblioteca.</summary>
+    /// <summary>Sends the game's files to the Recycle Bin (recoverable) and removes it from the library.</summary>
     internal void DeleteFiles(GameItemViewModel item)
     {
         var files = SheetParser.FilesOfGame(item.FilePath);
@@ -350,11 +368,11 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         }
 
         var totalBytes = files.Sum(f => new FileInfo(f).Length);
-        var detail = string.Join("\n", files.Take(8)) + (files.Count > 8 ? $"\n… e mais {files.Count - 8}" : "");
+        var detail = string.Join("\n", files.Take(8)) + (files.Count > 8 ? "\n" + L.F("… and {0} more", files.Count - 8) : "");
         if (!ConfirmDialog.Ask(
-                $"Excluir \"{item.Title}\"?",
-                $"{files.Count} arquivo(s), {FormatSize(totalBytes)}, vão para a Lixeira do Windows. Dá para restaurar de lá.",
-                "Mover para a Lixeira",
+                L.F("Delete \"{0}\"?", item.Title),
+                L.F("{0} file(s), {1}, will go to the Windows Recycle Bin. You can restore them from there.", files.Count, FormatSize(totalBytes)),
+                L.T("Move to Recycle Bin"),
                 detail))
             return;
 
@@ -377,8 +395,8 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         CloseDetails();
         Load();
         Notice = failed.Count == 0
-            ? Notice.Ok($"\"{item.Title}\" foi para a Lixeira ({FormatSize(totalBytes)} liberados ao esvaziá-la).")
-            : Notice.Warn($"Não foi possível excluir: {string.Join(", ", failed)} (em uso ou sem permissão).");
+            ? Notice.Ok(L.F("\"{0}\" was moved to the Recycle Bin ({1} freed once you empty it).", item.Title, FormatSize(totalBytes)))
+            : Notice.Warn(L.F("Could not delete: {0} (in use or no permission).", string.Join(", ", failed)));
     }
 
     internal void OpenFileFolder(GameItemViewModel item)
@@ -396,9 +414,9 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Adicionar jogos",
+            Title = L.T("Add games"),
             Multiselect = true,
-            Filter = "ROMs e imagens de disco|*.*",
+            Filter = L.T("ROMs and disc images") + "|*.*",
         };
         if (dialog.ShowDialog() != true)
             return;
@@ -416,24 +434,24 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         var result = _services.Database.UpsertScanned(identified, source: "manual");
         Load();
 
-        var message = $"{result.Added} jogo(s) adicionado(s).";
+        var message = L.F("{0} game(s) added.", result.Added);
         if (result.Duplicates.Count > 0)
             message += " " + DescribeDuplicates(result.Duplicates);
         if (rejected.Count > 0)
-            message += $" Não são jogos: {string.Join("; ", rejected)}.";
+            message += " " + L.F("Not games: {0}.", string.Join("; ", rejected));
         if (failed > 0)
-            message += $" {failed} arquivo(s) sem sistema reconhecido.";
+            message += " " + L.F("{0} file(s) with no recognized system.", failed);
         Notice = rejected.Count == 0 && failed == 0 && result.Duplicates.Count == 0 ? Notice.Ok(message) : Notice.Warn(message);
         _ = FetchCoversAsync();
     }
 
-    /// <summary>Busca capas pelo nome para os jogos que ainda não têm. Cada card atualiza assim que a capa chega.</summary>
+    /// <summary>Looks up covers by name for games that do not have one yet. Each card updates as soon as its cover arrives.</summary>
     [RelayCommand]
     private async Task FetchCoversAsync()
     {
         if (IsFetchingCovers)
         {
-            _coversRequestedAgain = true; // jogos novos chegaram durante a busca: roda de novo no fim
+            _coversRequestedAgain = true; // new games arrived during the lookup: run again at the end
             return;
         }
 
@@ -447,31 +465,31 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
             if (pending.Count > 0)
             {
                 var done = 0;
-                CoverStatus = $"buscando capas · 0 de {pending.Count}";
+                CoverStatus = L.F("fetching covers · {0} of {1}", 0, pending.Count);
                 var progress = new Progress<CoverFound>(found =>
                 {
-                    // Procura na lista atual: um Load() no meio da busca recria os cards.
+                    // Look in the current list: a Load() in the middle of the lookup recreates the cards.
                     _games.FirstOrDefault(g => g.Game.Id == found.GameId)?.SetCover(found.Path);
-                    CoverStatus = $"buscando capas · {++done} de {pending.Count}";
+                    CoverStatus = L.F("fetching covers · {0} of {1}", ++done, pending.Count);
                 });
                 var (found, missing) = await Task.Run(() =>
                     _services.Covers.FetchMissingAsync(pending.Select(p => p.Game).ToList(), progress));
                 if (missing > 0)
-                    coverSummary = $"{found} capas baixadas · {missing} sem capa encontrada pelo nome (botão direito › Página do jogo › Trocar capa)";
+                    coverSummary = L.F("{0} covers downloaded · {1} with no cover found by name (right-click › Game page › Change cover)", found, missing);
             }
 
-            // Depois das capas, as informações (ano, gênero, sinopse…) — mesma fonte aberta, sem conta.
+            // After the covers, the info (year, genre, synopsis…) — same open source, no account.
             var games = _games.Select(g => g.Game).Where(g => Core.Metadata.GameMetadata.FromJson(g.MetadataJson)?.Name is null).ToList();
             if (games.Count > 0)
             {
-                CoverStatus = "buscando informações dos jogos…";
+                CoverStatus = L.T("fetching game info…");
                 await Task.Run(() => _services.Metadata.FillMissingAsync(games));
             }
             CoverStatus = coverSummary;
         }
         catch (Exception ex)
         {
-            CoverStatus = $"capas indisponíveis: {ex.Message}";
+            CoverStatus = L.F("covers unavailable: {0}", ex.Message);
         }
         finally
         {
@@ -482,13 +500,13 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
             await FetchCoversAsync();
     }
 
-    /// <summary>"2 cópias repetidas ignoradas (Black.iso já está em Downloads\ps2)…" — os arquivos não são apagados.</summary>
+    /// <summary>"2 duplicate copies skipped (Black.iso is already in Downloads\ps2)…" — the files are not deleted.</summary>
     private static string DescribeDuplicates(IReadOnlyList<DuplicateRom> duplicates)
     {
         var examples = duplicates.Take(3).Select(d =>
-            $"{Path.GetFileName(d.Path)} em {Path.GetFileName(Path.GetDirectoryName(d.Path))}\\ = {Path.GetFileName(Path.GetDirectoryName(d.KeptPath))}\\");
-        return $"{duplicates.Count} cópia(s) repetida(s) do mesmo jogo ficaram de fora da biblioteca ({string.Join("; ", examples)}). " +
-               "Os arquivos continuam no disco — apague a cópia extra se quiser liberar espaço.";
+            L.F("{0} in {1}\\ = {2}\\", Path.GetFileName(d.Path), Path.GetFileName(Path.GetDirectoryName(d.Path)), Path.GetFileName(Path.GetDirectoryName(d.KeptPath))));
+        return L.F("{0} duplicate copy(ies) of the same game were left out of the library ({1}). The files stay on disk — delete the extra copy if you want to free up space.",
+            duplicates.Count, string.Join("; ", examples));
     }
 
     [RelayCommand]
@@ -497,7 +515,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
     [RelayCommand]
     private void DismissNotice() => Notice = null;
 
-    /// <summary>Abre no save mais recente que o emulador consegue carregar sozinho; sem save, abre normal.</summary>
+    /// <summary>Opens at the most recent save the emulator can load by itself; without a save, opens normally.</summary>
     internal Task ContinueAsync(GameItemViewModel item, CancellationToken ct = default)
     {
         var latest = _services.Saves.Find(item.Game).FirstOrDefault(s => s.CanLoadDirectly);
@@ -523,7 +541,7 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         }
         catch (System.ComponentModel.Win32Exception ex)
         {
-            Notice = Notice.Error($"Não foi possível abrir o emulador: {ex.Message}");
+            Notice = Notice.Error(L.F("Could not open the emulator: {0}", ex.Message));
         }
         finally
         {

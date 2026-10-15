@@ -1,18 +1,19 @@
+using RetroHub.Core.Localization;
 using RetroHub.Core.Models;
 
 namespace RetroHub.Core.Input;
 
 /// <summary>
-/// Ajustes de imagem e conquistas gravados direto nos arquivos de configuração dos emuladores
-/// (só as chaves envolvidas; o resto do arquivo fica como está).
+/// Graphics and achievements settings written directly into the emulators' configuration files
+/// (only the keys involved; the rest of the file stays as is).
 /// </summary>
 public static class EmulatorSettings
 {
     public const string Original = "Original";
-    public const string Enhanced = "Melhorado";
-    public const string Maximum = "Máximo";
+    public const string Enhanced = "Enhanced";
+    public const string Maximum = "Maximum";
 
-    /// <summary>Qual opção (ex.: "2x", "Máximo") está ativa hoje no arquivo do emulador, ou null se nenhuma bate.</summary>
+    /// <summary>Which option (e.g. "2x", "Maximum") is currently active in the emulator file, or null if none matches.</summary>
     public static string? Current(InstalledEmulator installed, GraphicsConfig graphics, GraphicsOption? option)
     {
         if (option is null)
@@ -26,7 +27,7 @@ public static class EmulatorSettings
     public static void Apply(InstalledEmulator installed, GraphicsConfig graphics, GraphicsOption option, string choice)
     {
         if (!option.Values.TryGetValue(choice, out var settings))
-            throw new ArgumentException($"Opção desconhecida: {choice}");
+            throw new ArgumentException(L.F("Unknown option: {0}", choice));
         IniMerger.Merge(SafePath(installed, graphics.File), graphics.Format, settings);
     }
 
@@ -56,7 +57,7 @@ public static class EmulatorSettings
         }
     }
 
-    /// <summary>Liga as conquistas. Usuário/senha só vão para emuladores que aceitam pelo arquivo (RetroArch).</summary>
+    /// <summary>Enables achievements. User/password only go to emulators that accept them via the file (RetroArch).</summary>
     public static string EnableAchievements(InstalledEmulator installed, AchievementsConfig config, string user, string password)
     {
         var settings = config.Enable.ToDictionary(
@@ -77,7 +78,7 @@ public static class EmulatorSettings
         var root = Path.GetFullPath(installed.InstallDir) + Path.DirectorySeparatorChar;
         var path = Path.GetFullPath(Path.Combine(installed.InstallDir, relative));
         if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException($"Arquivo fora da pasta do emulador: {relative}");
+            throw new InvalidDataException(L.F("File outside the emulator folder: {0}", relative));
         return path;
     }
 
@@ -87,7 +88,7 @@ public static class EmulatorSettings
         return File.Exists(path) ? Read(path, graphics.Format) : null;
     }
 
-    /// <summary>Lê um .ini ("[Seção]" + "chave = valor") ou .cfg plano ("chave = \"valor\"") em (seção, chave) → valor.</summary>
+    /// <summary>Reads an .ini ("[Section]" + "key = value") or flat .cfg ("key = \"value\"") into (section, key) → value.</summary>
     private static Dictionary<(string, string), string> Read(string path, string format)
     {
         var values = new Dictionary<(string, string), string>(new SectionKeyComparer());

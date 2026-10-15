@@ -20,7 +20,7 @@ public class CollectionsTests
         using var dir = new TempDir();
         var (db, game) = Create(dir);
 
-        Assert.Equal(["Zerados", "Quero jogar"], db.GetCollections().Select(c => c.Name));
+        Assert.Equal(["Completed", "Want to play"], db.GetCollections().Select(c => c.Name));
 
         var zerados = db.GetCollections()[0].Id;
         db.SetInCollection(zerados, game, true);

@@ -1,20 +1,20 @@
-using System.Collections.ObjectModel;
-using System.Globalization;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RetroHub.Core;
+using RetroHub.Core.Localization;
 
 namespace RetroHub.App.ViewModels;
 
-/// <summary>Uma barra: rótulo, valor já formatado e proporção 0–1 em relação ao maior da série.</summary>
+/// <summary>One bar: label, preformatted value and 0–1 ratio relative to the largest in the series.</summary>
 public sealed record StatBar(string Label, string ValueText, double Ratio, string Tooltip)
 {
-    /// <summary>Largura (barras horizontais) ou altura (colunas) em px; mínimo de 3 px para valores &gt; 0 continuarem visíveis.</summary>
+    /// <summary>Width (horizontal bars) or height (columns) in px; at least 3 px so values &gt; 0 stay visible.</summary>
     public double Length(double max) => Ratio <= 0 ? 0 : Math.Max(3, Ratio * max);
     public double BarWidth => Length(320);
     public double ColumnHeight => Length(120);
 }
 
-/// <summary>Estatísticas de jogo: totais, horas por sistema, jogos mais jogados e últimos 14 dias.</summary>
+/// <summary>Play stats: totals, hours per system, most played games and the last 14 days.</summary>
 public partial class StatsViewModel(HubServices services) : ObservableObject, IActivatable
 {
     public ObservableCollection<StatBar> BySystem { get; } = [];
@@ -42,22 +42,22 @@ public partial class StatsViewModel(HubServices services) : ObservableObject, IA
 
         Fill(BySystem, played
             .GroupBy(g => g.SystemId)
-            .Select(g => (Label: services.Manifests.GetSystem(g.Key)?.Name ?? g.Key, Seconds: g.Sum(x => x.PlaySeconds), Extra: $"{g.Count()} jogo(s)"))
+            .Select(g => (Label: services.Manifests.GetSystem(g.Key)?.Name is { } name ? L.T(name) : g.Key, Seconds: g.Sum(x => x.PlaySeconds), Extra: L.F("{0} game(s)", g.Count())))
             .OrderByDescending(x => x.Seconds));
 
         Fill(TopGames, played
             .OrderByDescending(g => g.PlaySeconds)
             .Take(8)
-            .Select(g => (Label: g.Title, Seconds: g.PlaySeconds, Extra: services.Manifests.GetSystem(g.SystemId)?.ShortName ?? g.SystemId)));
+            .Select(g => (Label: g.Title, Seconds: g.PlaySeconds, Extra: services.Manifests.GetSystem(g.SystemId)?.ShortName is { } shortName ? L.T(shortName) : g.SystemId)));
 
-        // Últimos 14 dias, inclusive os dias sem jogo (barra zerada).
-        var culture = new CultureInfo("pt-BR");
+        // Last 14 days, including days without play (empty bar).
+        var culture = L.Culture;
         var today = DateTime.Now.Date;
         var perDay = sessions.GroupBy(s => s.StartedAt.ToLocalTime().Date).ToDictionary(g => g.Key, g => g.Sum(s => s.Seconds));
         Fill(LastDays, Enumerable.Range(0, 14).Select(i => today.AddDays(i - 13)).Select(day =>
-            (Label: day == today ? "hoje" : day.ToString("ddd d", culture).Replace(".", ""),
+            (Label: day == today ? L.T("today") : day.ToString("ddd d", culture).Replace(".", ""),
              Seconds: perDay.GetValueOrDefault(day),
-             Extra: day.ToString("dddd, dd/MM", culture))));
+             Extra: $"{day.ToString("dddd", culture)}, {day.ToString("M", culture)}")));
     }
 
     private static void Fill(ObservableCollection<StatBar> target, IEnumerable<(string Label, long Seconds, string Extra)> rows)

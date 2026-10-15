@@ -1,12 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using RetroHub.Core.Localization;
 using RetroHub.Core.Models;
 
 namespace RetroHub.Core.Manifests;
 
 /// <summary>
-/// Carrega e valida systems.json, dependencies.json e emulators/*.json do app, mais systems/*.json e emulators/*.json
-/// da pasta do usuário (o do usuário vale quando o id é o mesmo). <see cref="Reload"/> relê tudo sem reiniciar.
+/// Loads and validates the app's systems.json, dependencies.json and emulators/*.json, plus systems/*.json and emulators/*.json
+/// from the user's folder (the user's wins when the id is the same). <see cref="Reload"/> rereads everything without restarting.
 /// </summary>
 public sealed class ManifestRepository
 {
@@ -39,10 +40,10 @@ public sealed class ManifestRepository
         Reload();
     }
 
-    /// <param name="userDir">Pasta de manifestos do usuário (systems\, emulators\); null = só os do app.</param>
+    /// <param name="userDir">User manifests folder (systems\, emulators\); null = app manifests only.</param>
     public static ManifestRepository Load(string manifestsDir, string? userDir = null) => new(manifestsDir, userDir);
 
-    /// <summary>Relê os manifestos (depois que o usuário adiciona, importa ou remove um emulador).</summary>
+    /// <summary>Rereads the manifests (after the user adds, imports or removes an emulator).</summary>
     public void Reload()
     {
         var systems = Read<SystemsManifest>(Path.Combine(_manifestsDir, "systems.json")).Systems;
@@ -55,7 +56,7 @@ public sealed class ManifestRepository
         var problems = new List<string>();
         if (_userDir is not null)
         {
-            // Os do usuário entram por último e substituem os do app com o mesmo id.
+            // User manifests come last and replace the app's ones with the same id.
             foreach (var (file, extra) in ReadAll<SystemsManifest>(Path.Combine(_userDir, "systems"), problems))
             {
                 systems.RemoveAll(s => extra.Systems.Any(x => string.Equals(x.Id, s.Id, StringComparison.OrdinalIgnoreCase)));
@@ -87,7 +88,7 @@ public sealed class ManifestRepository
         Warnings = [.. problems, .. Validate()];
     }
 
-    /// <summary>Lê todos os .json de uma pasta. Com <paramref name="problems"/>, um arquivo inválido vira aviso em vez de erro.</summary>
+    /// <summary>Reads every .json in a folder. With <paramref name="problems"/>, an invalid file becomes a warning instead of an error.</summary>
     private static List<(string File, T Item)> ReadAll<T>(string dir, List<string>? problems = null)
     {
         var list = new List<(string, T)>();
@@ -101,7 +102,7 @@ public sealed class ManifestRepository
         return list;
     }
 
-    /// <summary>Lê e confere um manifesto de emulador (para importar um arquivo do usuário).</summary>
+    /// <summary>Reads and checks an emulator manifest (to import a user file).</summary>
     public static EmulatorManifest ReadEmulator(string path) => Read<EmulatorManifest>(path);
 
     public SystemDefinition? GetSystem(string id) => _systems.GetValueOrDefault(id);
@@ -120,11 +121,11 @@ public sealed class ManifestRepository
         {
             using var stream = File.OpenRead(path);
             return JsonSerializer.Deserialize<T>(stream, JsonOptions)
-                ?? throw new InvalidDataException($"Manifesto vazio: {path}");
+                ?? throw new InvalidDataException(L.F("Empty manifest: {0}", path));
         }
         catch (JsonException ex)
         {
-            throw new InvalidDataException($"Manifesto inválido ({Path.GetFileName(path)}): {ex.Message}", ex);
+            throw new InvalidDataException(L.F("Invalid manifest ({0}): {1}", Path.GetFileName(path), ex.Message), ex);
         }
     }
 
@@ -133,52 +134,52 @@ public sealed class ManifestRepository
         var warnings = new List<string>();
 
         foreach (var dup in Systems.GroupBy(s => s.Id, StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1))
-            warnings.Add($"Sistema duplicado: {dup.Key}");
+            warnings.Add(L.F("Duplicate system: {0}", dup.Key));
         foreach (var dup in Emulators.GroupBy(e => e.Id, StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1))
-            warnings.Add($"Emulador duplicado: {dup.Key}");
+            warnings.Add(L.F("Duplicate emulator: {0}", dup.Key));
 
         foreach (var system in Systems)
         {
             if (system.DefaultEmulator is { } emu && GetEmulator(emu) is null)
-                warnings.Add($"{system.Id}: defaultEmulator '{emu}' não existe");
+                warnings.Add(L.F("{0}: defaultEmulator '{1}' does not exist", system.Id, emu));
         }
 
         foreach (var emu in Emulators)
         {
             if (emu.Source.Type is not ("github" or "forgejo" or "url" or "local"))
-                warnings.Add($"{emu.Id}: source.type '{emu.Source.Type}' desconhecido");
+                warnings.Add(L.F("{0}: unknown source.type '{1}'", emu.Id, emu.Source.Type));
             if (emu.Source.Type == "local" && string.IsNullOrWhiteSpace(emu.Source.Path))
-                warnings.Add($"{emu.Id}: fonte local exige 'path'");
+                warnings.Add(L.F("{0}: local source requires 'path'", emu.Id));
             if (emu.Source.Type is "github" or "forgejo" && (emu.Source.Repo is null || emu.Source.Asset is null))
-                warnings.Add($"{emu.Id}: fonte github exige 'repo' e 'asset'");
+                warnings.Add(L.F("{0}: github source requires 'repo' and 'asset'", emu.Id));
             if (emu.Source.Type == "url" && emu.Source.Url is null)
-                warnings.Add($"{emu.Id}: fonte url exige 'url'");
+                warnings.Add(L.F("{0}: url source requires 'url'", emu.Id));
             if (string.IsNullOrWhiteSpace(emu.Executable))
-                warnings.Add($"{emu.Id}: 'executable' vazio");
+                warnings.Add(L.F("{0}: empty 'executable'", emu.Id));
 
             if (emu.Controller is { } controller)
             {
                 if (controller.Format is not ("ini" or "flat" or "qt"))
-                    warnings.Add($"{emu.Id}: controller.format '{controller.Format}' desconhecido");
+                    warnings.Add(L.F("{0}: unknown controller.format '{1}'", emu.Id, controller.Format));
                 if (string.IsNullOrWhiteSpace(controller.File) || Path.IsPathRooted(controller.File) || controller.File.Contains(".."))
-                    warnings.Add($"{emu.Id}: controller.file precisa ser relativo à pasta do emulador");
+                    warnings.Add(L.F("{0}: controller.file must be relative to the emulator folder", emu.Id));
             }
 
             foreach (var sys in emu.Systems.Where(s => GetSystem(s) is null))
-                warnings.Add($"{emu.Id}: sistema '{sys}' não existe em systems.json");
+                warnings.Add(L.F("{0}: system '{1}' does not exist in systems.json", emu.Id, sys));
             foreach (var dep in emu.Dependencies.Where(d => GetDependency(d) is null))
-                warnings.Add($"{emu.Id}: dependência '{dep}' não existe em dependencies.json");
+                warnings.Add(L.F("{0}: dependency '{1}' does not exist in dependencies.json", emu.Id, dep));
 
             foreach (var profile in emu.Launch)
             {
                 foreach (var sys in profile.Systems.Where(s => !emu.Systems.Contains(s, StringComparer.OrdinalIgnoreCase)))
-                    warnings.Add($"{emu.Id}: perfil de launch cita '{sys}', que não está em 'systems'");
+                    warnings.Add(L.F("{0}: launch profile mentions '{1}', which is not in 'systems'", emu.Id, sys));
                 if (profile.Core is not null && emu.Cores is null)
-                    warnings.Add($"{emu.Id}: perfil usa core '{profile.Core}' mas não há 'cores'");
+                    warnings.Add(L.F("{0}: profile uses core '{1}' but there is no 'cores'", emu.Id, profile.Core));
             }
 
             foreach (var sys in emu.Systems.Where(s => !emu.Launch.Any(p => p.Systems.Contains(s, StringComparer.OrdinalIgnoreCase))))
-                warnings.Add($"{emu.Id}: sem perfil de launch para '{sys}'");
+                warnings.Add(L.F("{0}: no launch profile for '{1}'", emu.Id, sys));
         }
 
         return warnings;

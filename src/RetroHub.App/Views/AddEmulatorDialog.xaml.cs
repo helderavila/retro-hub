@@ -1,17 +1,18 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Win32;
+using RetroHub.Core.Localization;
 using RetroHub.Core.Models;
 
 namespace RetroHub.App.Views;
 
-/// <summary>Um chip de sistema no diálogo.</summary>
+/// <summary>A system chip in the dialog.</summary>
 public sealed partial class SystemOption(SystemDefinition system) : ObservableObject
 {
     public string Id { get; } = system.Id;
-    public string Label { get; } = system.ShortName.Length > 0 ? system.ShortName : system.Id.ToUpperInvariant();
-    public string Name { get; } = system.Name;
+    public string Label { get; } = system.ShortName.Length > 0 ? L.T(system.ShortName) : system.Id.ToUpperInvariant();
+    public string Name { get; } = L.T(system.Name);
     [ObservableProperty] private bool _isChecked;
 }
 
@@ -22,11 +23,12 @@ public partial class AddEmulatorDialog : Window
     private readonly List<SystemOption> _systems;
     private readonly Func<NewEmulator, string?> _submit;
 
-    /// <param name="submit">Tenta adicionar; devolve a mensagem de erro (ou null se deu certo).</param>
+    /// <param name="submit">Tries to add; returns the error message (or null on success).</param>
     private AddEmulatorDialog(IEnumerable<SystemDefinition> systems, Func<NewEmulator, string?> submit)
     {
         InitializeComponent();
-        _systems = systems.OrderBy(s => s.Name, StringComparer.CurrentCultureIgnoreCase).Select(s => new SystemOption(s)).ToList();
+        ArgsHint.Text = L.T("{rom} game file · {romDir} its folder · {romName} name without extension · {emuDir} emulator folder. E.g.: \"{rom}\" --fullscreen");
+        _systems = systems.Select(s => new SystemOption(s)).OrderBy(s => s.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
         SystemsList.ItemsSource = _systems;
         _submit = submit;
     }
@@ -42,7 +44,7 @@ public partial class AddEmulatorDialog : Window
 
     private void Browse_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFileDialog { Title = "Executável do emulador", Filter = "Programas (*.exe)|*.exe" };
+        var dialog = new OpenFileDialog { Title = L.T("Emulator executable"), Filter = L.T("Programs (*.exe)|*.exe") };
         if (dialog.ShowDialog(this) != true)
             return;
         ExeBox.Text = dialog.FileName;

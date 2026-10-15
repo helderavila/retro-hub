@@ -24,7 +24,7 @@ public enum XInputButtons : ushort
 
 public readonly record struct GamepadState(XInputButtons Buttons, short LeftX, short LeftY, byte LeftTrigger, byte RightTrigger);
 
-/// <summary>Controles Xbox via XInput (slots 0–3). Windows 8+ (xinput1_4.dll). Funciona mesmo sem a janela em foco.</summary>
+/// <summary>Xbox controllers via XInput (slots 0–3). Windows 8+ (xinput1_4.dll). Works even when the window is not focused.</summary>
 public static class XInput
 {
     private const uint ErrorSuccess = 0;
@@ -42,7 +42,7 @@ public static class XInput
     [DllImport("xinput1_4.dll", EntryPoint = "XInputGetState")]
     private static extern uint GetState(uint userIndex, out State state);
 
-    /// <summary>Slots com controle conectado (0 = jogador 1).</summary>
+    /// <summary>Slots with a connected controller (0 = player 1).</summary>
     public static IReadOnlyList<int> ConnectedSlots()
     {
         var slots = new List<int>();
@@ -64,7 +64,7 @@ public static class XInput
         }
         catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException)
         {
-            return false; // sem XInput no sistema
+            return false; // no XInput on this system
         }
     }
 }

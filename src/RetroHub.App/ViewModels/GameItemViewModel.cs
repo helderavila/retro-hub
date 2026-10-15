@@ -3,6 +3,7 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RetroHub.Core;
+using RetroHub.Core.Localization;
 using RetroHub.Core.Models;
 using RetroHub.Core.Scanning;
 
@@ -31,8 +32,8 @@ public partial class GameItemViewModel : ObservableObject
         Game = game;
         _owner = owner;
         _favorite = game.Favorite;
-        SystemShort = system?.ShortName ?? game.SystemId.ToUpperInvariant();
-        SystemName = system?.Name ?? game.SystemId;
+        SystemShort = L.T(system?.ShortName ?? game.SystemId.ToUpperInvariant());
+        SystemName = L.T(system?.Name ?? game.SystemId);
         _coverPath = CoverResolver.Find(game, paths);
 
         var words = game.Title.Split(' ', StringSplitOptions.RemoveEmptyEntries)
@@ -64,7 +65,7 @@ public partial class GameItemViewModel : ObservableObject
                 }
                 catch (Exception)
                 {
-                    // capa corrompida: fica o placeholder
+                    // corrupt cover: the placeholder stays
                 }
             }
             return _cover;
@@ -78,7 +79,7 @@ public partial class GameItemViewModel : ObservableObject
         OnPropertyChanged(nameof(LastPlayedText));
     }
 
-    /// <summary>Chamado quando a capa termina de baixar — o card troca o placeholder pela imagem.</summary>
+    /// <summary>Called when the cover finishes downloading — the card swaps the placeholder for the image.</summary>
     public void SetCover(string path)
     {
         Game.CoverPath = path;
@@ -107,11 +108,11 @@ public partial class GameItemViewModel : ObservableObject
 
     public string LastPlayedText => Game.LastPlayed is not { } t ? "" : (DateTimeOffset.Now - t) switch
     {
-        { TotalHours: < 1 } => "agora há pouco",
-        { TotalDays: < 1 } d => $"há {(int)d.TotalHours} h",
-        { TotalDays: < 2 } => "ontem",
-        { TotalDays: < 30 } d => $"há {(int)d.TotalDays} dias",
-        _ => t.ToLocalTime().ToString("dd/MM/yyyy"),
+        { TotalHours: < 1 } => L.T("just now"),
+        { TotalDays: < 1 } d => L.F("{0} h ago", (int)d.TotalHours),
+        { TotalDays: < 2 } => L.T("yesterday"),
+        { TotalDays: < 30 } d => L.F("{0} days ago", (int)d.TotalDays),
+        _ => L.Date(t),
     };
 
     [RelayCommand]

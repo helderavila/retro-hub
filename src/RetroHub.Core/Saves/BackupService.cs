@@ -7,8 +7,8 @@ namespace RetroHub.Core.Saves;
 public sealed record BackupResult(string ZipPath, int Files, long Bytes);
 
 /// <summary>
-/// Copia memory cards, saves e save states de todos os emuladores instalados para um .zip com data.
-/// Destino configurável (ex.: uma pasta do OneDrive/Google Drive para ficar na nuvem). Mantém os 10 mais recentes.
+/// Copies memory cards, saves and save states of all installed emulators into a dated .zip.
+/// Configurable destination (e.g. a OneDrive/Google Drive folder to keep it in the cloud). Keeps the 10 most recent.
 /// </summary>
 public sealed class BackupService(AppPaths paths, ManifestRepository manifests, LibraryDatabase db)
 {
@@ -22,7 +22,7 @@ public sealed class BackupService(AppPaths paths, ManifestRepository manifests, 
     public DateTimeOffset? LastBackup =>
         long.TryParse(db.GetSetting(LastSetting), out var unix) ? DateTimeOffset.FromUnixTimeSeconds(unix) : null;
 
-    /// <summary>Backup automático ligado por padrão.</summary>
+    /// <summary>Automatic backup is on by default.</summary>
     public bool AutoEnabled => db.GetSetting(AutoSetting) != "0";
 
     public bool IsDue => AutoEnabled && (LastBackup is null || DateTimeOffset.UtcNow - LastBackup > TimeSpan.FromDays(1));
@@ -63,14 +63,14 @@ public sealed class BackupService(AppPaths paths, ManifestRepository manifests, 
                         var entryName = Path.Combine(emulatorId, Path.GetRelativePath(installDir, file)).Replace('\\', '/');
                         try
                         {
-                            // FileShare.ReadWrite: o emulador pode estar aberto com o memory card.
+                            // FileShare.ReadWrite: the emulator may be open with the memory card.
                             using var input = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                             using var output = zip.CreateEntry(entryName, CompressionLevel.Optimal).Open();
                             input.CopyTo(output);
                             files++;
                             bytes += input.Length;
                         }
-                        catch (IOException) { /* arquivo travado: fica para o próximo backup */ }
+                        catch (IOException) { /* locked file: left for the next backup */ }
                     }
                 }
             }

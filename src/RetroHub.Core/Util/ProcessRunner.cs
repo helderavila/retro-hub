@@ -5,7 +5,7 @@ namespace RetroHub.Core.Util;
 
 public static class ProcessRunner
 {
-    /// <summary>Roda um processo sem janela, repassando stdout/stderr linha a linha.</summary>
+    /// <summary>Runs a process without a window, forwarding stdout/stderr line by line.</summary>
     public static async Task<int> RunAsync(string fileName, string arguments, Action<string>? onLine, CancellationToken ct)
     {
         var psi = new ProcessStartInfo(fileName, arguments)
@@ -21,7 +21,7 @@ public static class ProcessRunner
         using var process = new Process { StartInfo = psi };
         DataReceivedEventHandler handler = (_, e) =>
         {
-            // winget desenha spinners ("-", "\", "|", "/") e barras; ignora linhas curtas demais.
+            // winget draws spinners ("-", "\", "|", "/") and bars; ignore lines that are too short.
             if (e.Data is { } line && line.Trim().Length > 2)
                 onLine?.Invoke(line.TrimEnd());
         };
@@ -38,7 +38,7 @@ public static class ProcessRunner
         }
         catch (OperationCanceledException)
         {
-            try { process.Kill(entireProcessTree: true); } catch { /* já saiu */ }
+            try { process.Kill(entireProcessTree: true); } catch { /* already exited */ }
             throw;
         }
 

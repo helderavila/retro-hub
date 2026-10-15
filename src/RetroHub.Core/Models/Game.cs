@@ -16,7 +16,7 @@ public sealed class Game
     public DateTimeOffset? LastPlayed { get; set; }
     public DateTimeOffset AddedAt { get; set; }
     public string? EmulatorOverride { get; set; }
-    /// <summary>"scan" ou "manual".</summary>
+    /// <summary>"scan" or "manual".</summary>
     public string Source { get; set; } = "scan";
 }
 
@@ -27,7 +27,7 @@ public sealed class InstalledEmulator
     public string InstallDir { get; set; } = "";
     public string ExecutablePath { get; set; } = "";
     public string? Sha256 { get; set; }
-    /// <summary>True quando o hash baixado foi conferido contra um hash publicado.</summary>
+    /// <summary>True when the downloaded hash was checked against a published hash.</summary>
     public bool Verified { get; set; }
     public DateTimeOffset InstalledAt { get; set; }
 }

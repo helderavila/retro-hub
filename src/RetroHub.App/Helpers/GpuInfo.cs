@@ -4,10 +4,10 @@ using RetroHub.Core.Input;
 
 namespace RetroHub.App.Helpers;
 
-/// <summary>Placa de vídeo e nível de imagem recomendado para ela.</summary>
+/// <summary>Graphics card and the image quality level recommended for it.</summary>
 public static partial class GpuInfo
 {
-    // Classe de dispositivos "Adaptadores de vídeo".
+    // "Display adapters" device class.
     private const string DisplayClass = @"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
 
     [GeneratedRegex(@"RTX\s*(3|4|5)\d{3}|RX\s*(6|7|9)\d{3}|Arc\s*(A7|B5|B7)", RegexOptions.IgnoreCase)]
@@ -18,13 +18,13 @@ public static partial class GpuInfo
 
     private static readonly Lazy<IReadOnlyList<string>> Adapters = new(ReadAdapters);
 
-    /// <summary>Nome da melhor placa (a dedicada, quando há integrada + dedicada).</summary>
+    /// <summary>Name of the best card (the dedicated one when there is integrated + dedicated).</summary>
     public static string? BestAdapter =>
         Adapters.Value.FirstOrDefault(a => HighEnd().IsMatch(a))
         ?? Adapters.Value.FirstOrDefault(a => Dedicated().IsMatch(a))
         ?? Adapters.Value.FirstOrDefault();
 
-    /// <summary>RTX 30/40/50, RX 6000+ → Máximo · outras dedicadas → Melhorado · só integrada → Original.</summary>
+    /// <summary>RTX 30/40/50, RX 6000+ → Maximum · other dedicated → Enhanced · integrated only → Original.</summary>
     public static string RecommendedPreset => BestAdapter switch
     {
         { } name when HighEnd().IsMatch(name) => EmulatorSettings.Maximum,

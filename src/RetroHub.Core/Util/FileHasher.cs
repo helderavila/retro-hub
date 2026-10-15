@@ -25,8 +25,8 @@ public static class FileHasher
     }
 
     /// <summary>
-    /// Impressão digital rápida para arquivos grandes: SHA-1 de 3 trechos de 1 MiB (início, meio, fim) + tamanho.
-    /// Duas cópias do mesmo .iso de 4 GB dão o mesmo valor lendo só 3 MiB de cada.
+    /// Fast fingerprint for large files: SHA-1 of 3 chunks of 1 MiB (start, middle, end) + size.
+    /// Two copies of the same 4 GB .iso give the same value while reading only 3 MiB of each.
     /// </summary>
     public static string SampleFingerprint(string path)
     {

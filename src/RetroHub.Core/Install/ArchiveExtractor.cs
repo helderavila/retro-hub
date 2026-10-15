@@ -6,7 +6,7 @@ namespace RetroHub.Core.Install;
 
 public static class ArchiveExtractor
 {
-    /// <summary>Extrai .zip (nativo) ou .7z/.rar/.tar.* (SharpCompress) para <paramref name="destination"/>.</summary>
+    /// <summary>Extracts .zip (built-in) or .7z/.rar/.tar.* (SharpCompress) to <paramref name="destination"/>.</summary>
     public static void Extract(string archivePath, string destination, bool stripRoot)
     {
         Directory.CreateDirectory(destination);
@@ -17,7 +17,7 @@ public static class ArchiveExtractor
         }
         else
         {
-            // Extração sequencial (eficiente em 7z "sólido"); o SharpCompress bloqueia path traversal.
+            // Sequential extraction (efficient for "solid" 7z); SharpCompress blocks path traversal.
             ArchiveFactory.WriteToDirectory(archivePath, destination,
                 new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
         }
@@ -26,7 +26,7 @@ public static class ArchiveExtractor
             StripSingleRoot(destination);
     }
 
-    /// <summary>Se a pasta contém apenas uma subpasta (ex.: "RetroArch-Win64/"), sobe o conteúdo dela.</summary>
+    /// <summary>If the folder contains only one subfolder (e.g. "RetroArch-Win64/"), moves its contents up.</summary>
     private static void StripSingleRoot(string dir)
     {
         if (Directory.GetFiles(dir).Length != 0)
@@ -41,7 +41,7 @@ public static class ArchiveExtractor
         Directory.Move(temp, dir);
     }
 
-    /// <param name="preserve">Caminhos relativos que não são sobrescritos se já existirem (configurações do usuário).</param>
+    /// <param name="preserve">Relative paths not overwritten if they already exist (user settings).</param>
     public static void CopyDirectory(string source, string destination, IReadOnlyCollection<string>? preserve = null)
     {
         var keep = new HashSet<string>((preserve ?? []).Select(p => p.Replace('/', Path.DirectorySeparatorChar)), StringComparer.OrdinalIgnoreCase);
@@ -52,7 +52,7 @@ public static class ArchiveExtractor
         {
             var relative = Path.GetRelativePath(source, file);
             var target = Path.Combine(destination, relative);
-            // Arquivo listado, ou qualquer coisa dentro de uma pasta listada (ex.: uma pasta "user" de modo portátil).
+            // A listed file, or anything inside a listed folder (e.g. a portable-mode "user" folder).
             if (File.Exists(target) && keep.Any(k => relative.Equals(k, StringComparison.OrdinalIgnoreCase)
                                                     || relative.StartsWith(k.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
                 continue;

@@ -1,11 +1,11 @@
 {
   "id": "pcsx2",
   "name": "PCSX2",
-  "description": "Emulador de PlayStation 2.",
+  "description": "PlayStation 2 emulator.",
   "homepage": "https://pcsx2.net",
   "license": "GPL-3.0",
   "systems": ["ps2"],
-  // Última release estável; o hash vem do campo "digest" do asset no GitHub.
+  // Latest stable release; the hash comes from the asset's "digest" field on GitHub.
   "source": {
     "type": "github",
     "repo": "PCSX2/pcsx2",
@@ -21,11 +21,11 @@
   "launch": [
     { "systems": ["ps2"], "args": "-batch -fullscreen -- \"{rom}\"" }
   ],
-  // Controle no Pad 1 via SDL: Xbox, DualShock/DualSense e a maioria dos controles USB.
+  // Controller on Pad 1 via SDL: Xbox, DualShock/DualSense and most USB controllers.
   "controller": {
     "file": "inis/PCSX2.ini",
     "format": "ini",
-    "description": "Jogadores 1 e 2 · DualShock 2 · vibração",
+    "description": "Players 1 and 2 · DualShock 2 · rumble",
     "settings": {
       "Pad2": {
         "Type": "DualShock2",
@@ -53,7 +53,7 @@
       }
     }
   },
-  // Save states: sstates/SLUS-20946 (CRC).01.p2s (o .p2s é um zip com Screenshot.png dentro).
+  // Save states: sstates/SLUS-20946 (CRC).01.p2s (the .p2s is a zip with Screenshot.png inside).
   "saves": {
     "states": [ { "dir": "sstates", "pattern": "{serial} (*).*.p2s", "slot": "\\.(\\d+)\\.p2s$" } ],
     "loadStateArgs": "-batch -fullscreen -statefile \"{state}\" -- \"{rom}\"",
@@ -64,24 +64,24 @@
     "file": "inis/PCSX2.ini",
     "presets": { "values": {
       "Original": { "EmuCore/GS": { "upscale_multiplier": "1", "MaxAnisotropy": "0" } },
-      "Melhorado": { "EmuCore/GS": { "upscale_multiplier": "3", "MaxAnisotropy": "16" } },
-      "Máximo": { "EmuCore/GS": { "upscale_multiplier": "6", "MaxAnisotropy": "16" } } } },
+      "Enhanced": { "EmuCore/GS": { "upscale_multiplier": "3", "MaxAnisotropy": "16" } },
+      "Maximum": { "EmuCore/GS": { "upscale_multiplier": "6", "MaxAnisotropy": "16" } } } },
     "resolution": { "values": { "1x": { "EmuCore/GS": { "upscale_multiplier": "1" } }, "2x": { "EmuCore/GS": { "upscale_multiplier": "2" } }, "3x": { "EmuCore/GS": { "upscale_multiplier": "3" } }, "4x": { "EmuCore/GS": { "upscale_multiplier": "4" } }, "6x": { "EmuCore/GS": { "upscale_multiplier": "6" } }, "8x": { "EmuCore/GS": { "upscale_multiplier": "8" } } } },
     "aspect": { "values": {
       "Auto": { "EmuCore/GS": { "AspectRatio": "Auto 4:3/3:2" } },
       "4:3": { "EmuCore/GS": { "AspectRatio": "4:3" } },
       "16:9": { "EmuCore/GS": { "AspectRatio": "16:9" } } } },
     "toggles": [
-      { "id": "widescreen", "label": "Widescreen de verdade",
-        "hint": "Patches que ampliam o campo de visão para 16:9 (nos jogos que têm patch).",
+      { "id": "widescreen", "label": "True widescreen",
+        "hint": "Patches that widen the field of view to 16:9 (in games that have a patch).",
         "on": { "EmuCore": { "EnableWideScreenPatches": "true" }, "EmuCore/GS": { "AspectRatio": "16:9" } },
         "off": { "EmuCore": { "EnableWideScreenPatches": "false" }, "EmuCore/GS": { "AspectRatio": "Auto 4:3/3:2" } } },
-      { "id": "hdtextures", "label": "Texturas HD",
-        "hint": "Coloque o pacote em textures\\<serial>\\replacements (pasta do PCSX2).",
+      { "id": "hdtextures", "label": "HD textures",
+        "hint": "Put the pack in textures\\<serial>\\replacements (PCSX2 folder).",
         "on": { "EmuCore/GS": { "LoadTextureReplacements": "true" } },
         "off": { "EmuCore/GS": { "LoadTextureReplacements": "false" } } }
     ]
   },
-  // Login das conquistas é feito dentro do PCSX2 (Configurações › Conquistas); aqui só ligamos.
+  // Achievements login is done inside PCSX2 (Settings › Achievements); here we only enable them.
   "achievements": { "file": "inis/PCSX2.ini", "enable": { "Achievements": { "Enabled": "true" } } }
 }

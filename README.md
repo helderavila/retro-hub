@@ -1,139 +1,146 @@
+<p align="center"><b>English</b> · <a href="README.pt-BR.md">Português</a></p>
+
 <p align="center">
   <img src="docs/img/banner.png" alt="Retro Hub" width="720">
 </p>
 
 <p align="center">
-  <b>Seus jogos antigos num lugar só.</b><br>
-  Um hub para Windows que instala emuladores, organiza a biblioteca e abre cada jogo no emulador certo, com mouse ou controle.
+  <b>All your classic games in one place.</b><br>
+  A Windows hub that installs emulators, organizes your library and opens each game in the right emulator, with a mouse or a controller.
 </p>
 
 <p align="center">
-  <a href="../../releases/latest">Baixar</a> ·
-  <a href="#como-usar">Como usar</a> ·
-  <a href="#adicionar-emuladores">Adicionar emuladores</a> ·
-  <a href="#compilar">Compilar</a> ·
-  <a href="#aviso-legal">Aviso legal</a>
+  <a href="../../releases/latest">Download</a> ·
+  <a href="#getting-started">Getting started</a> ·
+  <a href="#adding-emulators">Adding emulators</a> ·
+  <a href="#building">Building</a> ·
+  <a href="#legal">Legal</a>
 </p>
 
 ---
 
-![Biblioteca do Retro Hub](docs/img/biblioteca.png)
+![Retro Hub library](docs/img/library.png)
 
-> As capturas usam uma biblioteca de demonstração com jogos fictícios.
+> Screenshots use a demo library with fictional games.
 
-## O que ele faz
+## What it does
 
-- **Instala emuladores com um clique.** Baixa as versões portáteis das fontes oficiais, confere o SHA-256 quando a fonte publica, extrai e deixa configurado. Dependências (Visual C++) vêm pelo winget.
-- **Reconhece seus jogos sozinho.** Escaneia as pastas de ROMs e descobre o sistema pela extensão, pelo cabeçalho do arquivo (ISO 9660, CHD, GameCube/Wii, Sega…) ou pelo nome da pasta. Arquivos citados por `.cue`/`.gdi`/`.m3u` não viram jogos repetidos.
-- **Biblioteca no estilo das lojas de jogos.** Lista lateral por sistema e favoritos, início com jogados recentemente, todos os jogos com ordenação e filtros, e uma página para cada jogo.
-- **Capas e informações automáticas.** Capas, tela de título e imagens do jogo vêm do acervo aberto do libretro; ano, gênero, desenvolvedora e sinopse vêm do libretro-database. Dá para editar à mão.
-- **Controle Xbox configurado sozinho.** Jogadores 1 e 2 são mapeados em cada emulador na primeira vez que um jogo abre nele, sem desfazer o que você mudar depois.
-- **Modo TV.** Tela cheia para jogar no sofá, navegada só pelo controle.
-- **Saves.** Lista os save states com miniatura, abre o jogo direto no último save e faz backup diário em `.zip`.
-- **Qualidade de imagem.** Níveis Original / Melhorado / Máximo (recomendado conforme a sua placa de vídeo), resolução interna, proporção, widescreen, texturas HD e filtro CRT.
-- **Tempo jogado e estatísticas** por jogo, por sistema e por mês.
-- **Conquistas** do RetroAchievements no RetroArch, PCSX2 e DuckStation.
-- **Seus próprios emuladores.** Aponte um `.exe` que você já tem ou importe um manifesto `.json` ([veja abaixo](#adicionar-emuladores)).
+- **One-click emulators.** Downloads portable builds from official sources, checks the SHA-256 when the source publishes one, extracts and configures them. Dependencies (Visual C++) come through winget.
+- **Recognizes your games.** Scans your ROM folders and works out the system from the extension, the file header (ISO 9660, CHD, GameCube/Wii, Sega…) or the folder name. Files referenced by `.cue`/`.gdi`/`.m3u` do not show up as duplicates.
+- **A game-store style library.** Sidebar grouped by system and favorites, a home with recently played games, all games with sorting and filters, and a page for every game.
+- **Covers and info, automatically.** Box art, title screens and in-game shots from the open libretro archive; year, genre, developer and synopsis from libretro-database. Everything is editable.
+- **Xbox controller set up for you.** Players 1 and 2 are mapped in each emulator the first time a game opens in it, without undoing changes you make later.
+- **TV mode.** Full screen for the couch, driven entirely by the controller.
+- **Saves.** Save states with thumbnails, "continue from the last save", and a daily `.zip` backup.
+- **Graphics quality.** Original / Enhanced / Maximum presets (recommended for your graphics card), internal resolution, aspect ratio, widescreen, HD textures and a CRT filter.
+- **Play time and stats** per game, per system and per month.
+- **RetroAchievements** in RetroArch, PCSX2 and DuckStation.
+- **Your own emulators.** Point to an `.exe` you already have or import a `.json` manifest ([see below](#adding-emulators)).
+- **English and Portuguese.** Pick the language in the installer or in **Folders › Preferences › Language**.
 
 | | |
 |---|---|
-| ![Página do jogo](docs/img/pagina-do-jogo.png) | ![Emuladores](docs/img/emuladores.png) |
-| ![Modo TV](docs/img/modo-tv.png) | ![Estatísticas](docs/img/estatisticas.png) |
+| ![Game page](docs/img/game-page.png) | ![Emulators](docs/img/emulators.png) |
+| ![TV mode](docs/img/tv-mode.png) | ![Stats](docs/img/stats.png) |
 
-## Sistemas e emuladores incluídos
+## Included systems and emulators
 
-| Emulador | Sistemas |
+| Emulator | Systems |
 |---|---|
-| RetroArch (cores libretro) | NES, SNES, Nintendo 64, Game Boy / Color / Advance, Nintendo DS, Master System, Mega Drive, Sega CD, Saturn, Dreamcast, Arcade (FinalBurn Neo) |
+| RetroArch (libretro cores) | NES, SNES, Nintendo 64, Game Boy / Color / Advance, Nintendo DS, Master System, Mega Drive / Genesis, Sega CD, Saturn, Dreamcast, Arcade (FinalBurn Neo) |
 | DuckStation | PlayStation |
 | PCSX2 | PlayStation 2 |
 | PPSSPP | PlayStation Portable |
 | Dolphin | GameCube, Wii |
 
-Qualquer outro emulador para Windows pode ser adicionado por você.
+Any other Windows emulator can be added by you.
 
-## Como usar
+## Getting started
 
-1. Baixe o instalador em [Releases](../../releases/latest) e instale. Ele não pede administrador e não precisa do .NET instalado.
-2. Em **Pastas**, adicione as pastas onde ficam as suas ROMs e clique em **Escanear**.
-3. Em **Emuladores**, clique em **Instalar selecionados** (ou instale só os que quiser).
-4. Se algum sistema precisar de BIOS, importe na tela **BIOS** os arquivos do seu console: arraste a pasta ou o `.zip` e eles são reconhecidos pelo MD5.
-5. Clique num jogo para ver a página dele, ou dê dois cliques para jogar.
+1. Download the installer from [Releases](../../releases/latest) and run it. It does not ask for administrator rights and does not need .NET installed.
+2. In **Folders**, add the folders that hold your ROMs, then click **Scan folders** in the **Library**.
+3. In **Emulators**, click **Install selected** (or install only the ones you want).
+4. If a system needs a BIOS, import your console's files in the **BIOS** screen: drag the folder or the `.zip` in and they are recognized by MD5.
+5. Click a game to open its page, or double-click it to play.
 
-A biblioteca, os emuladores e os saves ficam em `%LOCALAPPDATA%\RetroHub` e continuam lá depois de atualizar ou desinstalar. Com um arquivo `portable.txt` ao lado do `RetroHub.exe`, tudo vai para `.\data`.
+Your library, emulators and saves live in `%LOCALAPPDATA%\RetroHub` and stay there after updating or uninstalling. With a `portable.txt` file next to `RetroHub.exe`, everything goes to `.\data` instead.
 
 ### BIOS
 
-O Retro Hub **não baixa BIOS**: são firmwares com direitos autorais. Use os dumps do seu console.
+Retro Hub **does not download BIOS files**: they are copyrighted firmware. Use dumps from your own consoles.
 
-- **Não precisam:** NES, SNES, N64, GB/GBC, Master System, Mega Drive, GameCube/Wii, PSP, Arcade.
-- **Funcionam sem, com BIOS emulada:** GBA, Nintendo DS e Dreamcast.
-- **Precisam do dump:** PlayStation, PlayStation 2, Sega CD e Saturn.
+- **Not needed:** NES, SNES, N64, GB/GBC, Master System, Mega Drive, GameCube/Wii, PSP, Arcade.
+- **Work without one (emulated BIOS):** GBA, Nintendo DS and Dreamcast.
+- **Need the dump:** PlayStation, PlayStation 2, Sega CD and Saturn.
 
-### Modo TV
+### TV mode
 
-![Página do jogo no Modo TV](docs/img/modo-tv-pagina.png)
+![Game page in TV mode](docs/img/tv-game-page.png)
 
-Abre pelo botão **Modo TV**, por **F11**, pelo atalho "Retro Hub (Modo TV)" ou com `RetroHub.exe --tv`.
+Open it with the **TV Mode** button, **F11**, the "Retro Hub (TV mode)" shortcut or `RetroHub.exe --tv`.
 
-| Controle | Teclado | Ação |
+| Controller | Keyboard | Action |
 |---|---|---|
-| ← → / analógico | ← → | navegar |
-| LB / RB (ou ↑) | PgUp / PgDn, Q / E | trocar aba (Todos, Favoritos, sistemas, coleções) |
-| ↓ | ↓ | página do jogo (lá dentro: ← → troca de jogo, ↑ ↓ rola, B volta) |
-| A | Enter | jogar |
-| X | C | continuar do último save |
-| Y | F | favoritar |
-| B | Esc | sair do Modo TV |
-| Back + Start (segurar 1 s) | — | fechar o jogo e voltar |
+| ← → / stick | ← → | browse |
+| LB / RB (or ↑) | PgUp / PgDn, Q / E | switch tab (All, Favorites, systems, collections) |
+| ↓ | ↓ | game page (inside it: ← → switches game, ↑ ↓ scrolls, B goes back) |
+| A | Enter | play |
+| X | C | continue from the last save |
+| Y | F | favorite |
+| B | Esc | leave TV mode |
+| Back + Start (hold 1 s) | — | close the game and return |
 
-## Adicionar emuladores
+## Adding emulators
 
-Na tela **Emuladores**:
+In the **Emulators** screen:
 
-- **Adicionar emulador**: escolha o `.exe` de um emulador que você já tem, marque os sistemas e ajuste os argumentos. Nada é baixado, copiado ou alterado na pasta dele, e remover da lista não apaga os arquivos.
-- **Importar .json**: traga um manifesto completo, no mesmo formato dos que vêm com o app (download, controle, imagem, saves).
+- **Add emulator**: pick the `.exe` of an emulator you already have, tick its systems and adjust the arguments. Nothing is downloaded, copied or changed in its folder, and removing it from the list does not delete its files.
+- **Import .json**: bring in a full manifest, in the same format as the bundled ones (download, controller, graphics, saves).
 
-Os seus manifestos ficam em `%LOCALAPPDATA%\RetroHub\manifests` e não são apagados nas atualizações:
+Your manifests live in `%LOCALAPPDATA%\RetroHub\manifests` and are never deleted by updates:
 
 ```
 %LOCALAPPDATA%\RetroHub\manifests\
-  emulators\*.json   emuladores (o mesmo id de um emulador do app substitui o do app)
-  systems\*.json     sistemas novos: { "systems": [ { "id": …, "extensions": […], … } ] }
+  emulators\*.json   emulators (the same id as a bundled emulator replaces it)
+  systems\*.json     new systems: { "systems": [ { "id": …, "extensions": […], … } ] }
 ```
 
-### Formato do manifesto
+### Manifest format
 
 ```jsonc
 {
-  "id": "meu-emulador",                 // letras minúsculas, números e hífen
-  "name": "Meu Emulador",
-  "systems": ["snes", "gba"],           // ids de systems.json
-  "source": { "type": "local", "path": "D:\\Emuladores\\MeuEmu\\meuemu.exe" },
-  // ou baixar da última release do GitHub:
-  //   { "type": "github", "repo": "dono/projeto", "asset": "windows.*\\.zip$" }
-  // ou de um link fixo:
+  "id": "my-emulator",                  // lowercase letters, numbers and hyphens
+  "name": "My Emulator",
+  "systems": ["snes", "gba"],           // ids from systems.json
+  "source": { "type": "local", "path": "D:\\Emulators\\MyEmu\\myemu.exe" },
+  // or download the latest GitHub release:
+  //   { "type": "github", "repo": "owner/project", "asset": "windows.*\\.zip$" }
+  // or a fixed link:
   //   { "type": "url", "version": "1.0", "url": "https://…/emu.zip", "sha256": "…" }
-  "executable": "meuemu.exe",           // aceita curingas
+  "executable": "myemu.exe",            // wildcards allowed
   "launch": [
     { "systems": ["snes", "gba"], "args": "\"{rom}\" --fullscreen" }
     // placeholders: {rom} {romDir} {romName} {emuDir} {core}
   ],
-  "biosDir": "bios",                    // opcional: para onde a tela BIOS copia os arquivos
-  "preserve": ["config"],               // opcional: o que uma atualização nunca sobrescreve
-  "controller": { … },                  // opcional: mapeamento automático do controle
-  "graphics": { … },                    // opcional: níveis de imagem e resolução
-  "saves": { … }                        // opcional: save states e backup
+  "biosDir": "bios",                    // optional: where the BIOS screen copies files
+  "preserve": ["config"],               // optional: what an update never overwrites
+  "controller": { … },                  // optional: automatic controller mapping
+  "graphics": { … },                    // optional: quality presets and resolution
+  "saves": { … }                        // optional: save states and backup
 }
 ```
 
-Os manifestos em [`manifests/emulators`](manifests/emulators) mostram todos os campos opcionais em uso.
+The manifests in [`manifests/emulators`](manifests/emulators) show every optional field in use.
 
-**Hash:** fontes do GitHub usam o SHA-256 que o GitHub publica para cada arquivo. Links fixos sem hash ficam marcados como "sem hash" e o SHA-256 obtido é registrado; preencha `"sha256"` para exigir a conferência.
+**Hashes:** GitHub sources use the SHA-256 GitHub publishes for each asset. Fixed links without a hash are marked "no hash" and the computed SHA-256 is recorded; fill in `"sha256"` to require the check.
 
-## Compilar
+### Translations
 
-Precisa do [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) no Windows 10 ou 11.
+The UI text in the code is English and is also the translation key: `L.T("Install")` in C#, `{l:T 'Install'}` in XAML. Other languages live in `src/RetroHub.App/i18n/<language>/*.json` as flat `{ "English": "Translation" }` objects; a missing entry falls back to English.
+
+## Building
+
+Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) on Windows 10 or 11.
 
 ```bash
 dotnet run --project src/RetroHub.App
@@ -143,40 +150,42 @@ dotnet run --project src/RetroHub.App
 dotnet test
 ```
 
-Instalador (precisa do [Inno Setup 6](https://jrsoftware.org/isinfo.php)):
+Installer (requires [Inno Setup 6](https://jrsoftware.org/isinfo.php)):
 
 ```bash
 powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
 ```
 
-Gera `dist\RetroHub-Setup-<versão>.exe` com o app self-contained. A versão vem de `Directory.Build.props`.
+Produces `dist\RetroHub-Setup-<version>.exe` with a self-contained app. The version comes from `Directory.Build.props`.
 
-### Estrutura
+### Layout
 
 ```
-manifests/                  catálogo declarativo (vai para ao lado do .exe)
-  systems.json                sistemas, extensões, nomes de pasta, BIOS (MD5), capas
-  dependencies.json           pacotes winget
-  emulators/*.json            fonte, executável, argumentos, controle, imagem, saves
-src/RetroHub.Core/          lógica sem WPF (testável)
-  Install/                    versões (GitHub/Forgejo/URL), download, SHA-256, extração, winget, emuladores do usuário
-  Scanning/                   scanner, cabeçalhos de disco, ISO 9660, .cue/.gdi/.m3u, títulos
-  Library/                    SQLite: jogos, sessões, coleções, emuladores, configurações
-  Launch/ Input/ Saves/       abrir jogos, controle Xbox (XInput/SDL), save states e backup
-  Covers/ Metadata/ Bios/     capas, informações e verificação de ROM, BIOS por MD5
+manifests/                  declarative catalog (shipped next to the .exe)
+  systems.json                systems, extensions, folder names, BIOS (MD5), covers
+  dependencies.json           winget packages
+  emulators/*.json            source, executable, arguments, controller, graphics, saves
+src/RetroHub.Core/          logic without WPF (testable)
+  Install/                    versions (GitHub/Forgejo/URL), download, SHA-256, extraction, winget, user emulators
+  Scanning/                   scanner, disc headers, ISO 9660, .cue/.gdi/.m3u, titles
+  Library/                    SQLite: games, sessions, collections, emulators, settings
+  Launch/ Input/ Saves/       launching games, Xbox controller (XInput/SDL), save states and backup
+  Covers/ Metadata/ Bios/     covers, game info and ROM verification, BIOS by MD5
+  Localization/               L.T / L.F (English keys, translations from i18n/)
 src/RetroHub.App/           WPF + MVVM (CommunityToolkit.Mvvm)
-  Themes/                     tokens de design, ícones e estilos (preto e branco)
-  Views/ ViewModels/          biblioteca, página do jogo, emuladores, BIOS, pastas, Modo TV
-tests/RetroHub.Core.Tests/  xUnit com imagens de disco sintéticas
-docs/                       site (GitHub Pages) e imagens do README
+  Themes/                     design tokens, icons and styles (black and white)
+  Views/ ViewModels/          library, game page, emulators, BIOS, folders, TV mode
+  i18n/pt-BR/                 Portuguese translation
+tests/RetroHub.Core.Tests/  xUnit with synthetic disc images
+docs/                       website (GitHub Pages) and README images
 ```
 
-## Aviso legal
+## Legal
 
-O Retro Hub **não inclui e não baixa jogos, BIOS, chaves ou firmware**. Use apenas cópias que você mesmo extraiu dos seus jogos e consoles. Não abra issues pedindo onde conseguir ROMs ou BIOS: elas serão fechadas.
+Retro Hub **does not include or download games, BIOS files, keys or firmware**. Only use copies you dumped yourself from games and consoles you own. Issues asking where to get ROMs or BIOS files will be closed.
 
-Os emuladores são baixados das páginas oficiais de cada projeto, sob as licenças deles. Capas e informações vêm de acervos abertos do libretro; a arte pertence às editoras. Nomes de consoles e jogos são marcas dos seus donos e aparecem só para indicar compatibilidade. O Retro Hub não tem relação com nenhuma dessas empresas.
+Emulators are downloaded from each project's official pages, under their own licenses. Covers and game info come from open libretro archives; the artwork belongs to the publishers. Console and game names are trademarks of their owners and appear only to state compatibility. Retro Hub is not affiliated with any of these companies.
 
-## Licença
+## License
 
-[MIT](LICENSE). Bibliotecas de terceiros: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+[MIT](LICENSE). Third-party libraries: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

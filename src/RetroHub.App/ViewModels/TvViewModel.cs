@@ -1,8 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RetroHub.App.Input;
 using RetroHub.Core;
+using RetroHub.Core.Localization;
 
 namespace RetroHub.App.ViewModels;
 
@@ -14,7 +15,7 @@ public sealed partial class TvTab(string? systemId, string label, int count) : O
     [ObservableProperty] private bool _isActive;
 }
 
-/// <summary>Modo TV: uma prateleira de capas navegável só pelo controle.</summary>
+/// <summary>TV mode: a shelf of covers navigated with the controller only.</summary>
 public partial class TvViewModel : ObservableObject
 {
     private readonly LibraryViewModel _library;
@@ -34,10 +35,10 @@ public partial class TvViewModel : ObservableObject
 
     public bool HasGames => Games.Count > 0;
 
-    /// <summary>Pedido de fechar o Modo TV (B na prateleira).</summary>
+    /// <summary>Request to close TV mode (B on the shelf).</summary>
     public event Action? CloseRequested;
 
-    /// <summary>O jogo terminou: a janela volta para a frente.</summary>
+    /// <summary>The game ended: the window comes back to the front.</summary>
     public event Action? GameEnded;
 
     public TvViewModel(LibraryViewModel library, HubServices services)
@@ -45,14 +46,14 @@ public partial class TvViewModel : ObservableObject
         _library = library;
         _services = services;
 
-        Tabs.Add(new TvTab(null, "Todos", library.AllGames.Count));
+        Tabs.Add(new TvTab(null, L.T("All"), library.AllGames.Count));
         if (library.AllGames.Any(g => g.Favorite))
-            Tabs.Add(new TvTab("*", "Favoritos", library.AllGames.Count(g => g.Favorite)));
+            Tabs.Add(new TvTab("*", L.T("Favorites"), library.AllGames.Count(g => g.Favorite)));
         foreach (var group in library.AllGames.GroupBy(g => g.SystemId).OrderBy(g => g.First().SystemShort))
             Tabs.Add(new TvTab(group.Key, group.First().SystemShort, group.Count()));
-        // Coleções com jogos viram abas também ("Zerados", "Quero jogar"…).
+        // Collections with games become tabs too ("Completed", "Want to play"…).
         foreach (var collection in services.Database.GetCollections().Where(c => c.Count > 0))
-            Tabs.Add(new TvTab($"c:{collection.Id}", collection.Name, collection.Count));
+            Tabs.Add(new TvTab($"c:{collection.Id}", L.T(collection.Name), collection.Count));
 
         ApplyTab(0);
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
@@ -63,7 +64,7 @@ public partial class TvViewModel : ObservableObject
     public void Handle(PadButton button)
     {
         if (IsPlaying)
-            return; // o controle é do emulador agora; só Back + Start (ExitGame) vale
+            return; // the controller belongs to the emulator now; only Back + Start (ExitGame) counts
 
         Message = null;
         if (Page is not null)
@@ -85,12 +86,12 @@ public partial class TvViewModel : ObservableObject
         }
     }
 
-    // ── Página do jogo (↓ na prateleira) ────────────────────────────────────
+    // ── Game page (↓ on the shelf) ──────────────────────────────────────────
 
-    /// <summary>Página do jogo selecionado aberta por cima da prateleira — null = fechada.</summary>
+    /// <summary>Page of the selected game open over the shelf; null = closed.</summary>
     [ObservableProperty] private GameDetailsViewModel? _page;
 
-    /// <summary>Rolar o texto da página: −1 sobe, +1 desce.</summary>
+    /// <summary>Scroll the page text: −1 up, +1 down.</summary>
     public event Action<int>? ScrollRequested;
 
     private void OpenPage()
@@ -134,7 +135,7 @@ public partial class TvViewModel : ObservableObject
     partial void OnSelectedIndexChanged(int value) =>
         Selected = value >= 0 && value < Games.Count ? Games[value] : null;
 
-    /// <summary>Vídeo de prévia do jogo selecionado (arquivo local), ou null.</summary>
+    /// <summary>Preview video of the selected game (local file), or null.</summary>
     [ObservableProperty] private string? _previewVideo;
 
     partial void OnSelectedChanged(GameItemViewModel? value) =>
@@ -144,7 +145,7 @@ public partial class TvViewModel : ObservableObject
     {
         if (Tabs.Count == 0)
             return;
-        index = (index + Tabs.Count) % Tabs.Count; // dá a volta nas pontas
+        index = (index + Tabs.Count) % Tabs.Count; // wraps around at the ends
         TabIndex = index;
         for (var i = 0; i < Tabs.Count; i++)
             Tabs[i].IsActive = i == index;
@@ -158,7 +159,7 @@ public partial class TvViewModel : ObservableObject
                 var c when c.StartsWith("c:") => _library.CollectionMembers.TryGetValue(long.Parse(c[2..]), out var m) && m.Contains(g.Game.Id),
                 var id => g.SystemId == id,
             })
-            // Jogados recentemente primeiro, depois alfabético.
+            // Recently played first, then alphabetical.
             .OrderByDescending(g => g.Game.LastPlayed ?? DateTimeOffset.MinValue)
             .ThenBy(g => g.Title, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
@@ -199,7 +200,7 @@ public partial class TvViewModel : ObservableObject
             _gameCts.Dispose();
             _gameCts = null;
             if (Page is not null)
-                OpenPage(); // tempo jogado e saves atualizados
+                OpenPage(); // refreshed playtime and saves
             GameEnded?.Invoke();
         }
     }

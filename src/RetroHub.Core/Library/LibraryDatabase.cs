@@ -12,7 +12,7 @@ public sealed record PlaySession(DateTimeOffset StartedAt, long Seconds, string 
 
 public sealed record UpsertResult(int Added, int Updated, int Moved, IReadOnlyList<DuplicateRom> Duplicates);
 
-/// <summary>Biblioteca em SQLite. Datas são gravadas como segundos Unix (UTC).</summary>
+/// <summary>SQLite library. Dates are stored as Unix seconds (UTC).</summary>
 public sealed class LibraryDatabase
 {
     private const string GameColumns =
@@ -67,13 +67,13 @@ public sealed class LibraryDatabase
         );
         """;
 
-    /// <summary>v2: impressão digital do conteúdo, para reconhecer o mesmo jogo em pastas diferentes.</summary>
+    /// <summary>v2: content fingerprint, to recognize the same game in different folders.</summary>
     private const string SchemaV2 = """
         ALTER TABLE games ADD COLUMN fingerprint TEXT;
         CREATE INDEX ix_games_fingerprint ON games(system_id, fingerprint);
         """;
 
-    /// <summary>v3: arquivos que o usuário tirou da biblioteca — o escaneamento não os traz de volta.</summary>
+    /// <summary>v3: files the user removed from the library; scanning does not bring them back.</summary>
     private const string SchemaV3 = """
         CREATE TABLE excluded_paths (
             path     TEXT PRIMARY KEY COLLATE NOCASE,
@@ -81,7 +81,7 @@ public sealed class LibraryDatabase
         );
         """;
 
-    /// <summary>v4: coleções do usuário ("Zerados", "Quero jogar"…).</summary>
+    /// <summary>v4: user collections ("Completed", "Want to play"…).</summary>
     private const string SchemaV4 = """
         CREATE TABLE collections (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -93,7 +93,18 @@ public sealed class LibraryDatabase
             game_id       INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
             PRIMARY KEY (collection_id, game_id)
         );
-        INSERT INTO collections (name, created_at) VALUES ('Zerados', CAST(strftime('%s','now') AS INTEGER)), ('Quero jogar', CAST(strftime('%s','now') AS INTEGER));
+        INSERT INTO collections (name, created_at) VALUES ('Completed', CAST(strftime('%s','now') AS INTEGER)), ('Want to play', CAST(strftime('%s','now') AS INTEGER));
+        """;
+
+    /// <summary>
+    /// v5: default collections seeded in Portuguese get their English names (the UI translates them back).
+    /// Skipped if the user already has a collection with the English name (names are UNIQUE).
+    /// </summary>
+    private const string SchemaV5 = """
+        UPDATE collections SET name = 'Completed'
+        WHERE name = 'Zerados' COLLATE BINARY AND NOT EXISTS (SELECT 1 FROM collections WHERE name = 'Completed');
+        UPDATE collections SET name = 'Want to play'
+        WHERE name = 'Quero jogar' COLLATE BINARY AND NOT EXISTS (SELECT 1 FROM collections WHERE name = 'Want to play');
         """;
 
     private readonly string _connectionString;
@@ -140,9 +151,16 @@ public sealed class LibraryDatabase
             Execute(c, "PRAGMA user_version = 4;", tx);
             tx.Commit();
         }
+        if (version < 5)
+        {
+            using var tx = c.BeginTransaction();
+            Execute(c, SchemaV5, tx);
+            Execute(c, "PRAGMA user_version = 5;", tx);
+            tx.Commit();
+        }
     }
 
-    // ── Jogos ───────────────────────────────────────────────────────────────
+    // ── Games ───────────────────────────────────────────────────────────────
 
     public List<Game> GetGames()
     {
@@ -164,12 +182,12 @@ public sealed class LibraryDatabase
     }
 
     /// <summary>
-    /// Grava o resultado de um escaneamento:
-    ///   • caminho já conhecido → atualiza;
-    ///   • mesmo conteúdo (impressão digital) num caminho que ainda existe → cópia duplicada, ignora;
-    ///   • mesmo conteúdo num caminho que sumiu → o arquivo foi movido, atualiza o caminho (mantém tempo jogado e favorito);
-    ///   • senão → jogo novo.
-    /// No fim, unifica duplicatas que já estavam na biblioteca.
+    /// Stores a scan result:
+    ///   • known path → update;
+    ///   • same content (fingerprint) at a path that still exists → duplicate copy, ignore;
+    ///   • same content at a path that is gone → the file was moved, update the path (keeps play time and favorite);
+    ///   • otherwise → new game.
+    /// Finally, merges duplicates that were already in the library.
     /// </summary>
     public UpsertResult UpsertScanned(IEnumerable<ScannedRom> roms, string source = "scan")
     {
@@ -181,7 +199,7 @@ public sealed class LibraryDatabase
         int added = 0, updated = 0, moved = 0;
         var duplicates = new List<DuplicateRom>();
 
-        // 1º: caminhos já conhecidos (assim as impressões digitais antigas ficam preenchidas antes da comparação).
+        // 1st: known paths (so old fingerprints get filled in before the comparison).
         var pending = new List<ScannedRom>();
         foreach (var rom in list)
         {
@@ -202,7 +220,7 @@ public sealed class LibraryDatabase
             updated++;
         }
 
-        // 2º: caminhos novos.
+        // 2nd: new paths.
         foreach (var rom in pending)
         {
             if (rom.Fingerprint is not null && FindByFingerprint(c, tx, rom.SystemId, rom.Fingerprint) is { } same)
@@ -243,8 +261,8 @@ public sealed class LibraryDatabase
     }
 
     /// <summary>
-    /// Une registros com o mesmo conteúdo: fica o mais jogado (depois favorito, depois o mais antigo),
-    /// somando tempo jogado e sessões. Só mexe no banco — nenhum arquivo é apagado.
+    /// Merges records with the same content: keeps the most played (then favorite, then oldest),
+    /// summing play time and sessions. Only touches the database; no file is deleted.
     /// </summary>
     private static List<DuplicateRom> MergeDuplicates(SqliteConnection c, SqliteTransaction tx)
     {
@@ -285,7 +303,7 @@ public sealed class LibraryDatabase
         }
         return removed;
     }
-    /// <summary>Tira o jogo da biblioteca e lembra do caminho para o escaneamento não trazê-lo de volta.</summary>
+    /// <summary>Removes the game from the library and remembers the path so scanning does not bring it back.</summary>
     public void ExcludeGame(long gameId)
     {
         using var c = Open();
@@ -305,8 +323,8 @@ public sealed class LibraryDatabase
     }
 
     /// <summary>
-    /// Remove jogos cujo arquivo sumiu — mas só se a pasta de ROMs onde ele estava continua acessível
-    /// (HD externo desconectado não apaga a biblioteca nem o tempo jogado).
+    /// Removes games whose file is gone, but only if the ROM folder it was in is still accessible
+    /// (a disconnected external drive does not wipe the library or play time).
     /// </summary>
     public List<string> RemoveMissingGames(IReadOnlyList<string> romFolders)
     {
@@ -319,7 +337,7 @@ public sealed class LibraryDatabase
         return missing;
     }
 
-    /// <summary>Zera jogos, sessões e exclusões. Pastas, emuladores e configurações ficam.</summary>
+    /// <summary>Clears games, sessions and exclusions. Folders, emulators and settings are kept.</summary>
     public void ClearLibrary()
     {
         using var c = Open();
@@ -340,7 +358,7 @@ public sealed class LibraryDatabase
         return set;
     }
 
-    // ── Coleções ────────────────────────────────────────────────────────────
+    // ── Collections ─────────────────────────────────────────────────────────
 
     public List<GameCollection> GetCollections()
     {
@@ -357,7 +375,7 @@ public sealed class LibraryDatabase
         return list;
     }
 
-    /// <summary>Cria (ou reaproveita, se o nome já existe) e retorna o id.</summary>
+    /// <summary>Creates (or reuses, if the name already exists) and returns the id.</summary>
     public long CreateCollection(string name)
     {
         using var c = Open();
@@ -380,7 +398,7 @@ public sealed class LibraryDatabase
             : "DELETE FROM collection_games WHERE collection_id = $c AND game_id = $g;", null, ("$c", collectionId), ("$g", gameId));
     }
 
-    /// <summary>coleção → ids dos jogos.</summary>
+    /// <summary>collection → game ids.</summary>
     public Dictionary<long, HashSet<long>> GetCollectionMembers()
     {
         using var c = Open();
@@ -395,9 +413,9 @@ public sealed class LibraryDatabase
         return map;
     }
 
-    // ── Estatísticas ────────────────────────────────────────────────────────
+    // ── Statistics ──────────────────────────────────────────────────────────
 
-    /// <summary>Sessões de jogo desde <paramref name="since"/>: (início, segundos, sistema, título).</summary>
+    /// <summary>Play sessions since <paramref name="since"/>: (start, seconds, system, title).</summary>
     public List<PlaySession> GetSessions(DateTimeOffset since)
     {
         using var c = Open();
@@ -425,7 +443,7 @@ public sealed class LibraryDatabase
         Execute(c, "UPDATE games SET metadata_json = $j WHERE id = $id;", null, ("$j", json), ("$id", gameId));
     }
 
-    /// <summary>Emulador escolhido para este jogo (null = o padrão do sistema).</summary>
+    /// <summary>Emulator chosen for this game (null = the system default).</summary>
     public void SetEmulatorOverride(long gameId, string? emulatorId)
     {
         using var c = Open();
@@ -438,7 +456,7 @@ public sealed class LibraryDatabase
         Execute(c, "UPDATE games SET cover_path = $p WHERE id = $id;", null, ("$p", coverPath), ("$id", gameId));
     }
 
-    /// <summary>Tira da biblioteca os arquivos indicados (os arquivos em disco não são tocados).</summary>
+    /// <summary>Removes the given files from the library (files on disk are not touched).</summary>
     public int RemoveGamesByPath(IEnumerable<string> paths)
     {
         using var c = Open();
@@ -465,7 +483,7 @@ public sealed class LibraryDatabase
         tx.Commit();
     }
 
-    // ── Pastas de ROMs ──────────────────────────────────────────────────────
+    // ── ROM folders ─────────────────────────────────────────────────────────
 
     public List<string> GetRomFolders()
     {
@@ -491,7 +509,7 @@ public sealed class LibraryDatabase
         Execute(c, "DELETE FROM rom_folders WHERE path = $p;", null, ("$p", path));
     }
 
-    // ── Emuladores instalados ───────────────────────────────────────────────
+    // ── Installed emulators ─────────────────────────────────────────────────
 
     public List<InstalledEmulator> GetInstalledEmulators()
     {
@@ -532,7 +550,7 @@ public sealed class LibraryDatabase
         Execute(c, "DELETE FROM installed_emulators WHERE id = $id;", null, ("$id", id));
     }
 
-    // ── Configurações ───────────────────────────────────────────────────────
+    // ── Settings ────────────────────────────────────────────────────────────
 
     public string? GetSetting(string key)
     {

@@ -7,13 +7,13 @@ using System.Windows.Shapes;
 namespace RetroHub.App.Controls;
 
 /// <summary>
-/// Capa sem corte em qualquer moldura: a imagem aparece inteira (caixas de N64, GBA, PS2… têm formatos diferentes)
-/// e o espaço que sobra é preenchido pela própria capa desfocada e escurecida. Se o formato da capa já é quase o da
-/// moldura, ela preenche tudo.
+/// Uncropped cover in any frame: the whole image shows (N64, GBA, PS2… boxes have different shapes) and the
+/// leftover space is filled with the cover itself, blurred and darkened. If the cover's shape is already close to
+/// the frame's, it fills everything.
 /// </summary>
 public sealed class CoverArt : Grid
 {
-    /// <summary>Diferença de proporção até a qual a capa é recortada para preencher (barras finas ficariam feias).</summary>
+    /// <summary>Aspect-ratio difference up to which the cover is cropped to fill (thin bars would look bad).</summary>
     private const double FillTolerance = 0.06;
 
     public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(
@@ -29,7 +29,7 @@ public sealed class CoverArt : Grid
 
     public CoverArt()
     {
-        // Margem negativa: o desfoque não deixa borda clara nas pontas (o recorte arredondado esconde o excesso).
+        // Negative margin: the blur leaves no light edge at the borders (the rounded clip hides the excess).
         _backdrop = new Rectangle { Fill = _backdropBrush, Margin = new Thickness(-24), Effect = new BlurEffect { Radius = 24, RenderingBias = RenderingBias.Performance } };
         _shade = new Rectangle { Fill = new SolidColorBrush(Color.FromArgb(0x73, 0, 0, 0)) };
         RenderOptions.SetBitmapScalingMode(_image, BitmapScalingMode.HighQuality);
@@ -73,7 +73,7 @@ public sealed class CoverArt : Grid
         Clip = RoundedRect(new Rect(0, 0, ActualWidth, ActualHeight), CornerRadius);
     }
 
-    /// <summary>Retângulo com um raio por canto (a capa do card só arredonda os de cima).</summary>
+    /// <summary>Rectangle with one radius per corner (the card cover only rounds the top ones).</summary>
     private static Geometry RoundedRect(Rect r, CornerRadius c)
     {
         var geometry = new StreamGeometry();

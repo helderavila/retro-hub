@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using RetroHub.Core.Covers;
 using RetroHub.Core.Library;
+using RetroHub.Core.Localization;
 using RetroHub.Core.Manifests;
 using RetroHub.Core.Models;
 using RetroHub.Core.Scanning;
@@ -10,10 +11,10 @@ using RetroHub.Core.Scanning;
 namespace RetroHub.Core.Metadata;
 
 /// <summary>
-/// Informações e verificação de jogos usando o libretro-database (aberto, sem conta):
-///   • metadat/{no-intro|redump}/…  → lista oficial de dumps (nome, serial, CRC, SHA-1, tamanho);
-///   • metadat/{developer,publisher,genre,releaseyear}/… → informações (PS1/PS2 trazem até sinopse).
-/// Os .dat ficam em data\metadata e são atualizados a cada 30 dias.
+/// Game info and verification using libretro-database (open, no account):
+///   • metadat/{no-intro|redump}/…  → official dump list (name, serial, CRC, SHA-1, size);
+///   • metadat/{developer,publisher,genre,releaseyear}/… → info (PS1/PS2 even include a synopsis).
+/// The .dat files live in data\metadata and are refreshed every 30 days.
 /// </summary>
 public sealed class MetadataService(HttpClient http, AppPaths paths, ManifestRepository manifests, LibraryDatabase db)
 {
@@ -23,22 +24,22 @@ public sealed class MetadataService(HttpClient http, AppPaths paths, ManifestRep
 
     private readonly ConcurrentDictionary<string, Lazy<Task<SystemData?>>> _systems = new();
 
-    /// <summary>Tudo que se sabe dos jogos de um sistema, indexado por nome, serial e CRC.</summary>
+    /// <summary>Everything known about a system's games, indexed by name, serial and CRC.</summary>
     private sealed class SystemData
     {
         public Dictionary<string, Dictionary<string, string>> ByName { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> NameBySerial { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> NameByCrc { get; } = new(StringComparer.OrdinalIgnoreCase);
-        /// <summary>SHA-1 e CRC+tamanho de cada arquivo dos dumps oficiais → nome do jogo.</summary>
+        /// <summary>SHA-1 and CRC+size of each file of the official dumps → game name.</summary>
         public Dictionary<string, string> DumpBySha1 { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> DumpByCrcSize { get; } = new(StringComparer.OrdinalIgnoreCase);
         public CoverMatcher.Index Names { get; set; } = new([]);
         public bool HasVerifyDat { get; set; }
     }
 
-    // ── Informações ─────────────────────────────────────────────────────────
+    // ── Info ────────────────────────────────────────────────────────────────
 
-    /// <summary>Preenche as informações dos jogos que ainda não têm. Retorna quantos foram encontrados.</summary>
+    /// <summary>Fills in info for games that do not have it yet. Returns how many were found.</summary>
     public async Task<int> FillMissingAsync(IEnumerable<Game> games, IProgress<long>? found = null, CancellationToken ct = default)
     {
         var count = 0;
@@ -60,7 +61,7 @@ public sealed class MetadataService(HttpClient http, AppPaths paths, ManifestRep
                 count++;
                 found?.Report(game.Id);
             }
-            catch (HttpRequestException) { /* sem internet: tenta na próxima */ }
+            catch (HttpRequestException) { /* no internet: try next time */ }
         }
         return count;
     }
@@ -94,11 +95,11 @@ public sealed class MetadataService(HttpClient http, AppPaths paths, ManifestRep
         };
     }
 
-    // ── Verificação ─────────────────────────────────────────────────────────
+    // ── Verification ────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Calcula SHA-1/CRC32 do arquivo inteiro (e das trilhas, se for .cue/.gdi) e compara com o dump oficial.
-    /// Grava o resultado em games.metadata_json.
+    /// Computes SHA-1/CRC32 of the whole file (and of the tracks, for .cue/.gdi) and compares with the official dump.
+    /// Stores the result in games.metadata_json.
     /// </summary>
     public async Task<GameMetadata> VerifyAsync(Game game, IProgress<double>? progress = null, CancellationToken ct = default)
     {
@@ -114,27 +115,27 @@ public sealed class MetadataService(HttpClient http, AppPaths paths, ManifestRep
         }
 
         if (data is null || !data.HasVerifyDat)
-            return Save("unsupported", "Não há lista oficial de dumps para este sistema.");
+            return Save("unsupported", L.T("There is no official dump list for this system."));
 
         var ext = Path.GetExtension(game.Path).ToLowerInvariant();
         if (ext is ".chd" or ".rvz" or ".wia" or ".gcz" or ".cso" or ".zso" or ".pbp" or ".7z" or ".wbfs" or ".ecm")
-            return Save("unsupported", $"Arquivos {ext} são comprimidos: o conteúdo não pode ser comparado direto com a lista oficial (que é de .iso/.bin).");
+            return Save("unsupported", L.F("{0} files are compressed: the content cannot be compared directly with the official list (which is for .iso/.bin).", ext));
 
-        // .zip de cartucho: o CRC de cada arquivo já está no índice do zip — nada para calcular.
+        // Cartridge .zip: each file's CRC is already in the zip index, nothing to compute.
         if (ext == ".zip")
         {
             using var zip = ZipFile.OpenRead(game.Path);
             foreach (var entry in zip.Entries)
                 if (data.DumpByCrcSize.TryGetValue($"{entry.Crc32:x8}:{entry.Length}", out var zipped))
-                    return Save("ok", $"Bate com o dump oficial: {zipped}", zipped);
-            return Save("unknown", "Nenhum arquivo do .zip bate com a lista oficial (modificado, traduzido, hack ou corrompido).");
+                    return Save("ok", L.F(GameMetadata.MatchedDumpFormat, zipped), zipped);
+            return Save("unknown", L.T("No file in the .zip matches the official list (modified, translated, hack or corrupted)."));
         }
 
         var files = SheetParser.FilesOfGame(game.Path)
             .Where(f => !SheetParser.IsSheet(Path.GetExtension(f).ToLowerInvariant()))
             .ToList();
         if (files.Count == 0)
-            return Save("unknown", "Arquivo não encontrado.");
+            return Save("unknown", L.T("File not found."));
 
         var total = files.Sum(f => new FileInfo(f).Length);
         long done = 0;
@@ -151,17 +152,17 @@ public sealed class MetadataService(HttpClient http, AppPaths paths, ManifestRep
         }
 
         if (matches.All(m => m is not null) && matches.Distinct().Count() == 1)
-            return Save("ok", $"Bate com o dump oficial: {matches[0]}", matches[0]);
+            return Save("ok", L.F(GameMetadata.MatchedDumpFormat, matches[0]), matches[0]);
 
         var ok = matches.Count(m => m is not null);
         return Save("unknown", files.Count == 1
-            ? "Não bate com a lista oficial: o arquivo pode ser modificado (tradução, hack), corrompido ou de um dump não catalogado."
-            : $"{ok} de {files.Count} trilhas batem com a lista oficial — as demais podem estar corrompidas ou ser de outra versão.");
+            ? L.T("Does not match the official list: the file may be modified (translation, hack), corrupted or from an uncatalogued dump.")
+            : L.F("{0} of {1} tracks match the official list; the others may be corrupted or from another version.", ok, files.Count));
     }
 
     /// <summary>
-    /// Bytes a pular antes do hash: as listas oficiais catalogam a ROM "pura".
-    /// NES: cabeçalho iNES de 16 bytes. SNES: cabeçalho de copiadora de 512 bytes (tamanho % 1024 == 512).
+    /// Bytes to skip before hashing: the official lists catalog the "bare" ROM.
+    /// NES: 16-byte iNES header. SNES: 512-byte copier header (size % 1024 == 512).
     /// </summary>
     internal static int HeaderSize(string path, long length)
     {
@@ -198,7 +199,7 @@ public sealed class MetadataService(HttpClient http, AppPaths paths, ManifestRep
         return (Convert.ToHexString(sha.GetHashAndReset()).ToLowerInvariant(), crc.GetCurrentHashAsUInt32().ToString("x8"), stream.Length - header);
     }
 
-    // ── Dados por sistema ───────────────────────────────────────────────────
+    // ── Per-system data ─────────────────────────────────────────────────────
 
     private async Task<SystemData?> GetSystemAsync(string systemId, CancellationToken ct)
     {
@@ -208,7 +209,7 @@ public sealed class MetadataService(HttpClient http, AppPaths paths, ManifestRep
         }
         catch
         {
-            _systems.TryRemove(systemId, out _); // sem internet agora: tenta de novo na próxima chamada
+            _systems.TryRemove(systemId, out _); // no internet right now: try again on the next call
             throw;
         }
     }
@@ -251,7 +252,7 @@ public sealed class MetadataService(HttpClient http, AppPaths paths, ManifestRep
                 continue;
             foreach (var entry in infoDat)
             {
-                // Cartuchos: casa pelo CRC; discos de PS1/PS2: pelo serial; senão pelo nome.
+                // Cartridges: match by CRC; PS1/PS2 discs: by serial; otherwise by name.
                 var name = entry.Roms.Select(r => r.GetValueOrDefault("crc")).OfType<string>().Select(c => data.NameByCrc.GetValueOrDefault(c)).FirstOrDefault(n => n is not null)
                            ?? (entry.Get("serial") is { } s ? data.NameBySerial.GetValueOrDefault(s) : null)
                            ?? entry.Name;
@@ -281,7 +282,7 @@ public sealed class MetadataService(HttpClient http, AppPaths paths, ManifestRep
                 record.TryAdd(key, value);
     }
 
-    /// <summary>Baixa (ou lê do cache) um .dat. 404 = este tipo de dado não existe para o sistema.</summary>
+    /// <summary>Downloads (or reads from cache) a .dat. 404 = this kind of data does not exist for the system.</summary>
     private async Task<List<DatEntry>?> GetDatAsync(string kind, string fileName, CancellationToken ct)
     {
         var cache = Path.Combine(paths.Root, "metadata", kind, fileName);
@@ -311,7 +312,7 @@ public sealed class MetadataService(HttpClient http, AppPaths paths, ManifestRep
             }
             catch (HttpRequestException) when (File.Exists(cache))
             {
-                text = await File.ReadAllTextAsync(cache, ct); // offline: usa o cache vencido
+                text = await File.ReadAllTextAsync(cache, ct); // offline: use the stale cache
             }
         }
 

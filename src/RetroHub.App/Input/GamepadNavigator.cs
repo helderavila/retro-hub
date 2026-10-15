@@ -1,4 +1,4 @@
-using System.Windows.Threading;
+﻿using System.Windows.Threading;
 using RetroHub.Core.Input;
 
 namespace RetroHub.App.Input;
@@ -6,9 +6,9 @@ namespace RetroHub.App.Input;
 public enum PadButton { Up, Down, Left, Right, A, B, X, Y, LB, RB, Start, Back }
 
 /// <summary>
-/// Lê os controles Xbox a ~60 Hz e transforma em eventos de navegação:
-/// direcional e analógico esquerdo com repetição ao segurar; Back + Start segurados por 1 s = "sair do jogo".
-/// Qualquer um dos 4 controles navega.
+/// Reads the Xbox controllers at ~60 Hz and turns them into navigation events:
+/// D-pad and left stick repeat while held; Back + Start held for 1 s = "quit game".
+/// Any of the 4 controllers can navigate.
 /// </summary>
 public sealed class GamepadNavigator : IDisposable
 {
@@ -43,7 +43,7 @@ public sealed class GamepadNavigator : IDisposable
             if (XInput.TryGetState(slot, out var state))
                 current.UnionWith(Map(state));
 
-        // Back + Start segurados: sair do jogo (dispara uma vez por aperto).
+        // Back + Start held: quit the game (fires once per press).
         if (current.Contains(PadButton.Back) && current.Contains(PadButton.Start))
         {
             _comboSince ??= now;

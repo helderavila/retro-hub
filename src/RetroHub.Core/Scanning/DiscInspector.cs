@@ -4,15 +4,15 @@ using System.Text.RegularExpressions;
 
 namespace RetroHub.Core.Scanning;
 
-/// <param name="IsVideoDisc">DVD de filme (VIDEO_TS na raiz, sem SYSTEM.CNF) — ex.: discos bônus. Não é jogo.</param>
+/// <param name="IsVideoDisc">Movie DVD (VIDEO_TS at the root, no SYSTEM.CNF), e.g. bonus discs. Not a game.</param>
 public sealed record DiscInfo(string? SystemId, string? Serial, bool IsVideoDisc = false)
 {
     public static readonly DiscInfo Unknown = new(null, null);
 }
 
 /// <summary>
-/// Identifica o sistema de imagens de disco lendo cabeçalhos — resolve as extensões ambíguas
-/// (.iso, .bin, .chd, .cue…) sem depender do nome do arquivo.
+/// Identifies the system of disc images by reading headers; resolves ambiguous extensions
+/// (.iso, .bin, .chd, .cue…) without relying on the file name.
 /// </summary>
 public static partial class DiscInspector
 {
@@ -68,7 +68,7 @@ public static partial class DiscInspector
         if (BinaryPrimitives.ReadUInt32BigEndian(head.AsSpan(0x18)) == WiiMagic)
             return new DiscInfo("wii", NintendoId(head.AsSpan(0, 6)));
 
-        // Sega: cabeçalho no setor 0 (offset 0 em .iso, 0x10 em .bin raw Mode 1).
+        // Sega: header in sector 0 (offset 0 in .iso, 0x10 in raw Mode 1 .bin).
         foreach (var offset in new[] { 0, 0x10 })
         {
             var text = Iso9660Reader.Ascii(head, offset, 16);
@@ -77,7 +77,7 @@ public static partial class DiscInspector
             if (text.StartsWith("SEGA SEGAKATANA")) return new DiscInfo("dreamcast", null);
         }
 
-        // Cartucho de Mega Drive em .bin: "SEGA MEGA DRIVE" / "SEGA GENESIS" em 0x100.
+        // Mega Drive cartridge in .bin: "SEGA MEGA DRIVE" / "SEGA GENESIS" at 0x100.
         if (Iso9660Reader.Ascii(head, 0x100, 16).TrimStart().StartsWith("SEGA"))
             return new DiscInfo("genesis", null);
 
@@ -104,15 +104,15 @@ public static partial class DiscInspector
             return new DiscInfo(system, m.Success ? $"{m.Groups[1].Value}-{m.Groups[2].Value}{m.Groups[3].Value}" : null);
         }
 
-        // Disco de jogo de PS2 sempre tem "PLAYSTATION" + SYSTEM.CNF (tratado acima).
-        // Sem isso e com VIDEO_TS na raiz, é um DVD de filme — o BIOS do PS2 tentaria abrir o player de DVD.
+        // A PS2 game disc always has "PLAYSTATION" + SYSTEM.CNF (handled above).
+        // Without it and with VIDEO_TS at the root, it is a movie DVD; the PS2 BIOS would try to open the DVD player.
         if (iso.RootEntries().Any(n => n.Equals("VIDEO_TS", StringComparison.OrdinalIgnoreCase)))
             return new DiscInfo(null, null, IsVideoDisc: true);
 
         return DiscInfo.Unknown;
     }
 
-    /// <summary>WIA/RVZ: header 1 tem 0x48 bytes; o header 2 começa com disc_type (1 = GC, 2 = Wii) e traz o disc header em +0x10.</summary>
+    /// <summary>WIA/RVZ: header 1 is 0x48 bytes; header 2 starts with disc_type (1 = GC, 2 = Wii) and holds the disc header at +0x10.</summary>
     private static DiscInfo InspectWia(string path)
     {
         var head = ReadAt(path, 0, 0x60);
@@ -143,8 +143,8 @@ public static partial class DiscInspector
     }
 
     /// <summary>
-    /// CHD: percorre as tags de metadados. GD-ROM → Dreamcast; DVD → PS2.
-    /// CDs (CHT2) são ambíguos e caem no nome da pasta.
+    /// CHD: walks the metadata tags. GD-ROM → Dreamcast; DVD → PS2.
+    /// CDs (CHT2) are ambiguous and fall back to the folder name.
     /// </summary>
     private static DiscInfo InspectChd(string path)
     {

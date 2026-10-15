@@ -1,11 +1,11 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 
 namespace RetroHub.App.Helpers;
 
-/// <summary>Barra de título escura nativa (Windows 11) com a cor do fundo do app.</summary>
+/// <summary>Native dark title bar (Windows 11) using the app background color.</summary>
 public static class WindowEffects
 {
     private const int DwmwaUseImmersiveDarkMode = 20;
@@ -24,7 +24,7 @@ public static class WindowEffects
         var on = 1;
         DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, ref on, sizeof(int));
 
-        // COLORREF = 0x00BBGGRR. Ignorado silenciosamente no Windows 10.
+        // COLORREF = 0x00BBGGRR. Silently ignored on Windows 10.
         var captionRef = ToColorRef(caption);
         DwmSetWindowAttribute(hwnd, DwmwaCaptionColor, ref captionRef, sizeof(int));
         var borderRef = ToColorRef(border);

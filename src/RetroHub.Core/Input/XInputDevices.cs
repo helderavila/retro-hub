@@ -2,13 +2,13 @@ using System.Runtime.InteropServices;
 
 namespace RetroHub.Core.Input;
 
-/// <summary>Um controle XInput conectado: jogador (slot), fabricante, modelo e versão.</summary>
+/// <summary>A connected XInput controller: player (slot), vendor, product and version.</summary>
 public sealed record XInputDeviceInfo(int Slot, ushort VendorId, ushort ProductId, ushort Version, byte SubType)
 {
     /// <summary>
-    /// GUID que o SDL dá a este controle, no formato que emuladores com SDL gravam (CRC do nome zerado, como o GetGUID do SDL faz para XInput):
-    /// barramento USB 0x0003 · 0000 · fabricante · 0000 · modelo · 0000 · versão · 'x' · subtipo — tudo little-endian.
-    /// Ex.: controle Xbox Series (045E:0B13, versão 0x0523) → 030000005e040000130b000023057801.
+    /// GUID SDL assigns to this controller, in the format SDL-based emulators store (name CRC zeroed, as SDL's GetGUID does for XInput):
+    /// USB bus 0x0003 · 0000 · vendor · 0000 · product · 0000 · version · 'x' · subtype — all little-endian.
+    /// E.g. Xbox Series controller (045E:0B13, version 0x0523) → 030000005e040000130b000023057801.
     /// </summary>
     public string SdlGuid
     {
@@ -28,8 +28,8 @@ public sealed record XInputDeviceInfo(int Slot, ushort VendorId, ushort ProductI
 }
 
 /// <summary>
-/// Lê fabricante/modelo/versão de cada controle pelo XInputGetCapabilitiesEx — a mesma chamada que o SDL usa
-/// (GuessXInputDevice) para montar o GUID. Assim o identificador sai idêntico ao que o emulador calcula.
+/// Reads vendor/product/version of each controller via XInputGetCapabilitiesEx — the same call SDL uses
+/// (GuessXInputDevice) to build the GUID. So the identifier matches exactly what the emulator computes.
 /// </summary>
 public static class XInputDevices
 {
@@ -46,7 +46,7 @@ public static class XInputDevices
         public uint Unknown2;
     }
 
-    // Exportado só por ordinal (#108) no xinput1_4.dll, Windows 10+.
+    // Exported only by ordinal (#108) in xinput1_4.dll, Windows 10+.
     [DllImport("xinput1_4.dll", EntryPoint = "#108")]
     private static extern uint XInputGetCapabilitiesEx(uint unknown, uint userIndex, uint flags, out CapabilitiesEx capabilities);
 

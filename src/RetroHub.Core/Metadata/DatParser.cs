@@ -2,19 +2,19 @@ using System.Text;
 
 namespace RetroHub.Core.Metadata;
 
-/// <summary>Um bloco <c>game ( … )</c> de um arquivo clrmamepro (.dat do libretro-database / No-Intro / Redump).</summary>
+/// <summary>A <c>game ( … )</c> block from a clrmamepro file (libretro-database / No-Intro / Redump .dat).</summary>
 public sealed class DatEntry
 {
     public Dictionary<string, string> Fields { get; } = new(StringComparer.OrdinalIgnoreCase);
     public List<Dictionary<string, string>> Roms { get; } = [];
 
-    /// <summary>Nome canônico ("Chrono Trigger (USA)"). Os .dat de metadados usam "comment" no lugar de "name".</summary>
+    /// <summary>Canonical name ("Chrono Trigger (USA)"). Metadata .dat files use "comment" instead of "name".</summary>
     public string? Name => Fields.GetValueOrDefault("name") ?? Fields.GetValueOrDefault("comment");
 
     public string? Get(string key) => Fields.GetValueOrDefault(key);
 }
 
-/// <summary>Leitor do formato clrmamepro: <c>chave "valor"</c>, blocos entre parênteses, <c>rom ( … )</c> aninhado.</summary>
+/// <summary>clrmamepro format reader: <c>key "value"</c>, parenthesized blocks, nested <c>rom ( … )</c>.</summary>
 public static class DatParser
 {
     public static List<DatEntry> Parse(string text)
@@ -33,7 +33,7 @@ public static class DatParser
             else if (i + 1 < tokens.Count && tokens[i + 1] == "(")
             {
                 i += 2;
-                SkipBlock(tokens, ref i); // cabeçalho "clrmamepro ( … )" e afins
+                SkipBlock(tokens, ref i); // "clrmamepro ( … )" header and the like
             }
             else
             {
@@ -114,7 +114,7 @@ public static class DatParser
                 i++;
                 while (i < text.Length && text[i] != '"')
                 {
-                    if (text[i] == '\\' && i + 1 < text.Length) i++; // \" dentro de descrições
+                    if (text[i] == '\\' && i + 1 < text.Length) i++; // \" inside descriptions
                     sb.Append(text[i++]);
                 }
                 i++;

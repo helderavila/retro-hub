@@ -1,28 +1,28 @@
-# Avisos de terceiros
+# Third-party notices
 
-O Retro Hub usa as bibliotecas abaixo. Cada uma continua sob a licença do seu autor.
+Retro Hub uses the libraries below. Each remains under its author's license.
 
-| Biblioteca | Licença | Autor |
+| Library | License | Author |
 |---|---|---|
-| [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | MIT | .NET Foundation e colaboradores |
-| [Microsoft.Data.Sqlite](https://github.com/dotnet/efcore) | MIT | .NET Foundation e colaboradores |
+| [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) | MIT | .NET Foundation and contributors |
+| [Microsoft.Data.Sqlite](https://github.com/dotnet/efcore) | MIT | .NET Foundation and contributors |
 | [SQLitePCLRaw](https://github.com/ericsink/SQLitePCL.raw) | Apache-2.0 | Eric Sink |
-| [SQLite](https://www.sqlite.org) | Domínio público | SQLite Consortium |
+| [SQLite](https://www.sqlite.org) | Public domain | SQLite Consortium |
 | [SharpCompress](https://github.com/adamhathcock/sharpcompress) | MIT | Adam Hathcock |
-| [System.IO.Hashing](https://github.com/dotnet/runtime) | MIT | .NET Foundation e colaboradores |
-| [.NET Runtime / WPF](https://github.com/dotnet/wpf) (incluído no instalador) | MIT | .NET Foundation e colaboradores |
+| [System.IO.Hashing](https://github.com/dotnet/runtime) | MIT | .NET Foundation and contributors |
+| [.NET Runtime / WPF](https://github.com/dotnet/wpf) (bundled with the installer) | MIT | .NET Foundation and contributors |
 
-Os textos completos das licenças MIT e Apache-2.0 estão nos repositórios acima.
+The full MIT and Apache-2.0 license texts are in the repositories above.
 
-## Serviços consultados enquanto o app roda
+## Services used while the app runs
 
-Nada disto vem dentro do Retro Hub. Os arquivos são baixados no computador de quem usa, quando ele pede.
+None of this ships inside Retro Hub. Files are downloaded on the user's computer, when the user asks for them.
 
-- **Emuladores**: baixados das páginas oficiais de cada projeto (GitHub releases, buildbot do RetroArch, sites oficiais), cada um sob a própria licença (GPL, CC BY-NC-ND etc.). O Retro Hub não redistribui nenhum emulador.
-- **Capas e imagens** de [libretro-thumbnails](https://github.com/libretro-thumbnails/libretro-thumbnails): a arte pertence às editoras de cada jogo.
-- **Informações dos jogos** (ano, gênero, sinopse, listas No-Intro/Redump) de [libretro-database](https://github.com/libretro/libretro-database).
-- **Dependências do Windows** (Visual C++ Redistributable) pelo winget, da Microsoft.
+- **Emulators**: downloaded from each project's official pages (GitHub releases, the RetroArch buildbot, official sites), each under its own license (GPL, CC BY-NC-ND, etc.). Retro Hub does not redistribute any emulator.
+- **Box art and screenshots** from [libretro-thumbnails](https://github.com/libretro-thumbnails/libretro-thumbnails): the artwork belongs to each game's publisher.
+- **Game information** (year, genre, synopsis, No-Intro/Redump lists) from [libretro-database](https://github.com/libretro/libretro-database).
+- **Windows dependencies** (Visual C++ Redistributable) through winget, from Microsoft.
 
-## Marcas
+## Trademarks
 
-PlayStation, Nintendo, Sega, Xbox e os nomes de consoles e jogos são marcas dos seus donos e aparecem só para dizer com o que o programa é compatível. O Retro Hub não tem relação com nenhuma dessas empresas.
+PlayStation, Nintendo, Sega, Xbox and the names of consoles and games are trademarks of their owners and appear only to state compatibility. Retro Hub is not affiliated with any of these companies.

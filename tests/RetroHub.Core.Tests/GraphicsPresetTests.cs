@@ -21,9 +21,9 @@ public class GraphicsPresetTests
         dir.File("inis/PCSX2.ini", "[EmuCore/GS]\nupscale_multiplier = 1\nMaxAnisotropy = 0\nAspectRatio = Auto 4:3/3:2\n");
 
         Assert.Equal("Original", EmulatorSettings.Current(installed, g, g.Presets));
-        EmulatorSettings.Apply(installed, g, g.Presets!, "Máximo");
+        EmulatorSettings.Apply(installed, g, g.Presets!, "Maximum");
 
-        Assert.Equal("Máximo", EmulatorSettings.Current(installed, g, g.Presets));
+        Assert.Equal("Maximum", EmulatorSettings.Current(installed, g, g.Presets));
         Assert.Equal("6x", EmulatorSettings.Current(installed, g, g.Resolution));
 
         EmulatorSettings.Apply(installed, g, g.Resolution!, "4x"); // ajuste manual → nível personalizado
@@ -60,20 +60,20 @@ public class GraphicsPresetTests
         {
             File = "user/config/qt-config.ini",
             Format = "qt",
-            Presets = new GraphicsOption { Values = new() { ["Original"] = Renderer("3", "1"), ["Máximo"] = Renderer("6", "5") } },
+            Presets = new GraphicsOption { Values = new() { ["Original"] = Renderer("3", "1"), ["Maximum"] = Renderer("6", "5") } },
             Resolution = new GraphicsOption { Values = new() { ["1x"] = Renderer("3", "1"), ["2x"] = Renderer("6", "5") } },
         };
         var installed = new InstalledEmulator { Id = "qtemu", InstallDir = dir.Path };
         var ini = dir.File("user/config/qt-config.ini", "[Renderer]\nresolution_setup\\default=true\nresolution_setup=3\nbackend=1\n");
 
-        EmulatorSettings.Apply(installed, g, g.Presets!, "Máximo");
+        EmulatorSettings.Apply(installed, g, g.Presets!, "Maximum");
         var lines = File.ReadAllLines(ini);
 
         Assert.Contains("resolution_setup\\default=false", lines);
         Assert.Contains("resolution_setup=6", lines);
         Assert.Contains("max_anisotropy=5", lines);
         Assert.Contains("backend=1", lines); // o resto do arquivo fica
-        Assert.Equal("Máximo", EmulatorSettings.Current(installed, g, g.Presets));
+        Assert.Equal("Maximum", EmulatorSettings.Current(installed, g, g.Presets));
         Assert.Equal("2x", EmulatorSettings.Current(installed, g, g.Resolution));
     }
 

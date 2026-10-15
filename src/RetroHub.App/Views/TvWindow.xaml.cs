@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using RetroHub.App.Helpers;
@@ -7,7 +7,7 @@ using RetroHub.App.ViewModels;
 
 namespace RetroHub.App.Views;
 
-/// <summary>Janela do Modo TV: tela cheia, sem mouse, comandada por controle (ou teclado).</summary>
+/// <summary>TV mode window: full screen, no mouse, driven by controller (or keyboard).</summary>
 public partial class TvWindow : Window
 {
     private readonly TvViewModel _vm;
@@ -27,7 +27,7 @@ public partial class TvWindow : Window
 
         Loaded += (_, _) => { _pad.Start(); ScrollToSelected(); BringToFront(); };
 
-        // Prévia: espera 0,8 s parado no jogo antes de tocar (não toca enquanto você passa rápido pelos jogos).
+        // Preview: waits 0.8 s on a game before playing (does not play while you scroll quickly through games).
         _videoDelay = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
         _videoDelay.Tick += (_, _) => { _videoDelay.Stop(); StartPreview(); };
         Video.MediaEnded += (_, _) => { Video.Position = TimeSpan.Zero; Video.Play(); };
@@ -36,20 +36,20 @@ public partial class TvWindow : Window
         _vm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(TvViewModel.PreviewVideo)) { StopPreview(); _videoDelay.Stop(); _videoDelay.Start(); }
-            if (e.PropertyName == nameof(TvViewModel.IsPlaying) && _vm.IsPlaying) StopPreview(); // jogo abrindo: silêncio
+            if (e.PropertyName == nameof(TvViewModel.IsPlaying) && _vm.IsPlaying) StopPreview(); // game starting: silence
             if (e.PropertyName == nameof(TvViewModel.Page))
             {
-                PageScroll.ScrollToTop(); // outro jogo: começa do topo
-                // A prévia em vídeo fica escondida atrás da página: sem som enquanto ela está aberta.
+                PageScroll.ScrollToTop(); // another game: start from the top
+                // The video preview is hidden behind the page: no sound while it is open.
                 _videoDelay.Stop();
                 if (_vm.Page is not null) StopPreview(); else _videoDelay.Start();
             }
         };
         Closed += (_, _) => { _videoDelay.Stop(); Video.Close(); };
-        // Ao voltar para a janela (ex.: Alt+Tab), cobre a barra de tarefas de novo.
+        // When returning to the window (e.g. Alt+Tab), cover the taskbar again.
         Activated += (_, _) => Topmost = !_vm.IsPlaying;
         Deactivated += (_, _) => Topmost = false;
-        // Jogo abrindo: sai do topo para o emulador aparecer na frente.
+        // Game starting: drop topmost so the emulator shows in front.
         _vm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(TvViewModel.IsPlaying) && _vm.IsPlaying)
@@ -58,7 +58,7 @@ public partial class TvWindow : Window
         Closed += (_, _) => { _pad.Dispose(); _vm.Stop(); };
     }
 
-    /// <summary>Teclado também navega: setas, Enter, Esc/Backspace, F (favorito), C (continuar), PgUp/PgDn ou Q/E (sistema).</summary>
+    /// <summary>The keyboard navigates too: arrows, Enter, Esc/Backspace, F (favorite), C (continue), PgUp/PgDn or Q/E (system).</summary>
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
         PadButton? button = e.Key switch
@@ -97,7 +97,7 @@ public partial class TvWindow : Window
     {
         Video.Stop();
         Video.Source = null;
-        Video.BeginAnimation(OpacityProperty, null); // solta o valor da animação de fade
+        Video.BeginAnimation(OpacityProperty, null); // releases the fade animation value
         Video.Opacity = 0;
     }
 
@@ -116,8 +116,8 @@ public partial class TvWindow : Window
     {
         if (WindowState == WindowState.Minimized)
             WindowState = WindowState.Maximized;
-        // Windows só entrega o foco a quem já está em primeiro plano; Topmost + Activate contorna isso
-        // e cobre a barra de tarefas (janela sem borda maximizada).
+        // Windows only gives focus to whoever is already in the foreground; Topmost + Activate works around it
+        // and covers the taskbar (borderless maximized window).
         Topmost = true;
         Activate();
         Focus();

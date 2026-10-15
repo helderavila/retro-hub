@@ -3,7 +3,7 @@ using System.IO;
 
 namespace RetroHub.App.ViewModels;
 
-/// <summary>Aviso inline. Kind: "ok" | "warn" | "error".</summary>
+/// <summary>Inline notice. Kind: "ok" | "warn" | "error".</summary>
 public sealed record Notice(string Kind, string Message)
 {
     public static Notice Ok(string message) => new("ok", message);
@@ -11,7 +11,7 @@ public sealed record Notice(string Kind, string Message)
     public static Notice Error(string message) => new("error", message);
 }
 
-/// <summary>Páginas que querem atualizar dados ao serem exibidas.</summary>
+/// <summary>Pages that want to refresh their data when shown.</summary>
 public interface IActivatable
 {
     void OnActivated();

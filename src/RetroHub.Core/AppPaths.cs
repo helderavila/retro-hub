@@ -1,8 +1,8 @@
 namespace RetroHub.Core;
 
 /// <summary>
-/// Layout de pastas. Se existir um "portable.txt" ao lado do executável, tudo fica em ./data;
-/// caso contrário, em %LOCALAPPDATA%\RetroHub.
+/// Folder layout. If a "portable.txt" exists next to the executable, everything lives in ./data;
+/// otherwise in %LOCALAPPDATA%\RetroHub.
 /// </summary>
 public sealed class AppPaths
 {
@@ -18,8 +18,8 @@ public sealed class AppPaths
     public string Database => Path.Combine(Root, "library.db");
 
     /// <summary>
-    /// Manifestos do usuário: emulators\*.json e systems\*.json somados aos que vêm com o app
-    /// (com o mesmo id, o do usuário vale). Ficam fora da pasta do programa: atualizações não apagam.
+    /// User manifests: emulators\*.json and systems\*.json added to the ones shipped with the app
+    /// (with the same id, the user's wins). They live outside the program folder, so updates do not delete them.
     /// </summary>
     public string UserManifests => Path.Combine(Root, "manifests");
 

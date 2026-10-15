@@ -1,10 +1,11 @@
-<Window x:Class="RetroHub.App.MainWindow"
+﻿<Window x:Class="RetroHub.App.MainWindow"
         Icon="/Assets/RetroHub.ico"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:RetroHub.App.Controls"
         xmlns:vm="clr-namespace:RetroHub.App.ViewModels"
         xmlns:views="clr-namespace:RetroHub.App.Views"
+        xmlns:l="clr-namespace:RetroHub.App.Helpers"
         Title="Retro Hub"
         Width="1320" Height="840" MinWidth="980" MinHeight="620"
         WindowStartupLocation="CenterScreen"
@@ -40,11 +41,11 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- ═══ Barra superior (abas como a Steam; Modo TV no canto, como o Big Picture) ═══ -->
+        <!-- ═══ Top bar (tabs like Steam; TV mode in the corner, like Big Picture) ═══ -->
         <Border Grid.Row="0" Background="{StaticResource Brush.Bg.Subtle}"
                 BorderBrush="{StaticResource Brush.Border.Subtle}" BorderThickness="0,0,0,1">
             <DockPanel Margin="20,0,16,0">
-                <!-- Marca -->
+                <!-- Brand -->
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,36,0">
                     <Image Source="/Assets/logo-mark.png" Width="30" Height="30" RenderOptions.BitmapScalingMode="HighQuality" />
                     <Image Source="/Assets/logo-wordmark.png" Height="19" Margin="10,0,0,0" VerticalAlignment="Center"
@@ -53,23 +54,23 @@
                                Style="{StaticResource Text.Mono.Tertiary}" />
                 </StackPanel>
 
-                <!-- Direita: controle e Modo TV -->
+                <!-- Right: controller and TV mode -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,18,0"
-                                ToolTip="O controle é configurado automaticamente no primeiro jogo de cada emulador">
+                                ToolTip="{l:T 'Your controller is set up automatically the first time you play on each emulator'}">
                         <ui:Icon Data="{StaticResource Icon.Gamepad}" Width="15" Height="15"
                                  Foreground="{Binding ControllerKind, Converter={StaticResource StatusBrush}}" />
                         <TextBlock Text="{Binding ControllerText}" Margin="8,0,0,0" VerticalAlignment="Center"
                                    FontSize="{StaticResource Font.Size.Sm}" Foreground="{StaticResource Brush.Text.Secondary}" />
                     </StackPanel>
-                    <ToggleButton IsChecked="{Binding IsTvOpen}" Cursor="Hand" ToolTip="Tela cheia para jogar no sofá, só com o controle (F11)">
+                    <ToggleButton IsChecked="{Binding IsTvOpen}" Cursor="Hand" ToolTip="{l:T 'Full screen for couch play, controller only (F11)'}">
                         <ToggleButton.Template>
                             <ControlTemplate TargetType="ToggleButton">
                                 <Border x:Name="Box" Height="32" Padding="12,0" CornerRadius="{StaticResource Radius.Md}"
                                         Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border.Strong}" BorderThickness="1">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <ui:Icon Data="{StaticResource Icon.Tv}" Width="15" Height="15" Foreground="{StaticResource Brush.Text.Primary}" />
-                                        <TextBlock Text="Modo TV" Margin="8,0,0,0" FontWeight="{StaticResource Font.Weight.Medium}"
+                                        <TextBlock Text="{l:T 'TV Mode'}" Margin="8,0,0,0" FontWeight="{StaticResource Font.Weight.Medium}"
                                                    Foreground="{StaticResource Brush.Text.Primary}" VerticalAlignment="Center" />
                                         <TextBlock Text="F11" Margin="8,0,0,0" Style="{StaticResource Text.Mono.Tertiary}" VerticalAlignment="Center" />
                                     </StackPanel>
@@ -84,23 +85,23 @@
                     </ToggleButton>
                 </StackPanel>
 
-                <!-- Abas -->
+                <!-- Tabs -->
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton Style="{StaticResource TopNav.Item}" Content="BIBLIOTECA" GroupName="Top"
+                    <RadioButton Style="{StaticResource TopNav.Item}" Content="{l:T LIBRARY}" GroupName="Top"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=library}" />
-                    <RadioButton Style="{StaticResource TopNav.Item}" Content="ESTATÍSTICAS" GroupName="Top"
+                    <RadioButton Style="{StaticResource TopNav.Item}" Content="{l:T STATS}" GroupName="Top"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=stats}" />
-                    <RadioButton Style="{StaticResource TopNav.Item}" Content="EMULADORES" GroupName="Top"
+                    <RadioButton Style="{StaticResource TopNav.Item}" Content="{l:T EMULATORS}" GroupName="Top"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=emulators}" />
                     <RadioButton Style="{StaticResource TopNav.Item}" Content="BIOS" GroupName="Top"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=bios}" />
-                    <RadioButton Style="{StaticResource TopNav.Item}" Content="PASTAS" GroupName="Top"
+                    <RadioButton Style="{StaticResource TopNav.Item}" Content="{l:T FOLDERS}" GroupName="Top"
                                  IsChecked="{Binding CurrentKey, Converter={StaticResource Equals}, ConverterParameter=folders}" />
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <!-- ═══ Conteúdo ═══ -->
+        <!-- ═══ Content ═══ -->
         <Grid Grid.Row="1" ClipToBounds="True">
             <Rectangle Height="360" VerticalAlignment="Top" Fill="{StaticResource Brush.TopGlow}" IsHitTestVisible="False" />
 
@@ -110,7 +111,7 @@
                     <TranslateTransform />
                 </ContentControl.RenderTransform>
                 <ContentControl.Triggers>
-                    <!-- Transição de página: fade + leve subida, 200ms ease-out -->
+                    <!-- Page transition: fade + slight rise, 200ms ease-out -->
                     <EventTrigger RoutedEvent="Binding.TargetUpdated">
                         <BeginStoryboard>
                             <Storyboard>
@@ -125,7 +126,7 @@
             </ContentControl>
         </Grid>
 
-        <!-- Grão sobre tudo, sem capturar mouse -->
+        <!-- Grain over everything, without capturing the mouse -->
         <Rectangle x:Name="Grain" Grid.RowSpan="2" IsHitTestVisible="False" />
     </Grid>
 </Window>

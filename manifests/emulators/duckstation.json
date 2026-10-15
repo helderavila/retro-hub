@@ -1,11 +1,11 @@
 {
   "id": "duckstation",
   "name": "DuckStation",
-  "description": "Emulador de PlayStation focado em precisão e desempenho.",
+  "description": "PlayStation emulator focused on accuracy and performance.",
   "homepage": "https://www.duckstation.org",
   "license": "CC-BY-NC-ND-4.0",
   "systems": ["ps1"],
-  // A DuckStation publica builds contínuas na tag "latest".
+  // DuckStation publishes rolling builds under the "latest" tag.
   "source": {
     "type": "github",
     "repo": "stenzek/duckstation",
@@ -25,7 +25,7 @@
   "controller": {
     "file": "settings.ini",
     "format": "ini",
-    "description": "Jogadores 1 e 2 · DualShock analógico · vibração",
+    "description": "Players 1 and 2 · analog DualShock · rumble",
     "settings": {
       "Pad2": {
         "Type": "AnalogController",
@@ -52,7 +52,7 @@
       }
     }
   },
-  // Save states: savestates/SLUS-00067_1.sav (e _resume.sav ao sair).
+  // Save states: savestates/SLUS-00067_1.sav (and _resume.sav on exit).
   "saves": {
     "states": [ { "dir": "savestates", "pattern": "{serial}_*.sav", "slot": "_(\\d+)\\.sav$" } ],
     "loadStateArgs": "-batch -fullscreen -statefile \"{state}\" \"{rom}\"",
@@ -63,24 +63,24 @@
     "file": "settings.ini",
     "presets": { "values": {
       "Original": { "GPU": { "ResolutionScale": "1", "PGXPEnable": "false", "Multisamples": "1" } },
-      "Melhorado": { "GPU": { "ResolutionScale": "3", "PGXPEnable": "true", "Multisamples": "1" } },
-      "Máximo": { "GPU": { "ResolutionScale": "8", "PGXPEnable": "true", "Multisamples": "4" } } } },
+      "Enhanced": { "GPU": { "ResolutionScale": "3", "PGXPEnable": "true", "Multisamples": "1" } },
+      "Maximum": { "GPU": { "ResolutionScale": "8", "PGXPEnable": "true", "Multisamples": "4" } } } },
     "resolution": { "values": { "1x": { "GPU": { "ResolutionScale": "1" } }, "2x": { "GPU": { "ResolutionScale": "2" } }, "3x": { "GPU": { "ResolutionScale": "3" } }, "4x": { "GPU": { "ResolutionScale": "4" } }, "6x": { "GPU": { "ResolutionScale": "6" } }, "8x": { "GPU": { "ResolutionScale": "8" } } } },
     "aspect": { "values": {
       "Auto": { "Display": { "AspectRatio": "Auto (Game Native)" } },
       "4:3": { "Display": { "AspectRatio": "4:3" } },
       "16:9": { "Display": { "AspectRatio": "16:9" } } } },
     "toggles": [
-      { "id": "widescreen", "label": "Widescreen de verdade",
-        "hint": "Renderiza em 16:9 (funciona bem na maioria dos jogos 3D; alguns mostram objetos sumindo nas bordas).",
+      { "id": "widescreen", "label": "True widescreen",
+        "hint": "Renders in 16:9 (works well in most 3D games; some show objects disappearing at the edges).",
         "on": { "GPU": { "WidescreenHack": "true" }, "Display": { "AspectRatio": "16:9" } },
         "off": { "GPU": { "WidescreenHack": "false" }, "Display": { "AspectRatio": "Auto (Game Native)" } } },
-      { "id": "hdtextures", "label": "Texturas HD",
-        "hint": "Coloque o pacote em textures\\<serial> (pasta da DuckStation).",
+      { "id": "hdtextures", "label": "HD textures",
+        "hint": "Put the pack in textures\\<serial> (DuckStation folder).",
         "on": { "TextureReplacements": { "EnableTextureReplacements": "true" } },
         "off": { "TextureReplacements": { "EnableTextureReplacements": "false" } } }
     ]
   },
-  // Login das conquistas é feito dentro da DuckStation (Configurações › Conquistas); aqui só ligamos.
+  // Achievements login is done inside DuckStation (Settings › Achievements); here we only enable them.
   "achievements": { "file": "settings.ini", "enable": { "Cheevos": { "Enabled": "true" } } }
 }

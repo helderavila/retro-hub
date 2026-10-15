@@ -1,11 +1,16 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using RetroHub.Core;
+using RetroHub.Core.Localization;
 
 namespace RetroHub.App.ViewModels;
+
+public sealed record LanguageOption(string Code, string Name);
 
 public sealed record SystemInfoRow(string Name, string ShortName, string Folders, string Extensions, string Emulator);
 
@@ -21,13 +26,13 @@ public partial class FoldersViewModel : ObservableObject, IActivatable
     public bool HasFolders => Folders.Count > 0;
     public bool HasWarnings => ManifestWarnings.Count > 0;
 
-    // ── Backup dos saves ────────────────────────────────────────────────────
+    // ── Save backup ─────────────────────────────────────────────────────────
 
     public string BackupDir => _services.Backup.Destination;
 
     public string LastBackupText => _services.Backup.LastBackup is { } t
-        ? $"último backup: {t.ToLocalTime():dd/MM/yyyy HH:mm}"
-        : "nenhum backup feito ainda";
+        ? L.F("last backup: {0}", L.DateTime(t))
+        : L.T("no backup made yet");
 
     [ObservableProperty] private bool _isBackingUp;
     [ObservableProperty] private Notice? _backupNotice;
@@ -45,7 +50,7 @@ public partial class FoldersViewModel : ObservableObject, IActivatable
     [RelayCommand]
     private void ChangeBackupDir()
     {
-        var dialog = new OpenFolderDialog { Title = "Onde guardar os backups (dica: uma pasta do OneDrive ou Google Drive)" };
+        var dialog = new OpenFolderDialog { Title = L.T("Where to keep backups (tip: a OneDrive or Google Drive folder)") };
         if (dialog.ShowDialog() != true) return;
         _services.Database.SetSetting(Core.Saves.BackupService.DirSetting, dialog.FolderName);
         OnPropertyChanged(nameof(BackupDir));
@@ -59,13 +64,13 @@ public partial class FoldersViewModel : ObservableObject, IActivatable
         {
             var result = await _services.Backup.CreateAsync();
             BackupNotice = result is null
-                ? Notice.Warn("Nada para copiar ainda: instale um emulador e jogue algo.")
-                : Notice.Ok($"{result.Files} arquivo(s), {result.Bytes / 1048576.0:0.0} MB → {Path.GetFileName(result.ZipPath)}");
+                ? Notice.Warn(L.T("Nothing to back up yet: install an emulator and play something."))
+                : Notice.Ok(L.F("{0} file(s), {1:0.0} MB → {2}", result.Files, result.Bytes / 1048576.0, Path.GetFileName(result.ZipPath)));
             OnPropertyChanged(nameof(LastBackupText));
         }
         catch (Exception ex)
         {
-            BackupNotice = Notice.Error($"Falha no backup: {ex.Message}");
+            BackupNotice = Notice.Error(L.F("Backup failed: {0}", ex.Message));
         }
         finally
         {
@@ -80,7 +85,7 @@ public partial class FoldersViewModel : ObservableObject, IActivatable
         Shell.OpenFolder(BackupDir);
     }
 
-    /// <summary>Abre o Retro Hub direto no Modo TV (para usar o PC como console).</summary>
+    /// <summary>Opens Retro Hub straight into TV mode (to use the PC as a console).</summary>
     public bool StartInTv
     {
         get => _services.Database.GetSetting(MainViewModel.StartInTvSetting) == "1";
@@ -91,13 +96,39 @@ public partial class FoldersViewModel : ObservableObject, IActivatable
         }
     }
 
+    // ── Language ────────────────────────────────────────────────────────────
+
+    public IReadOnlyList<LanguageOption> Languages { get; } = L.Languages.Select(l => new LanguageOption(l.Code, l.Name)).ToList();
+
+    /// <summary>Chosen interface language; saved right away, applied on the next start.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LanguageRestartNeeded))]
+    private string _selectedLanguage = L.Language;
+
+    /// <summary>The saved language differs from the one loaded at startup.</summary>
+    public bool LanguageRestartNeeded => SelectedLanguage != L.Language;
+
+    partial void OnSelectedLanguageChanged(string value)
+    {
+        if (!string.IsNullOrEmpty(value))
+            _services.Database.SetSetting(L.Setting, value);
+    }
+
+    [RelayCommand]
+    private void Restart()
+    {
+        if (Environment.ProcessPath is { } exe)
+            Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true });
+        Application.Current.Shutdown();
+    }
+
     public FoldersViewModel(HubServices services)
     {
         _services = services;
         Systems = services.Manifests.Systems
             .Select(s => new SystemInfoRow(
-                s.Name,
-                s.ShortName,
+                L.T(s.Name),
+                L.T(s.ShortName),
                 string.Join("  ", s.FolderAliases.Take(3).Select(a => a + "\\")),
                 string.Join(" ", s.Extensions),
                 s.DefaultEmulator is { } e ? services.Manifests.GetEmulator(e)?.Name ?? e : "—"))
@@ -117,7 +148,7 @@ public partial class FoldersViewModel : ObservableObject, IActivatable
     [RelayCommand]
     private void AddFolder()
     {
-        var dialog = new OpenFolderDialog { Title = "Escolha pastas de ROMs", Multiselect = true };
+        var dialog = new OpenFolderDialog { Title = L.T("Choose ROM folders"), Multiselect = true };
         if (dialog.ShowDialog() != true)
             return;
 

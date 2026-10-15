@@ -1,8 +1,8 @@
-// Sistemas reconhecidos pelo Retro Hub.
-// - extensions: podem se repetir entre sistemas; o scanner desempata pelo conteúdo e pelo nome da pasta.
-// - thumbnails: pasta do sistema em thumbnails.libretro.com (capas buscadas pelo nome).
-// - dat: lista oficial de dumps no libretro-database (no-intro / redump / fbneo-split) — verificação e informações do jogo.
-// - bios: MD5 conforme a documentação do libretro. O Retro Hub NUNCA baixa BIOS.
+// Systems recognized by Retro Hub.
+// - extensions: may repeat across systems; the scanner breaks ties by content and folder name.
+// - thumbnails: system folder on thumbnails.libretro.com (covers looked up by name).
+// - dat: official dump list in libretro-database (no-intro / redump / fbneo-split) — game verification and info.
+// - bios: MD5 per the libretro documentation. Retro Hub NEVER downloads BIOS files.
 {
   "schemaVersion": 1,
   "systems": [
@@ -54,9 +54,9 @@
       "folderAliases": ["gba", "game boy advance", "gameboy advance"],
       "defaultEmulator": "retroarch",
       "biosRule": "none",
-      "biosHle": "mGBA usa BIOS emulada quando gba_bios.bin não existe",
+      "biosHle": "mGBA uses an emulated BIOS when gba_bios.bin is missing",
       "bios": [
-        { "file": "gba_bios.bin", "md5": ["a860e8c0b6d573d191e4ec7db1b1e4f6"], "size": 16384, "description": "BIOS do GBA (opcional — o mGBA tem HLE)", "optional": true }
+        { "file": "gba_bios.bin", "md5": ["a860e8c0b6d573d191e4ec7db1b1e4f6"], "size": 16384, "description": "GBA BIOS (optional — mGBA has HLE)", "optional": true }
       ]
     },
     {
@@ -66,7 +66,7 @@
       "extensions": [".nds"],
       "folderAliases": ["nds", "ds", "nintendo ds"],
       "defaultEmulator": "retroarch",
-      "biosHle": "melonDS DS traz BIOS e firmware livres embutidos"
+      "biosHle": "melonDS DS ships with free built-in BIOS and firmware"
     },
     {
       "id": "gamecube", "name": "GameCube", "shortName": "GC", "manufacturer": "Nintendo",
@@ -109,9 +109,9 @@
       "defaultEmulator": "retroarch",
       "biosRule": "any",
       "bios": [
-        { "file": "bios_CD_U.bin", "md5": ["2efd74e3232ff260e371b99f84024f7f"], "size": 131072, "description": "Sega CD (EUA)" },
-        { "file": "bios_CD_E.bin", "md5": ["e66fa1dc5820d254611fdcdba0662372"], "size": 131072, "description": "Mega-CD (Europa)" },
-        { "file": "bios_CD_J.bin", "md5": ["278a9397d192149e84e820ac621a8edd"], "size": 131072, "description": "Mega-CD (Japão)" }
+        { "file": "bios_CD_U.bin", "md5": ["2efd74e3232ff260e371b99f84024f7f"], "size": 131072, "description": "Sega CD (USA)" },
+        { "file": "bios_CD_E.bin", "md5": ["e66fa1dc5820d254611fdcdba0662372"], "size": 131072, "description": "Mega-CD (Europe)" },
+        { "file": "bios_CD_J.bin", "md5": ["278a9397d192149e84e820ac621a8edd"], "size": 131072, "description": "Mega-CD (Japan)" }
       ]
     },
     {
@@ -123,8 +123,8 @@
       "defaultEmulator": "retroarch",
       "biosRule": "any",
       "bios": [
-        { "file": "sega_101.bin", "md5": ["85ec9ca47d8f6807718151cbcca8b964"], "size": 524288, "description": "Saturn (Japão)" },
-        { "file": "mpr-17933.bin", "md5": ["3240872c70984b6cbfda1586cab68dbe"], "size": 524288, "description": "Saturn (EUA/Europa)" }
+        { "file": "sega_101.bin", "md5": ["85ec9ca47d8f6807718151cbcca8b964"], "size": 524288, "description": "Saturn (Japan)" },
+        { "file": "mpr-17933.bin", "md5": ["3240872c70984b6cbfda1586cab68dbe"], "size": 524288, "description": "Saturn (USA/Europe)" }
       ]
     },
     {
@@ -135,9 +135,9 @@
       "folderAliases": ["dreamcast", "dc"],
       "defaultEmulator": "retroarch",
       "biosRule": "none",
-      "biosHle": "Flycast usa BIOS emulada quando dc_boot.bin não existe",
+      "biosHle": "Flycast uses an emulated BIOS when dc_boot.bin is missing",
       "bios": [
-        { "file": "dc_boot.bin", "md5": ["e10c53c2f8b90bab96ead2d368858623"], "size": 2097152, "description": "Boot ROM (opcional — o Flycast tem HLE)", "optional": true },
+        { "file": "dc_boot.bin", "md5": ["e10c53c2f8b90bab96ead2d368858623"], "size": 2097152, "description": "Boot ROM (optional — Flycast has HLE)", "optional": true },
         { "file": "dc_flash.bin", "md5": ["0a93f7940c455905bea6e392dfde92a4"], "size": 131072, "description": "Flash ROM", "optional": true }
       ]
     },
@@ -150,10 +150,10 @@
       "defaultEmulator": "duckstation",
       "biosRule": "any",
       "bios": [
-        { "file": "scph5501.bin", "md5": ["490f666e1afb15b7362b406ed1cea246"], "size": 524288, "description": "PS1 BIOS v3.0 (EUA)" },
-        { "file": "scph5500.bin", "md5": ["8dd7d5296a650fac7319bce665a6a53c"], "size": 524288, "description": "PS1 BIOS v3.0 (Japão)" },
-        { "file": "scph5502.bin", "md5": ["32736f17079d0b2b7024407c39bd3050"], "size": 524288, "description": "PS1 BIOS v3.0 (Europa)" },
-        { "file": "scph1001.bin", "md5": ["924e392ed05558ffdb115408c263dccf"], "size": 524288, "description": "PS1 BIOS v2.2 (EUA)" }
+        { "file": "scph5501.bin", "md5": ["490f666e1afb15b7362b406ed1cea246"], "size": 524288, "description": "PS1 BIOS v3.0 (USA)" },
+        { "file": "scph5500.bin", "md5": ["8dd7d5296a650fac7319bce665a6a53c"], "size": 524288, "description": "PS1 BIOS v3.0 (Japan)" },
+        { "file": "scph5502.bin", "md5": ["32736f17079d0b2b7024407c39bd3050"], "size": 524288, "description": "PS1 BIOS v3.0 (Europe)" },
+        { "file": "scph1001.bin", "md5": ["924e392ed05558ffdb115408c263dccf"], "size": 524288, "description": "PS1 BIOS v2.2 (USA)" }
       ]
     },
     {
@@ -164,9 +164,9 @@
       "folderAliases": ["ps2", "playstation 2", "playstation2"],
       "defaultEmulator": "pcsx2",
       "biosRule": "any",
-      // Há dezenas de revisões de BIOS de PS2; aceitamos qualquer dump de 4 MiB com o ROMDIR ("RESET") no início.
+      // There are dozens of PS2 BIOS revisions; any 4 MiB dump with the ROMDIR ("RESET") near the start is accepted.
       "bios": [
-        { "file": "*.bin", "size": 4194304, "signature": "RESET", "description": "Qualquer BIOS de PS2 (dump de 4 MiB do seu console)" }
+        { "file": "*.bin", "size": 4194304, "signature": "RESET", "description": "Any PS2 BIOS (4 MiB dump from your console)" }
       ]
     },
     {
@@ -178,7 +178,7 @@
       "defaultEmulator": "ppsspp"
     },
     {
-      "id": "arcade", "name": "Arcade (FinalBurn Neo)", "shortName": "ARC", "manufacturer": "Vários",
+      "id": "arcade", "name": "Arcade (FinalBurn Neo)", "shortName": "ARC", "manufacturer": "Various",
       "thumbnails": "FBNeo - Arcade Games",
       "dat": "fbneo-split",
       "extensions": [".zip"],

@@ -1,6 +1,6 @@
 <!--
-  Ícones de linha no estilo Lucide: grade 24×24, desenhados com Stroke (não Fill).
-  Use com <ui:Icon Data="{StaticResource Icon.X}" />.
+  Lucide-style line icons: 24×24 grid, drawn with Stroke (not Fill).
+  Use with <ui:Icon Data="{StaticResource Icon.X}" />.
 -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">

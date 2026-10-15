@@ -5,6 +5,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using RetroHub.Core.Covers;
+using RetroHub.Core.Localization;
 
 namespace RetroHub.App.Views;
 
@@ -12,7 +13,7 @@ public enum CoverChoiceKind { Catalog, File, None }
 
 public sealed record CoverChoice(CoverChoiceKind Kind, string? Value);
 
-/// <summary>Escolher a capa: buscar no acervo do libretro (com prévia), usar uma imagem do PC ou ficar sem capa.</summary>
+/// <summary>Pick the cover: search the libretro archive (with preview), use an image from the PC or have no cover.</summary>
 public partial class CoverPickerDialog : Window
 {
     private readonly CoverFetcher _covers;
@@ -53,18 +54,18 @@ public partial class CoverPickerDialog : Window
         _search?.Cancel();
         _search = new CancellationTokenSource();
         var token = _search.Token;
-        Status.Text = "buscando…";
+        Status.Text = L.T("searching…");
         try
         {
             var results = await _covers.SearchAsync(_systemId, Query.Text, token);
             if (token.IsCancellationRequested) return;
             Results.ItemsSource = results;
-            Status.Text = results.Count == 0 ? "Nenhuma capa com esse nome. Tente menos palavras." : "";
+            Status.Text = results.Count == 0 ? L.T("No covers with that name. Try fewer words.") : "";
             if (results.Count > 0) Results.SelectedIndex = 0;
         }
         catch (HttpRequestException)
         {
-            Status.Text = "Sem conexão com o acervo de capas.";
+            Status.Text = L.T("Cannot reach the cover archive.");
         }
     }
 
@@ -72,7 +73,7 @@ public partial class CoverPickerDialog : Window
     {
         UseButton.IsEnabled = Results.SelectedItem is string;
         Preview.Source = null;
-        PreviewHint.Text = "carregando…";
+        PreviewHint.Text = L.T("loading…");
         if (Results.SelectedItem is string name && _covers.ThumbnailUrl(_systemId, name) is { } url)
         {
             var bitmap = new BitmapImage();
@@ -81,7 +82,7 @@ public partial class CoverPickerDialog : Window
             bitmap.DecodePixelWidth = 460;
             bitmap.EndInit();
             bitmap.DownloadCompleted += (_, _) => PreviewHint.Text = "";
-            bitmap.DownloadFailed += (_, _) => PreviewHint.Text = "sem prévia";
+            bitmap.DownloadFailed += (_, _) => PreviewHint.Text = L.T("no preview");
             Preview.Source = bitmap;
         }
     }
@@ -95,7 +96,7 @@ public partial class CoverPickerDialog : Window
 
     private void FromFile_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFileDialog { Title = "Imagem da capa", Filter = "Imagens|*.png;*.jpg;*.jpeg;*.webp;*.bmp" };
+        var dialog = new OpenFileDialog { Title = L.T("Cover image"), Filter = L.T("Images") + "|*.png;*.jpg;*.jpeg;*.webp;*.bmp" };
         if (dialog.ShowDialog(this) != true) return;
         Choice = new CoverChoice(CoverChoiceKind.File, dialog.FileName);
         DialogResult = true;

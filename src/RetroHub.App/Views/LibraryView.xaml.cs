@@ -10,7 +10,7 @@ public partial class LibraryView : UserControl
 
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
-        // Esc: primeiro cancela a edição das informações; depois volta ao início da biblioteca.
+        // Esc: first cancels editing the info; then goes back to the library home.
         if (e.Key == Key.Escape && DataContext is LibraryViewModel { Page: { IsEditing: true } page })
         {
             page.CancelEditCommand.Execute(null);

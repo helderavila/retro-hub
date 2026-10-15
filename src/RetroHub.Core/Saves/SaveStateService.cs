@@ -1,20 +1,21 @@
 using System.IO.Compression;
 using System.Text.RegularExpressions;
 using RetroHub.Core.Library;
+using RetroHub.Core.Localization;
 using RetroHub.Core.Manifests;
 using RetroHub.Core.Metadata;
 using RetroHub.Core.Models;
 
 namespace RetroHub.Core.Saves;
 
-/// <param name="Slot">Número do slot (RetroArch: 0 = ".state"). null quando o emulador não numera (ex.: "resume").</param>
-/// <param name="CanLoadDirectly">O emulador aceita abrir já neste state pela linha de comando.</param>
+/// <param name="Slot">Slot number (RetroArch: 0 = ".state"). null when the emulator does not number them (e.g. "resume").</param>
+/// <param name="CanLoadDirectly">The emulator can start directly in this state from the command line.</param>
 public sealed record SaveState(string Path, string EmulatorId, string EmulatorName, int? Slot, DateTimeOffset Modified, long Size, bool CanLoadDirectly)
 {
-    public string Label => Slot is { } s ? $"Slot {s}" : System.IO.Path.GetFileNameWithoutExtension(Path).Contains("resume", StringComparison.OrdinalIgnoreCase) ? "Ao sair" : "Save";
+    public string Label => Slot is { } s ? L.F("Slot {0}", s) : System.IO.Path.GetFileNameWithoutExtension(Path).Contains("resume", StringComparison.OrdinalIgnoreCase) ? L.T("On exit") : "Save";
 }
 
-/// <summary>Encontra os save states de um jogo nas pastas dos emuladores instalados (conforme os manifestos).</summary>
+/// <summary>Finds a game's save states in the installed emulators' folders (per the manifests).</summary>
 public sealed class SaveStateService(ManifestRepository manifests, LibraryDatabase db)
 {
     public IReadOnlyList<SaveState> Find(Game game)
@@ -57,10 +58,10 @@ public sealed class SaveStateService(ManifestRepository manifests, LibraryDataba
         return states.OrderByDescending(s => s.Modified).ToList();
     }
 
-    /// <summary>O save mais recente do jogo ("Continuar"), se houver.</summary>
+    /// <summary>The game's most recent save ("Continue"), if any.</summary>
     public SaveState? Latest(Game game) => Find(game).FirstOrDefault();
 
-    /// <summary>Miniatura do save, quando o emulador grava uma: .p2s do PCSX2 (zip com Screenshot.png) ou .png ao lado (RetroArch).</summary>
+    /// <summary>Save thumbnail, when the emulator writes one: PCSX2 .p2s (zip with Screenshot.png) or a .png next to it (RetroArch).</summary>
     public static byte[]? Thumbnail(SaveState state)
     {
         try
@@ -91,6 +92,6 @@ public sealed class SaveStateService(ManifestRepository manifests, LibraryDataba
         return m.Groups[1].Value.Length == 0 ? 0 : int.TryParse(m.Groups[1].Value, out var slot) ? slot : null;
     }
 
-    /// <summary>Nomes de ROM com [ ] não podem virar curinga no EnumerateFiles.</summary>
+    /// <summary>ROM names with [ ] must not become wildcards in EnumerateFiles.</summary>
     private static string EscapeWildcards(string name) => name.Replace("*", "?");
 }

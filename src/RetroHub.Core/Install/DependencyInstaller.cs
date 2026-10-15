@@ -1,10 +1,11 @@
 using System.ComponentModel;
+using RetroHub.Core.Localization;
 using RetroHub.Core.Models;
 using RetroHub.Core.Util;
 
 namespace RetroHub.Core.Install;
 
-/// <summary>Instala dependências do sistema (VC++ Redist etc.) via winget.</summary>
+/// <summary>Installs system dependencies (VC++ Redist etc.) via winget.</summary>
 public sealed class DependencyInstaller
 {
     private const string CommonFlags = "--accept-source-agreements --disable-interactivity";
@@ -34,11 +35,11 @@ public sealed class DependencyInstaller
         if (deps.Count == 0)
             return;
 
-        progress.Report(new InstallUpdate("Verificando dependências", null, null));
+        progress.Report(new InstallUpdate(L.T("Checking dependencies"), null, null));
         if (!await IsWingetAvailableAsync(ct))
         {
             foreach (var dep in deps)
-                progress.Report(InstallUpdate.Line($"! winget indisponível — instale manualmente: {dep.Name} ({dep.WingetId})"));
+                progress.Report(InstallUpdate.Line(L.F("! winget unavailable — install manually: {0} ({1})", dep.Name, dep.WingetId)));
             return;
         }
 
@@ -47,19 +48,19 @@ public sealed class DependencyInstaller
             ct.ThrowIfCancellationRequested();
             if (await IsInstalledAsync(dep, ct))
             {
-                progress.Report(InstallUpdate.Line($"✓ {dep.Name} já instalado"));
+                progress.Report(InstallUpdate.Line(L.F("✓ {0} already installed", dep.Name)));
                 continue;
             }
 
-            progress.Report(new InstallUpdate($"Instalando {dep.Name}", null, $"→ winget install {dep.WingetId}"));
+            progress.Report(new InstallUpdate(L.F("Installing {0}", dep.Name), null, $"→ winget install {dep.WingetId}"));
             var code = await ProcessRunner.RunAsync("winget",
                 $"install --id {dep.WingetId} -e --silent --accept-package-agreements {CommonFlags}",
                 line => progress.Report(InstallUpdate.Line("  " + line)), ct);
 
-            // 3010 = sucesso, reinício pendente (comum no VC++ Redist).
+            // 3010 = success, restart pending (common with VC++ Redist).
             progress.Report(InstallUpdate.Line(code is 0 or 3010
-                ? $"✓ {dep.Name} instalado"
-                : $"! winget terminou com código {code} para {dep.Name}; o emulador pode não abrir sem ele"));
+                ? L.F("✓ {0} installed", dep.Name)
+                : L.F("! winget exited with code {0} for {1}; the emulator may not start without it", code, dep.Name)));
         }
     }
 }

@@ -12,7 +12,7 @@ using RetroHub.Core.Scanning;
 
 namespace RetroHub.Core;
 
-/// <summary>Composição dos serviços (sem container de DI — o grafo é pequeno).</summary>
+/// <summary>Service composition (no DI container; the graph is small).</summary>
 public sealed class HubServices : IDisposable
 {
     public required AppPaths Paths { get; init; }
