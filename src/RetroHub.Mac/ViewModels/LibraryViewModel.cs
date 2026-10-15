@@ -554,9 +554,14 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         Notice = null;
         item.IsRunning = true;
         var loading = curtain ? LaunchCurtain.Show(item) : null;
+        var played = false;
         try
         {
-            await _services.Launcher.LaunchAsync(item.Game, ct, state, started: process => loading?.Watch(process));
+            await _services.Launcher.LaunchAsync(item.Game, ct, state, started: process =>
+            {
+                played = true;
+                loading?.Watch(process);
+            });
             if (_services.Database.GetGame(item.Game.Id) is { } fresh)
                 item.Update(fresh);
         }
@@ -576,6 +581,8 @@ public partial class LibraryViewModel : ObservableObject, IActivatable
         {
             loading?.Dismiss(); // the game ended or never started
             item.IsRunning = false;
+            if (played)
+                MacPresentation.ReturnToHub();
         }
     }
 

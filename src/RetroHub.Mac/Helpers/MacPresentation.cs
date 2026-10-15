@@ -68,6 +68,32 @@ public static class MacPresentation
         catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException) { }
     }
 
+    /// <summary>
+    /// Back to Retro Hub when a game ends, on the Space its window is on. macOS hands the focus back to Retro Hub by itself
+    /// but stays on the first desktop once the emulator's full-screen Space closes; ordering the window front again (as the
+    /// Window menu does) after that slide switches to its Space.
+    /// </summary>
+    public static async void ReturnToHub()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is not Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            return;
+        await Task.Delay(TimeSpan.FromMilliseconds(900)); // the full-screen Space slides away first
+        var window = desktop.Windows.LastOrDefault(w => w.IsVisible && w is not Views.LaunchCurtain);
+        if (window is null)
+            return;
+        if (OperatingSystem.IsMacOS() && window.TryGetPlatformHandle() is { HandleDescriptor: "NSWindow" } handle)
+        {
+            try
+            {
+                var app = objc_msgSend(objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
+                objc_msgSend_nuint_bool(app, sel_registerName("activateIgnoringOtherApps:"), 1);
+                objc_msgSend_ptr(handle.Handle, sel_registerName("makeKeyAndOrderFront:"), IntPtr.Zero);
+            }
+            catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException) { }
+        }
+        window.Activate();
+    }
+
     [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
     private static extern IntPtr objc_msgSend_int(IntPtr receiver, IntPtr selector, int value);
 
