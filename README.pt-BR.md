@@ -56,15 +56,32 @@ Qualquer outro emulador para Windows pode ser adicionado por você.
 
 ## Como usar
 
-1. Baixe o instalador em [Releases](../../releases/latest) e instale. Ele não pede administrador e não precisa do .NET instalado.
-2. Em **Pastas**, adicione as pastas onde ficam as suas ROMs e depois clique em **Escanear pastas** na **Biblioteca**.
+### Instalar no Windows
+
+Baixe o `RetroHub-Setup-<versão>.exe` em [Releases](../../releases/latest) e instale. Ele não pede administrador e não precisa do .NET instalado.
+
+### Instalar no macOS
+
+1. Baixe o `RetroHub-<versão>-macos-arm64.dmg` (Apple Silicon) ou o `-macos-x64.dmg` (Intel) em [Releases](../../releases/latest). macOS 12 ou mais novo; o .NET já vem junto.
+2. Abra o `.dmg` e arraste o **Retro Hub** para **Aplicativos**.
+3. Abra o Retro Hub em Aplicativos. Builds sem assinatura Developer ID são bloqueados na primeira vez ("A Apple não pôde verificar…"):
+   - macOS 15 ou mais novo: clique em **OK**, abra **Ajustes do Sistema › Privacidade e Segurança**, role até o fim e clique em **Abrir Mesmo Assim** ao lado do Retro Hub; depois confirme.
+   - macOS 12 a 14: botão direito no app › **Abrir** › **Abrir**.
+   - Ou, no Terminal: `xattr -dr com.apple.quarantine "/Applications/Retro Hub.app"`
+4. Para PlayStation 2 no Apple Silicon, o PCSX2 precisa do Rosetta 2. O macOS oferece a instalação na primeira vez que o PCSX2 abre, ou rode `softwareupdate --install-rosetta --agree-to-license`.
+
+Isso é feito uma vez só; as atualizações mantêm a biblioteca. Mais sobre a versão do Mac em [macOS](#macos).
+
+### Primeiros passos
+
+1. Em **Pastas**, adicione as pastas onde ficam as suas ROMs e depois clique em **Escanear pastas** na **Biblioteca**.
 3. Em **Emuladores**, clique em **Instalar selecionados** (ou instale só os que quiser).
 4. Se algum sistema precisar de BIOS, importe na tela **BIOS** os arquivos do seu console: arraste a pasta ou o `.zip` e eles são reconhecidos pelo MD5.
 5. Clique num jogo para ver a página dele, ou dê dois cliques para jogar.
 
-**Idioma:** o app vem em inglês e também em português. Escolha **Português** no instalador ou, no app, em **Pastas › Preferências › Idioma**.
+**Idioma:** o app vem em inglês e também em português. Escolha **Português** no instalador do Windows (no Mac, segue o idioma do sistema) ou, no app, em **Pastas › Preferências › Idioma**.
 
-A biblioteca, os emuladores e os saves ficam em `%LOCALAPPDATA%\RetroHub` e continuam lá depois de atualizar ou desinstalar. Com um arquivo `portable.txt` ao lado do `RetroHub.exe`, tudo vai para `.\data`.
+A biblioteca, os emuladores e os saves ficam em `%LOCALAPPDATA%\RetroHub` no Windows e em `~/Library/Application Support/RetroHub` no macOS, e continuam lá depois de atualizar ou desinstalar. Com um arquivo `portable.txt` ao lado do `RetroHub.exe` (no macOS, dentro de `Retro Hub.app/Contents/MacOS`), tudo vai para uma pasta `data` ali.
 
 ### BIOS
 
@@ -96,11 +113,12 @@ Abre pelo botão **Modo TV**, por **F11**, pelo atalho "Retro Hub (Modo TV)" ou 
 O app do Mac (`src/RetroHub.Mac`, Avalonia) tem as mesmas telas, o mesmo design e os mesmos recursos, e compartilha todo o resto com o app do Windows: a lógica, os manifestos e as traduções.
 
 - **Requisitos:** macOS 12 ou mais novo, Apple Silicon ou Intel.
-- **Instalar:** abra o `RetroHub-<versão>-macos-<arch>.dmg` e arraste o Retro Hub para Aplicativos. Builds sem assinatura Developer ID mostram o aviso de "desenvolvedor não identificado" na primeira vez: clique com o botão direito no app › **Abrir**.
+- **Instalar:** veja [Instalar no macOS](#instalar-no-macos).
 - **Dados:** `~/Library/Application Support/RetroHub` (um `portable.txt` dentro de `Retro Hub.app/Contents/MacOS` troca para `./data` ali).
 - **Emuladores** são os apps oficiais para macOS, baixados para a pasta do Retro Hub e mantidos nela: RetroArch, PCSX2 e Dolphin no modo portátil; DuckStation e PPSSPP rodam com a pasta pessoal apontando para dentro dela.
 - **PCSX2** ainda não tem versão para Apple Silicon: roda pelo Rosetta 2 (o botão **Dependências** verifica).
 - **Controles** são lidos pelo SDL3 (Xbox, PlayStation, Switch Pro e MFi); o RetroArch usa o driver MFi.
+- **Nintendo 64** usa o renderizador ParaLLEl-RDP com Vulkan: o renderizador OpenGL padrão (GLideN64) fica com a tela preta no macOS. O Retro Hub configura isso na primeira vez que um jogo de N64 abre.
 - **Diferenças:** sem winget (os emuladores vêm como apps), Finder e Lixo no lugar de Explorer e Lixeira, e o Modo TV mostra a arte do jogo em vez dos vídeos de prévia.
 
 ## Adicionar emuladores
@@ -145,7 +163,7 @@ Os seus manifestos ficam em `%LOCALAPPDATA%\RetroHub\manifests` e não são apag
 
 Os manifestos em [`manifests/emulators`](manifests/emulators) mostram todos os campos opcionais em uso.
 
-**macOS:** um bloco `"macos"` substitui as chaves de topo que ele nomeia (em geral `source`, `executable`, `launch`, `controller`). Sem ele, um emulador baixável só aparece no Windows. Duas chaves ajudam emuladores que guardam os dados na pasta pessoal: `"environment": { "HOME": "{emuDir}/home" }` define variáveis para o processo do emulador, e `"dataDir"` faz os caminhos de controle, gráficos e saves partirem dessa pasta.
+**macOS:** um bloco `"macos"` substitui as chaves de topo que ele nomeia (em geral `source`, `executable`, `launch`, `controller`). Sem ele, um emulador baixável só aparece no Windows. `"defaults"` grava configurações de que o emulador precisa naquele sistema (por exemplo, um renderizador) na instalação e antes do primeiro jogo; uma mudança feita depois dentro do emulador é mantida. Duas chaves ajudam emuladores que guardam os dados na pasta pessoal: `"environment": { "HOME": "{emuDir}/home" }` define variáveis para o processo do emulador, e `"dataDir"` faz os caminhos de controle, gráficos e saves partirem dessa pasta.
 
 **Hash:** fontes do GitHub usam o SHA-256 que o GitHub publica para cada arquivo. Links fixos sem hash ficam marcados como "sem hash" e o SHA-256 obtido é registrado; preencha `"sha256"` para exigir a conferência.
 

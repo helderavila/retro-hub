@@ -57,13 +57,30 @@ Any other Windows emulator can be added by you.
 
 ## Getting started
 
-1. Download the installer from [Releases](../../releases/latest) and run it. It does not ask for administrator rights and does not need .NET installed.
-2. In **Folders**, add the folders that hold your ROMs, then click **Scan folders** in the **Library**.
+### Install on Windows
+
+Download `RetroHub-Setup-<version>.exe` from [Releases](../../releases/latest) and run it. It does not ask for administrator rights and does not need .NET installed.
+
+### Install on macOS
+
+1. Download `RetroHub-<version>-macos-arm64.dmg` (Apple Silicon) or `-macos-x64.dmg` (Intel) from [Releases](../../releases/latest). macOS 12 or later; .NET is included.
+2. Open the `.dmg` and drag **Retro Hub** onto **Applications**.
+3. Open Retro Hub from Applications. Builds without a Developer ID signature are blocked the first time ("Apple could not verify…"):
+   - macOS 15 or later: click **Done**, open **System Settings › Privacy & Security**, scroll down and click **Open Anyway** next to Retro Hub, then confirm.
+   - macOS 12–14: right-click the app › **Open** › **Open**.
+   - Or, in Terminal: `xattr -dr com.apple.quarantine "/Applications/Retro Hub.app"`
+4. For PlayStation 2 on Apple Silicon, PCSX2 needs Rosetta 2. macOS offers to install it the first time PCSX2 opens, or run `softwareupdate --install-rosetta --agree-to-license`.
+
+You only do this once; updates keep your library. More about the Mac version in [macOS](#macos).
+
+### First steps
+
+1. In **Folders**, add the folders that hold your ROMs, then click **Scan folders** in the **Library**.
 3. In **Emulators**, click **Install selected** (or install only the ones you want).
 4. If a system needs a BIOS, import your console's files in the **BIOS** screen: drag the folder or the `.zip` in and they are recognized by MD5.
 5. Click a game to open its page, or double-click it to play.
 
-Your library, emulators and saves live in `%LOCALAPPDATA%\RetroHub` and stay there after updating or uninstalling. With a `portable.txt` file next to `RetroHub.exe`, everything goes to `.\data` instead.
+Your library, emulators and saves live in `%LOCALAPPDATA%\RetroHub` on Windows and `~/Library/Application Support/RetroHub` on macOS, and stay there after updating or uninstalling. With a `portable.txt` file next to `RetroHub.exe` (on macOS, inside `Retro Hub.app/Contents/MacOS`), everything goes to a `data` folder there instead.
 
 ### BIOS
 
@@ -95,11 +112,12 @@ Open it with the **TV Mode** button, **F11**, the "Retro Hub (TV mode)" shortcut
 The Mac app (`src/RetroHub.Mac`, Avalonia) has the same screens, design and features, and shares everything else with the Windows app: the core logic, the manifests and the translations.
 
 - **Requirements:** macOS 12 or later, Apple Silicon or Intel.
-- **Install:** open `RetroHub-<version>-macos-<arch>.dmg` and drag Retro Hub to Applications. Builds without a Developer ID signature show the "unidentified developer" prompt the first time: right-click the app › **Open**.
+- **Install:** see [Install on macOS](#install-on-macos).
 - **Data:** `~/Library/Application Support/RetroHub` (a `portable.txt` inside `Retro Hub.app/Contents/MacOS` switches to `./data` there).
 - **Emulators** are the official macOS apps, downloaded into Retro Hub's folder and kept self-contained: RetroArch, PCSX2 and Dolphin in their portable mode; DuckStation and PPSSPP run with their home folder inside it.
 - **PCSX2** has no Apple Silicon build yet: it runs through Rosetta 2 (the **Dependencies** button checks for it).
 - **Controllers** are read through SDL3 (Xbox, PlayStation, Switch Pro and MFi controllers); RetroArch uses its MFi driver.
+- **Nintendo 64** uses the ParaLLEl-RDP renderer on Vulkan: the default OpenGL renderer (GLideN64) shows a black screen on macOS. Retro Hub sets this up the first time an N64 game opens.
 - **Differences:** no winget (emulators ship as app bundles), Finder and the Trash instead of Explorer and the Recycle Bin, and TV mode shows the game art instead of preview videos.
 
 ## Adding emulators
@@ -143,7 +161,7 @@ Your manifests live in `%LOCALAPPDATA%\RetroHub\manifests` and are never deleted
 }
 ```
 
-**macOS:** a `"macos"` block overrides the top-level keys it names (usually `source`, `executable`, `launch`, `controller`). Without it, a downloadable emulator only appears on Windows. Two keys help emulators that keep their data in the home folder: `"environment": { "HOME": "{emuDir}/home" }` sets variables for the emulator process, and `"dataDir"` makes the controller, graphics and save paths relative to that folder.
+**macOS:** a `"macos"` block overrides the top-level keys it names (usually `source`, `executable`, `launch`, `controller`). Without it, a downloadable emulator only appears on Windows. `"defaults"` writes settings an emulator needs on that system (for example a renderer) on install and before the first game; a later change made inside the emulator is kept. Two keys help emulators that keep their data in the home folder: `"environment": { "HOME": "{emuDir}/home" }` sets variables for the emulator process, and `"dataDir"` makes the controller, graphics and save paths relative to that folder.
 
 The manifests in [`manifests/emulators`](manifests/emulators) show every optional field in use.
 
