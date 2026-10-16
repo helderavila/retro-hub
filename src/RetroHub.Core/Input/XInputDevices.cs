@@ -65,6 +65,33 @@ public static class XInputDevices
     [DllImport("xinput1_4.dll", EntryPoint = "#108")]
     private static extern uint XInputGetCapabilitiesEx(uint unknown, uint userIndex, uint flags, out CapabilitiesEx capabilities);
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct BatteryInformation
+    {
+        public byte Type, Level;
+    }
+
+    [DllImport("xinput1_4.dll")]
+    private static extern uint XInputGetBatteryInformation(uint userIndex, byte devType, out BatteryInformation information);
+
+    /// <summary>Connected controllers with model, connection and battery (four levels, as XInput reports it).</summary>
+    public static IReadOnlyList<GamepadStatus> Statuses()
+    {
+        var result = new List<GamepadStatus>();
+        try
+        {
+            var devices = List(); // vendor, when XInputGetCapabilitiesEx is available
+            foreach (var slot in XInput.ConnectedSlots())
+            {
+                var vendor = devices.FirstOrDefault(d => d.Slot == slot)?.VendorId ?? 0;
+                var battery = XInputGetBatteryInformation((uint)slot, 0, out var info) == 0 ? info : new BatteryInformation { Type = 0xFF };
+                result.Add(GamepadStatus.FromXInput(slot, vendor, battery.Type, battery.Level));
+            }
+        }
+        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException) { }
+        return result;
+    }
+
     public static IReadOnlyList<XInputDeviceInfo> List()
     {
         var result = new List<XInputDeviceInfo>();

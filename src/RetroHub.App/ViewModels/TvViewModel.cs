@@ -57,8 +57,23 @@ public partial class TvViewModel : ObservableObject
 
         ApplyTab(0);
         _clockTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
-        _clockTimer.Tick += (_, _) => Clock = DateTime.Now.ToString("HH:mm");
+        _clockTimer.Tick += (_, _) =>
+        {
+            Clock = DateTime.Now.ToString("HH:mm");
+            RefreshPads();
+        };
+        RefreshPads();
         _clockTimer.Start();
+    }
+
+    /// <summary>One chip per player under the clock: controller and battery (amber when low).</summary>
+    [ObservableProperty] private IReadOnlyList<RetroHub.Core.Input.GamepadStatus> _pads = [];
+
+    private void RefreshPads()
+    {
+        var now = RetroHub.Core.Input.XInputDevices.Statuses();
+        if (!now.SequenceEqual(Pads))
+            Pads = now;
     }
 
     public void Handle(PadButton button)

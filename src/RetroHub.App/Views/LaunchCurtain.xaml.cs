@@ -35,6 +35,11 @@ public partial class LaunchCurtain : Window
     public static LaunchCurtain Show(GameItemViewModel item)
     {
         var curtain = new LaunchCurtain { DataContext = item };
+        if (RetroHub.Core.Input.GamepadStatus.LowWarning(RetroHub.Core.Input.XInputDevices.Statuses()) is { } warning)
+        {
+            curtain.BatteryWarningText.Text = warning;
+            curtain.BatteryWarning.Visibility = System.Windows.Visibility.Visible;
+        }
         curtain.Show();
         return curtain;
     }

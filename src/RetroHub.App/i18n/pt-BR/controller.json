@@ -1,0 +1,13 @@
+{
+  "Wired": "Com fio",
+  "Charged": "Carregado",
+  "Charging": "Carregando",
+  "Charging · {0}%": "Carregando · {0}%",
+  "Battery empty": "Bateria vazia",
+  "Battery low": "Bateria baixa",
+  "Battery medium": "Bateria média",
+  "Battery full": "Bateria cheia",
+  "Controller": "Controle",
+  "Controller battery low · {0}": "Controle com bateria fraca · {0}",
+  "Player {0}": "Jogador {0}"
+}

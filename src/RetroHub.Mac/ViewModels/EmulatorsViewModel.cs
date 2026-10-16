@@ -482,6 +482,8 @@ public partial class EmulatorsViewModel : ObservableObject, IActivatable
         Stage = connected > 0
             ? L.T("Controller detected — mapping to player 1")
             : L.T("No controller connected right now — the mapping applies once you connect one");
+        foreach (var pad in SdlGamepads.Statuses())
+            Append(L.F("Player {0}", pad.Player) + " — " + pad.Summary);
 
         var installed = Items.Where(i => i.Installed is not null).ToList();
         if (installed.Count == 0)

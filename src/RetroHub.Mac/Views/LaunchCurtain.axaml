@@ -63,6 +63,12 @@
                     <Run Text="{Binding SystemName}" /><Run Text=" · " Foreground="{StaticResource Brush.Text.Tertiary}" /><Run Text="{l:T 'starting…'}" />
                 </TextBlock>
             </StackPanel>
+            <!-- Set from code when a controller may not last the session -->
+            <StackPanel x:Name="BatteryWarning" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,22,0,0" IsVisible="False">
+                <ui:Icon Data="{StaticResource Icon.Battery}" Width="18" Height="18" Foreground="{StaticResource Brush.Status.Warn}" />
+                <TextBlock x:Name="BatteryWarningText" Margin="8,0,0,0" VerticalAlignment="Center" Theme="{StaticResource Text.Mono}"
+                           FontSize="{StaticResource Font.Size.Md}" Foreground="{StaticResource Brush.Status.Warn}" />
+            </StackPanel>
         </StackPanel>
 
         <l:GrainLayer MaxAlpha="{StaticResource Grain.MaxAlpha}" />

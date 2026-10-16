@@ -24,19 +24,35 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private ObservableObject _currentPage;
 
-    /// <summary>Connected Xbox controllers (XInput), refreshed every 2s.</summary>
+    /// <summary>Connected Xbox controllers (XInput) with connection and battery, refreshed every 2s.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ControllerText), nameof(ControllerKind))]
-    private int _controllersConnected;
+    [NotifyPropertyChangedFor(nameof(ControllerText), nameof(ControllerKind), nameof(BatteryText), nameof(BatteryKind),
+        nameof(HasBattery), nameof(IsCharging), nameof(ControllerTip))]
+    private IReadOnlyList<GamepadStatus> _controllers = [];
 
-    public string ControllerText => ControllersConnected switch
+    public string ControllerText => Controllers.Count switch
     {
         0 => L.T("No controller"),
         1 => L.T("Xbox controller connected"),
         var n => L.F("{0} Xbox controllers", n),
     };
 
-    public string ControllerKind => ControllersConnected > 0 ? "ok" : "idle";
+    public string ControllerKind => Controllers.Count == 0 ? "idle" : Controllers.Any(c => c.IsLow) ? "warn" : "ok";
+
+    /// <summary>The controller worth showing: the only one, or the one on battery with the least charge.</summary>
+    private GamepadStatus? ShownPad => Controllers.Count == 1 ? Controllers[0] : GamepadStatus.Weakest(Controllers);
+
+    public string BatteryText => ShownPad?.BatteryText ?? "";
+
+    public string BatteryKind => ShownPad?.IsLow == true ? "warn" : "idle";
+
+    public bool HasBattery => ShownPad?.Power is PadPower.Battery;
+
+    public bool IsCharging => ShownPad?.Power is PadPower.Charging or PadPower.Charged;
+
+    /// <summary>One line per controller, then how setup works.</summary>
+    public string ControllerTip => string.Join("\n", Controllers.Select(c => L.F("Player {0}", c.Player) + " — " + c.Summary)
+        .Append((Controllers.Count > 0 ? "\n" : "") + L.T("Your controller is set up automatically the first time you play on each emulator")));
 
     private readonly DispatcherTimer _controllerTimer;
 
@@ -61,10 +77,17 @@ public partial class MainViewModel : ObservableObject
                 catch (Exception) { /* retries tomorrow; the manual button shows the error */ }
             });
 
-        ControllersConnected = XInput.ConnectedSlots().Count;
+        RefreshControllers();
         _controllerTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        _controllerTimer.Tick += (_, _) => ControllersConnected = XInput.ConnectedSlots().Count;
+        _controllerTimer.Tick += (_, _) => RefreshControllers();
         _controllerTimer.Start();
+    }
+
+    private void RefreshControllers()
+    {
+        var now = XInputDevices.Statuses();
+        if (!now.SequenceEqual(Controllers))
+            Controllers = now;
     }
 
     public void Navigate(string key) => CurrentKey = key;

@@ -32,6 +32,11 @@ public partial class LaunchCurtain : Window
         // back from it.
         var curtain = new LaunchCurtain { DataContext = item, ShowActivated = false };
         ScreenCover.Apply(curtain);
+        if (RetroHub.Core.Input.GamepadStatus.LowWarning(Input.SdlGamepads.Statuses()) is { } warning)
+        {
+            curtain.BatteryWarningText.Text = warning;
+            curtain.BatteryWarning.IsVisible = true;
+        }
         curtain.Opened += (_, _) =>
         {
             MacPresentation.FloatOverEverything(curtain);

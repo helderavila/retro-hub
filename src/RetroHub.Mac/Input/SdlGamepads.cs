@@ -116,6 +116,57 @@ public static unsafe class SdlGamepads
             (byte)(Math.Max((int)lt, 0) >> 7), (byte)(Math.Max((int)rt, 0) >> 7));
     }
 
+    /// <summary>Connected controllers with model, connection and battery, as SDL reports them (exact percentage).</summary>
+    public static IReadOnlyList<GamepadStatus> Statuses()
+    {
+        if (Environment.GetEnvironmentVariable("RETROHUB_SNAPSHOT_PADS") is { Length: > 0 } fake)
+            return FakeStatuses(fake);
+        Update();
+        var result = new List<GamepadStatus>();
+        for (var slot = 0; slot < Open.Count; slot++)
+        {
+            var (id, handle) = Open[slot];
+            var pad = (SDL_Gamepad*)handle;
+            int percent;
+            var state = SDL_GetGamepadPowerInfo(pad, &percent);
+            var power = state switch
+            {
+                SDL_PowerState.SDL_POWERSTATE_ON_BATTERY => PadPower.Battery,
+                SDL_PowerState.SDL_POWERSTATE_CHARGING => PadPower.Charging,
+                SDL_PowerState.SDL_POWERSTATE_CHARGED => PadPower.Charged,
+                SDL_PowerState.SDL_POWERSTATE_NO_BATTERY => PadPower.Wired,
+                _ => PadPower.Unknown,
+            };
+            var connection = SDL_GetGamepadConnectionState(pad);
+            var wireless = connection == SDL_JoystickConnectionState.SDL_JOYSTICK_CONNECTION_WIRELESS;
+            // A USB controller often reports no power state at all (macOS's driver doesn't): the cable says enough.
+            if (power == PadPower.Unknown && connection == SDL_JoystickConnectionState.SDL_JOYSTICK_CONNECTION_WIRED)
+                power = PadPower.Wired;
+            var model = SDL_GetGamepadType(pad) switch
+            {
+                SDL_GamepadType.SDL_GAMEPAD_TYPE_XBOX360 or SDL_GamepadType.SDL_GAMEPAD_TYPE_XBOXONE => PadModel.Xbox,
+                SDL_GamepadType.SDL_GAMEPAD_TYPE_PS3 or SDL_GamepadType.SDL_GAMEPAD_TYPE_PS4 or SDL_GamepadType.SDL_GAMEPAD_TYPE_PS5 => PadModel.PlayStation,
+                SDL_GamepadType.SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO or SDL_GamepadType.SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT
+                    or SDL_GamepadType.SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT
+                    or SDL_GamepadType.SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR => PadModel.Switch,
+                _ => PadModel.Generic,
+            };
+            var name = Marshal.PtrToStringUTF8((nint)Unsafe_SDL_GetGamepadNameForID(id)) ?? "";
+            result.Add(new GamepadStatus(slot, name, model, wireless, power,
+                percent >= 0 && power is PadPower.Battery or PadPower.Charging ? percent : null));
+        }
+        return result;
+    }
+
+    /// <summary>Dev snapshots only: "Name:Power:Percent;…" (e.g. "DualSense:Battery:12") stands in for real controllers.</summary>
+    private static List<GamepadStatus> FakeStatuses(string spec) => spec.Split(';').Select((pad, slot) =>
+    {
+        var parts = pad.Split(':');
+        var power = Enum.Parse<PadPower>(parts[1]);
+        return new GamepadStatus(slot, parts[0], PadModel.Generic, power != PadPower.Wired, power,
+            parts.Length > 2 ? int.Parse(parts[2]) : null);
+    }).ToList();
+
     /// <summary>Connected controllers with the GUID SDL computes — the same one SDL-based emulators write in their config.</summary>
     public static IReadOnlyList<IGamepadDevice> Devices()
     {

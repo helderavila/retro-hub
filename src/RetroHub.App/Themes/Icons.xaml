@@ -10,6 +10,8 @@
     <Geometry x:Key="Icon.Shield">M12,2.5 L19.5,5.5 V11.5 C19.5,16.5 16.2,19.8 12,21.5 C7.8,19.8 4.5,16.5 4.5,11.5 V5.5 Z M9,12 L11,14 L15,10</Geometry>
     <Geometry x:Key="Icon.Folder">M3,7 C3,5.9 3.9,5 5,5 H9 L11,7 H19 C20.1,7 21,7.9 21,9 V18 C21,19.1 20.1,20 19,20 H5 C3.9,20 3,19.1 3,18 Z</Geometry>
     <Geometry x:Key="Icon.Gamepad">M6,7 H18 C20.2,7 22,8.8 22,11 V14 C22,16.2 20.2,18 18,18 C16.6,18 15.7,17 15,16 H9 C8.3,17 7.4,18 6,18 C3.8,18 2,16.2 2,14 V11 C2,8.8 3.8,7 6,7 Z M6,12.5 H10 M8,10.5 V14.5 M15,12 H15.01 M18,13.5 H18.01</Geometry>
+    <Geometry x:Key="Icon.Battery">M3,7.5 H17 C17.8,7.5 18.5,8.2 18.5,9 V15 C18.5,15.8 17.8,16.5 17,16.5 H3 C2.2,16.5 1.5,15.8 1.5,15 V9 C1.5,8.2 2.2,7.5 3,7.5 Z M22,11 V13</Geometry>
+    <Geometry x:Key="Icon.Bolt">M13,2.5 L4.5,13.5 H11.5 L10.5,21.5 L19.5,10.5 H12.5 Z</Geometry>
     <Geometry x:Key="Icon.Tv">M3,7 H21 V20 H3 Z M16,2.5 L12,7 L8,2.5</Geometry>
     <Geometry x:Key="Icon.Play">M7,4.5 L19,12 L7,19.5 Z</Geometry>
     <Geometry x:Key="Icon.Star">M12,2.5 L14.9,8.4 L21.4,9.3 L16.7,13.9 L17.8,20.4 L12,17.3 L6.2,20.4 L7.3,13.9 L2.6,9.3 L9.1,8.4 Z</Geometry>

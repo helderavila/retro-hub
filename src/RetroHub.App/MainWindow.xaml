@@ -56,12 +56,25 @@
 
                 <!-- Right: controller and TV mode -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,18,0"
-                                ToolTip="{l:T 'Your controller is set up automatically the first time you play on each emulator'}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,18,0" Background="Transparent"
+                                ToolTip="{Binding ControllerTip}">
                         <ui:Icon Data="{StaticResource Icon.Gamepad}" Width="15" Height="15"
                                  Foreground="{Binding ControllerKind, Converter={StaticResource StatusBrush}}" />
                         <TextBlock Text="{Binding ControllerText}" Margin="8,0,0,0" VerticalAlignment="Center"
                                    FontSize="{StaticResource Font.Size.Sm}" Foreground="{StaticResource Brush.Text.Secondary}" />
+                        <!-- Battery of the only (or weakest) controller -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0"
+                                    Visibility="{Binding BatteryText, Converter={StaticResource NullToCollapsed}}">
+                            <ui:Icon Data="{StaticResource Icon.Battery}" Width="15" Height="15"
+                                     Visibility="{Binding HasBattery, Converter={StaticResource BoolToVisible}}"
+                                     Foreground="{Binding BatteryKind, Converter={StaticResource StatusBrush}}" />
+                            <ui:Icon Data="{StaticResource Icon.Bolt}" Width="13" Height="13"
+                                     Visibility="{Binding IsCharging, Converter={StaticResource BoolToVisible}}"
+                                     Foreground="{StaticResource Brush.Status.Ok}" />
+                            <TextBlock Text="{Binding BatteryText}" Margin="5,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Mono}"
+                                       FontSize="{StaticResource Font.Size.Sm}"
+                                       Foreground="{Binding BatteryKind, Converter={StaticResource StatusBrush}}" />
+                        </StackPanel>
                     </StackPanel>
                     <ToggleButton IsChecked="{Binding IsTvOpen}" Cursor="Hand" ToolTip="{l:T 'Full screen for couch play, controller only (F11)'}">
                         <ToggleButton.Template>

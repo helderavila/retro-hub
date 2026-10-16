@@ -2,6 +2,7 @@
         xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:RetroHub.Mac.Controls"
+        xmlns:input="using:RetroHub.Core.Input"
         xmlns:vm="using:RetroHub.Mac.ViewModels"
         xmlns:l="using:RetroHub.Mac.Helpers"
         x:DataType="vm:TvViewModel"
@@ -111,6 +112,19 @@
     </Window.Resources>
 
     <Window.Styles>
+        <!-- Player chips next to the clock: secondary text, amber when the battery is low -->
+        <Style Selector="StackPanel.pad TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+        </Style>
+        <Style Selector="StackPanel.pad ui|Icon">
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+        </Style>
+        <Style Selector="StackPanel.pad.low TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Brush.Status.Warn}" />
+        </Style>
+        <Style Selector="StackPanel.pad.low ui|Icon">
+            <Setter Property="Foreground" Value="{StaticResource Brush.Status.Warn}" />
+        </Style>
         <!-- Shelf card frame; the selected one gets a thick white border, visible from afar -->
         <Style Selector="Border.frame">
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" />
@@ -191,6 +205,26 @@
                     </Border>
                 </StackPanel>
             </DockPanel>
+
+            <!-- Players: controller and battery, under the clock -->
+            <ItemsControl Grid.Row="1" ItemsSource="{Binding Pads}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,0,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="22" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="input:GamepadStatus">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Classes="pad" Classes.low="{Binding IsLow}">
+                            <ui:Icon Data="{StaticResource Icon.Gamepad}" Width="18" Height="18" />
+                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontFamily="{StaticResource Font.Mono}" FontSize="16">
+                                <Run Text="P" /><Run Text="{Binding Player}" />
+                            </TextBlock>
+                            <TextBlock Text="{Binding BatteryText}" Margin="10,0,0,0" VerticalAlignment="Center"
+                                       FontFamily="{StaticResource Font.Mono}" FontSize="16"
+                                       IsVisible="{Binding BatteryText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
             <!-- Shelf -->
             <ListBox x:Name="Shelf" Grid.Row="1" VerticalAlignment="Center" Margin="0,40,0,0"
